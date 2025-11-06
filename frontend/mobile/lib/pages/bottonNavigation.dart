@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/bookmark.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/event.dart';
 
@@ -14,6 +15,7 @@ class _BottonNavigationState extends State<BottonNavigation> {
   List<Widget> get screens => [
     Dashboard(),
     EventPage(),
+    BookmarkPage(),
   ];
 
   void _onItemTapped(int index) {

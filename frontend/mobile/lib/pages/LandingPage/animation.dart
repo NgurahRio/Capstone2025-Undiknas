@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/LandingPage/firstPage.dart';
 
-class AnimasiFirst extends StatefulWidget {
-  const AnimasiFirst({super.key});
+class AnimationFirst extends StatefulWidget {
+  const AnimationFirst({super.key});
 
   @override
-  State<AnimasiFirst> createState() => _AnimasiFirstState();
+  State<AnimationFirst> createState() => _AnimationFirstState();
 }
 
-class _AnimasiFirstState extends State<AnimasiFirst>
+class _AnimationFirstState extends State<AnimationFirst>
     with TickerProviderStateMixin {
   bool showLogo = false;
   bool showOval = true;
