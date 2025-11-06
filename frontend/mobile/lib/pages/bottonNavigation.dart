@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/pages/dashboard.dart';
+import 'package:mobile/pages/event.dart';
 
 class BottonNavigation extends StatefulWidget {
   const BottonNavigation({super.key});
@@ -12,6 +13,7 @@ class _BottonNavigationState extends State<BottonNavigation> {
   int _selectedIndex = 0;
   List<Widget> get screens => [
     Dashboard(),
+    EventPage(),
   ];
 
   void _onItemTapped(int index) {
