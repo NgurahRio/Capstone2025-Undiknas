@@ -42,71 +42,80 @@ class _BookmarkPageState extends State<BookmarkPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          content: Text(
-            textAlign: TextAlign.center,
-            _isSelect == false
-              ? "Are you sure want to delete all these items?"
-              : "Delete this item?",
-            style: TextStyle(fontSize: 18),
+          content: SizedBox(
+            width: 200,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    _isSelect == false
+                      ? "Are you sure want to delete all these items?"
+                      : "Delete this item?",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 170,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF547899),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          color: Colors.white, 
+                          fontSize: 15, 
+                          fontWeight: FontWeight.w500
+                        )
+                      ),
+                    ),
+                  ),
+                ),
+                            
+                Center(
+                  child: Container(
+                    width: 170,
+                    margin: EdgeInsets.only(top: 7),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Color(0xffff8484),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        if (_isSelect) {
+                          _deleteSelecteds();
+                        } else {
+                          _deleteAllFavorites();
+                        }
+                  
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Delete", 
+                        style: TextStyle(
+                          color: Colors.white, 
+                          fontSize: 15, 
+                          fontWeight: FontWeight.w500
+                        )
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          actions: [
-            Center(
-              child: Container(
-                width: 170,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                decoration: BoxDecoration(
-                  color: Color(0xFF547899),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(
-                      color: Colors.white, 
-                      fontSize: 15, 
-                      fontWeight: FontWeight.w500
-                    )
-                  ),
-                ),
-              ),
-            ),
-                        
-            Center(
-              child: Container(
-                width: 170,
-                margin: EdgeInsets.only(top: 7),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                decoration: BoxDecoration(
-                  color: Color(0xffff8484),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    if (_isSelect) {
-                      _deleteSelecteds();
-                    } else {
-                      _deleteAllFavorites();
-                    }
-              
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    "Delete", 
-                    style: TextStyle(
-                      color: Colors.white, 
-                      fontSize: 15, 
-                      fontWeight: FontWeight.w500
-                    )
-                  ),
-                ),
-              ),
-            ),
-          ],
         );
       },
     );

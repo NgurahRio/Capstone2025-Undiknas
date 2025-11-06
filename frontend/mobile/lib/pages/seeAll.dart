@@ -6,13 +6,13 @@ import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/rating_model.dart';
 import 'package:mobile/pages/detail.dart';
 
-class SeeAll extends StatefulWidget {
+class SeeAllPage extends StatefulWidget {
   final List<dynamic> selectedCategories;
   final List<dynamic> selectedSubCategories;
   final List<dynamic> appliedSubCategories;
   final void Function(List<dynamic> cats, List<dynamic> subs, List<dynamic> applied) onSaveStyle;
 
-  SeeAll({
+  SeeAllPage({
     super.key,
     required this.selectedCategories,
     required this.selectedSubCategories,
@@ -21,10 +21,10 @@ class SeeAll extends StatefulWidget {
   });
 
   @override
-  State<SeeAll> createState() => _SeeAllState();
+  State<SeeAllPage> createState() => _SeeAllPageState();
 }
 
-class _SeeAllState extends State<SeeAll> {
+class _SeeAllPageState extends State<SeeAllPage> {
 
   final LayerLink _editLink = LayerLink();
   final GlobalKey _editKey = GlobalKey();

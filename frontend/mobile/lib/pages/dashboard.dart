@@ -8,6 +8,7 @@ import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/rating_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
 import 'package:mobile/pages/detail.dart';
+import 'package:mobile/pages/seeAll.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -465,7 +466,25 @@ class _DashboardState extends State<Dashboard> {
                           children: [
                             _subHeader(
                               title: "Recommended Your Style",
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SeeAllPage(
+                                      selectedCategories: selectedCategory,
+                                      selectedSubCategories: selectedSubCategories,
+                                      appliedSubCategories: appliedSubCategories,
+                                      onSaveStyle: (cats, subs, applied) {
+                                        setState(() {
+                                          selectedCategory = List.from(cats);
+                                          selectedSubCategories = List.from(subs);
+                                          appliedSubCategories = List.from(applied);
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
