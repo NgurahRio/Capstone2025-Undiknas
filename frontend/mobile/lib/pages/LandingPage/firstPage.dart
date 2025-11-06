@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
+import 'package:mobile/pages/Auth/loginPage.dart';
 
 class FirstPage extends StatelessWidget {
   const FirstPage({super.key});
@@ -45,7 +46,13 @@ class FirstPage extends StatelessWidget {
 
                       ButtonCostum(
                         text: "Start Now",
-                        onPressed: (){}, 
+                        onPressed: (){
+                          Navigator.pushAndRemoveUntil(
+                            context, 
+                            MaterialPageRoute(builder: (context) => LoginPage()), 
+                            (route) => false
+                          );
+                        }, 
                       )
                     ],
                   ),
