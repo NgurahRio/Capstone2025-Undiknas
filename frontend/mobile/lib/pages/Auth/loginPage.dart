@@ -3,6 +3,7 @@ import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/textField.dart';
 import 'package:mobile/pages/Auth/forgetPassword.dart';
 import 'package:mobile/pages/Auth/registerPage.dart';
+import 'package:mobile/pages/bottonNavigation.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,6 +56,13 @@ class _LoginPageState extends State<LoginPage>
 
   void _onLoginPressed() async {
     await _controller.forward();
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const BottonNavigation()),
+      );
+    }
   }
 
   @override
@@ -155,7 +163,12 @@ class _LoginPageState extends State<LoginPage>
 
                         ButtonCostum(
                           text: "Explore as Guest", 
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BottonNavigation()),
+                            );
+                          },
                         ),
 
                         Padding(
