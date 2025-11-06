@@ -4,6 +4,7 @@ import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/rating_model.dart';
+import 'package:mobile/pages/detail.dart';
 
 class SeeAll extends StatefulWidget {
   final List<dynamic> selectedCategories;
@@ -231,7 +232,15 @@ class _SeeAllState extends State<SeeAll> {
                       rating: ratDest,
                       category: item.subCategoryId.categoryId.name,
                       isDestination: true,
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (context) => DetailPage(
+                            destination: item, 
+                            event: null,
+                          )),
+                        );
+                      },
                     );
                   },
                 ),

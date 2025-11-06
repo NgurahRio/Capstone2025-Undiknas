@@ -3,14 +3,14 @@ import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
 
-class Profile extends StatefulWidget {
-  const Profile({super.key});
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  State<Profile> createState() => _ProfileState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfileState extends State<Profile> {
+class _ProfilePageState extends State<ProfilePage> {
   bool isChangePassword = false;
 
   final TextEditingController oldPasswordController = TextEditingController();
@@ -219,7 +219,7 @@ class _ProfileState extends State<Profile> {
       backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(85),
-        child: Header(title: "Profile", onTap: () {}),
+        child: Header(title: "ProfilePage", onTap: () {}),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 60),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/bookmark_model.dart';
+import 'package:mobile/pages/detail.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({super.key});
@@ -385,7 +386,16 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                     subtitle: subtitle,
                                     category: isEvent ? null : category,
                                     isBookmark: true,
-                                    onTap: () {},
+                                    onTap: () {
+                                      Navigator.push(
+                                        context, 
+                                        MaterialPageRoute(builder: (context) => DetailPage(
+                                          destination: isEvent ? null : bookM.destinationId, 
+                                          event: isEvent ? bookM.eventId : null,
+                                          isInitialFavorite: true,
+                                        )),
+                                      );
+                                    },
                                   ),
                                 ),
                               ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/pages/bookmark.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/event.dart';
+import 'package:mobile/pages/profile.dart';
 
 class BottonNavigation extends StatefulWidget {
   const BottonNavigation({super.key});
@@ -16,6 +17,7 @@ class _BottonNavigationState extends State<BottonNavigation> {
     Dashboard(),
     EventPage(),
     BookmarkPage(),
+    ProfilePage()
   ];
 
   void _onItemTapped(int index) {

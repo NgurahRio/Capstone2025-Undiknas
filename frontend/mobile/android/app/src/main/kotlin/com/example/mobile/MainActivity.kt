@@ -1,5 +1,5 @@
-package com.example.mobile
+package com.example.tourismubud_apk
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity: FlutterActivity()
+class MainActivity: FlutterFragmentActivity()

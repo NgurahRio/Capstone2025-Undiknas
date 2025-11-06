@@ -7,6 +7,7 @@ import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/rating_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
+import 'package:mobile/pages/detail.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -451,7 +452,7 @@ class _DashboardState extends State<Dashboard> {
                                     rating: ratDest,
                                     category: item.subCategoryId.categoryId.name,
                                     isDestination: true,
-                                    onTap: () {},
+                                    onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
                                   );
                                 },
                               ),
@@ -500,7 +501,7 @@ class _DashboardState extends State<Dashboard> {
                                   rating: ratDest,
                                   category: item.subCategoryId.categoryId.name,
                                   isDestination: true,
-                                  onTap: () {},
+                                  onTap: () => _navigateTo(DetailPage(destination: item, event: null))
                                 );
                               }
                             )
@@ -523,7 +524,7 @@ class _DashboardState extends State<Dashboard> {
                             title: item.name,
                             subtitle: item.location,
                             category: item.subCategoryId.categoryId.name,
-                            onTap: () {},
+                            onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
                           );
                         },
                       ),
@@ -568,7 +569,7 @@ class _DashboardState extends State<Dashboard> {
                                   location: item.location, 
                                   subTitle: item.description,
                                   price: item.price,
-                                  onTap: () {},
+                                  onTap: () => _navigateTo(DetailPage(destination: null, event: item))
                                 );
                               }
                             ),
@@ -590,7 +591,7 @@ class _DashboardState extends State<Dashboard> {
                             rating: ratDest,
                             category: item.subCategoryId.categoryId.name,
                             isDestination: true,
-                            onTap: () {},
+                            onTap: () => _navigateTo(DetailPage(destination: item, event: null))
                           );
                         }
                       )

@@ -3,6 +3,7 @@ import 'package:mobile/componen/calenderStyle.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/event_model.dart';
+import 'package:mobile/pages/detail.dart';
 
 class EventPage extends StatefulWidget {
   const EventPage({super.key});
@@ -103,7 +104,15 @@ class _EventPageState extends State<EventPage> {
                                 title: item.name,
                                 subtitle: item.formattedDate,
                                 image: item.imageUrl[0],
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.push(
+                                    context,  
+                                    MaterialPageRoute(builder: (context) => DetailPage(
+                                      destination: null, 
+                                      event: item,
+                                    )),
+                                  );
+                                },
                               );
                             },
                           ),
