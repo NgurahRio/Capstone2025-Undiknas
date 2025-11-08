@@ -256,6 +256,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                   )
                 : Column(
                     children: [
+
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
                         child: Row(
@@ -383,73 +384,90 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                 ],
                               ),
                             ),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: filteredItems.length,
-                              itemBuilder:(context, index) {
-                                final bookM = filteredItems[index];
-                                final isEvent = bookM.eventId != null;
-                        
-                                final title = isEvent ? bookM.eventId!.name : bookM.destinationId!.name;
-                                final subtitle = isEvent ? bookM.eventId!.formattedDate : bookM.destinationId!.location;
-                                final image = isEvent ? bookM.eventId!.imageUrl[0] : bookM.destinationId!.imageUrl[0];
-                                final category = isEvent ? "" : bookM.destinationId!.subCategoryId.categoryId.name;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      if(_isSelect == true)
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Container(
-                                            width: 20,
-                                            height: 20,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Color(0xFF547899)),
-                                              borderRadius: BorderRadius.circular(3)
-                                            ),
-                                            child: Checkbox(
-                                              fillColor: const WidgetStatePropertyAll(Colors.white),
-                                              side: const BorderSide(color: Colors.white),
-                                              activeColor: Color(0xFF547899),
-                                              checkColor: const Color(0xFF547899),
-                                              value: selected.contains(bookM.id_bookmark),
-                                              onChanged: (bool? value) {
-                                                setState(() {
-                                                  if (value == true) {
-                                                    selected.add(bookM.id_bookmark);
-                                                  } else {
-                                                    selected.remove(bookM.id_bookmark);
-                                                  }
-                                                });
-                                              },
+
+                            filteredItems.isEmpty
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 50),
+                                    child: Text(
+                                      textAlign: TextAlign.center,
+                                      "Destinations and events\nhave not beenbookmarked yet",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: filteredItems.length,
+                                itemBuilder:(context, index) {
+                                  final bookM = filteredItems[index];
+                                  final isEvent = bookM.eventId != null;
+                          
+                                  final title = isEvent ? bookM.eventId!.name : bookM.destinationId!.name;
+                                  final subtitle = isEvent ? bookM.eventId!.formattedDate : bookM.destinationId!.location;
+                                  final image = isEvent ? bookM.eventId!.imageUrl[0] : bookM.destinationId!.imageUrl[0];
+                                  final category = isEvent ? "" : bookM.destinationId!.subCategoryId.categoryId.name;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        if(_isSelect == true)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                                            child: Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                border: Border.all(color: Color(0xFF547899)),
+                                                borderRadius: BorderRadius.circular(3)
+                                              ),
+                                              child: Checkbox(
+                                                fillColor: const WidgetStatePropertyAll(Colors.white),
+                                                side: const BorderSide(color: Colors.white),
+                                                activeColor: Color(0xFF547899),
+                                                checkColor: const Color(0xFF547899),
+                                                value: selected.contains(bookM.id_bookmark),
+                                                onChanged: (bool? value) {
+                                                  setState(() {
+                                                    if (value == true) {
+                                                      selected.add(bookM.id_bookmark);
+                                                    } else {
+                                                      selected.remove(bookM.id_bookmark);
+                                                    }
+                                                  });
+                                                },
+                                              ),
                                             ),
                                           ),
+                                        Expanded(
+                                          child: CardItems1(
+                                            rating: 4.9,
+                                            title: title,
+                                            image: image,
+                                            subtitle: subtitle,
+                                            category: isEvent ? null : category,
+                                            isBookmark: true,
+                                            onTap: () {
+                                              Navigator.push(
+                                                context, 
+                                                MaterialPageRoute(builder: (context) => DetailPage(
+                                                  destination: isEvent ? null : bookM.destinationId, 
+                                                  event: isEvent ? bookM.eventId : null,
+                                                  isInitialFavorite: true,
+                                                )),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                      Expanded(
-                                        child: CardItems1(
-                                          rating: 4.9,
-                                          title: title,
-                                          image: image,
-                                          subtitle: subtitle,
-                                          category: isEvent ? null : category,
-                                          isBookmark: true,
-                                          onTap: () {
-                                            Navigator.push(
-                                              context, 
-                                              MaterialPageRoute(builder: (context) => DetailPage(
-                                                destination: isEvent ? null : bookM.destinationId, 
-                                                event: isEvent ? bookM.eventId : null,
-                                                isInitialFavorite: true,
-                                              )),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                      ],
+                                    ),
+                                  );
                               }
                             ),
                           ],
