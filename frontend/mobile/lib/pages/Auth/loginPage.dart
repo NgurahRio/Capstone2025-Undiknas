@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/textField.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/forgetPassword.dart';
 import 'package:mobile/pages/Auth/registerPage.dart';
 import 'package:mobile/pages/bottonNavigation.dart';
@@ -22,6 +23,8 @@ class _LoginPageState extends State<LoginPage>
   late Animation<double> _scaleUp;
   late Animation<double> _moveX;
   late Animation<double> _moveY;
+
+  bool _isAuthenticating = false;
 
   @override
   void initState() {
@@ -55,14 +58,60 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void _onLoginPressed() async {
-    await _controller.forward();
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const BottonNavigation()),
+  // simple local authentication using the `users` list below
+  User? _authenticate(String email, String password) {
+    try {
+      return users.firstWhere(
+        (u) =>
+          u.email.trim().toLowerCase() == email.trim().toLowerCase() &&
+          u.password == password,
       );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _onLoginPressed() async {
+    FocusScope.of(context).unfocus();
+
+    if (_isAuthenticating) return;
+
+    final email = emailController.text;
+    final pass = passwordController.text;
+
+    if (email.isEmpty || pass.isEmpty) {
+      _showSnackBar('Email dan password harus diisi.');
+      return;
+    }
+
+    setState(() => _isAuthenticating = true);
+
+    final user = _authenticate(email, pass);
+
+    if (user == null) {
+      setState(() => _isAuthenticating = false);
+      _showSnackBar('Email atau password salah.');
+      return;
+    }
+
+    try {
+      await _controller.forward();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => BottonNavigation(currentUser: user,)),
+        );
+      }
+    } finally {
+      _controller.reset();
+      if (mounted) setState(() => _isAuthenticating = false);
     }
   }
 
@@ -165,7 +214,14 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         ButtonCostum(
                           text: "Explore as Guest",
-                          onPressed: _onLoginPressed,
+                          onPressed: () async {
+                            await _controller.forward();
+                            Navigator.pushAndRemoveUntil(
+                              context, 
+                              MaterialPageRoute(builder: (context) => BottonNavigation()), 
+                              (route) => false
+                            );
+                          },
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 40),

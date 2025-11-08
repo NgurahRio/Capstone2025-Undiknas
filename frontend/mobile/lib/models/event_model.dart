@@ -13,7 +13,6 @@ class Event {
   final String maps;
   final double latitude;
   final double longitude;
-
   final List<String>? dos;
   final List<String>? donts;
   final List<String>? safetyGuidelines;

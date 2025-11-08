@@ -1,28 +1,30 @@
 class User {
-  final int id;
+  final int id_user;
   final String userName;
   final String email;
   final String password;
 
   User({
-    required this.id,
+    required this.id_user,
     required this.userName,
     required this.email,
     required this.password,
   });
+
+  static User? currentUser;
 }
 
 final List<User> users = [
   User(
-    id: 1,
-    userName: "user",
-    email: "john@example.com",
+    id_user: 1,
+    userName: "Riyo",
+    email: "riyo@gmail.com",
     password: "12345678",
   ),
   User(
-    id: 2,
-    userName: "admin",
-    email: "admin@example.com",
-    password: "admin123",
+    id_user: 2,
+    userName: "Wilson",
+    email: "wdc@gmail.com",
+    password: "12345678",
   ),
 ];

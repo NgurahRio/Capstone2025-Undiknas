@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/bookmark.dart';
 import 'package:mobile/pages/dashboard.dart';
 import 'package:mobile/pages/event.dart';
 import 'package:mobile/pages/profile.dart';
 
 class BottonNavigation extends StatefulWidget {
-  const BottonNavigation({super.key});
+  final User? currentUser; 
+
+  const BottonNavigation({super.key, this.currentUser});
 
   @override
   State<BottonNavigation> createState() => _BottonNavigationState();
@@ -16,8 +19,8 @@ class _BottonNavigationState extends State<BottonNavigation> {
   List<Widget> get screens => [
     Dashboard(),
     EventPage(),
-    BookmarkPage(),
-    ProfilePage()
+    BookmarkPage(currentUser: widget.currentUser),
+    ProfilePage(currentUser: widget.currentUser),
   ];
 
   void _onItemTapped(int index) {
