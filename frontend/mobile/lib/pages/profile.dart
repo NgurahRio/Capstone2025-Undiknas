@@ -3,6 +3,7 @@ import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   final User? currentUser;
@@ -147,11 +148,14 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void _handleLogout() {
-    Navigator.pushAndRemoveUntil(
+  void _handleLogout() async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+    User.currentUser = null;
+
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (route) => false,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 

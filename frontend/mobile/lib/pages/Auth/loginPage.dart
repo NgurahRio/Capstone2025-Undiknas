@@ -5,6 +5,7 @@ import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/forgetPassword.dart';
 import 'package:mobile/pages/Auth/registerPage.dart';
 import 'package:mobile/pages/bottonNavigation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -58,6 +59,12 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
+  Future<void> _saveLogin(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', user.id_user);
+    User.currentUser = user;
+  }
+
   // simple local authentication using the `users` list below
   User? _authenticate(String email, String password) {
     try {
@@ -103,6 +110,9 @@ class _LoginPageState extends State<LoginPage>
 
     try {
       await _controller.forward();
+
+      await _saveLogin(user);
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
