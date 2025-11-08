@@ -18,9 +18,10 @@ class _LoginPageState extends State<LoginPage>
   final TextEditingController passwordController = TextEditingController();
 
   late AnimationController _controller;
-  late Animation<Offset> _logoMove;
   late Animation<double> _fadeOut;
   late Animation<double> _scaleUp;
+  late Animation<double> _moveX;
+  late Animation<double> _moveY;
 
   @override
   void initState() {
@@ -30,10 +31,10 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
     );
 
-    _logoMove = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(1.3, 2),
-    ).animate(
+    _moveX = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _moveY = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
@@ -42,8 +43,8 @@ class _LoginPageState extends State<LoginPage>
     );
 
     _scaleUp = Tween<double>(begin: 1.0, end: 1.7).animate(
-    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-  );
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -67,29 +68,34 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final screen = MediaQuery.of(context).size;
+    const logoSize = 70.0;
+
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
+            final moveX = (screen.width / 2 - logoSize / 2 - screen.width * 0.16) * _moveX.value;
+            final moveY = (screen.height / 2 - logoSize / 2 - screen.height * 0.16) * _moveY.value;
+
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 35),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo + Name
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ScaleTransition(
-                        scale: _scaleUp,
-                        child: SlideTransition(
-                          position: _logoMove,
+                      Transform.translate(
+                        offset: Offset(moveX, moveY),
+                        child: Transform.scale(
+                          scale: _scaleUp.value,
                           child: Image.asset(
-                            'assets/logo.png', 
-                            height: 70,
+                            'assets/logo.png',
+                            height: logoSize,
                           ),
                         ),
                       ),
@@ -104,7 +110,6 @@ class _LoginPageState extends State<LoginPage>
                     opacity: _fadeOut.value,
                     child: Column(
                       children: [
-
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(
@@ -118,19 +123,16 @@ class _LoginPageState extends State<LoginPage>
                             ),
                           ),
                         ),
-
                         FieldTextCustom(
                           controller: emailController,
                           labelText: "Email",
                         ),
-
                         FieldTextCustom(
                           controller: passwordController,
                           labelText: "Password",
                           isPassword: true,
                           obscurePass: true,
                         ),
-
                         Align(
                           alignment: Alignment.centerRight,
                           child: Padding(
@@ -145,14 +147,15 @@ class _LoginPageState extends State<LoginPage>
                               ),
                               onTap: () {
                                 Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(builder: (context) => ForgetPasswordPage()),
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ForgetPasswordPage(),
+                                  ),
                                 );
                               },
                             ),
                           ),
                         ),
-
                         Padding(
                           padding: const EdgeInsets.only(top: 20, bottom: 15),
                           child: ButtonCostum(
@@ -160,17 +163,10 @@ class _LoginPageState extends State<LoginPage>
                             onPressed: _onLoginPressed,
                           ),
                         ),
-
                         ButtonCostum(
-                          text: "Explore as Guest", 
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) => const BottonNavigation()),
-                            );
-                          },
+                          text: "Explore as Guest",
+                          onPressed: _onLoginPressed,
                         ),
-
                         Padding(
                           padding: const EdgeInsets.only(top: 40),
                           child: Row(
@@ -189,7 +185,7 @@ class _LoginPageState extends State<LoginPage>
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => RegisterPage()
+                                      builder: (context) => RegisterPage(),
                                     ),
                                   );
                                 },

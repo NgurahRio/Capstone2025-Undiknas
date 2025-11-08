@@ -127,35 +127,37 @@ class _AnimationFirstState extends State<AnimationFirst>
               ),
             ),
 
-            // Logo utama
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: AnimatedSlide(
-                offset: logoOffset,
-                duration: const Duration(milliseconds: 1200),
-                curve: Curves.easeOutBack,
-                child: AnimatedScale(
-                  scale: logoScale,
-                  duration: const Duration(milliseconds: 1000),
-                  child: AnimatedOpacity(
-                    opacity: showLogo ? 1 : 0,
-                    duration: const Duration(milliseconds: 800),
-                    child: Image.asset(
-                      'assets/logo.png',
-                      width: 90,
+            Align(
+              alignment: Alignment.center,
+              child: Transform.translate(
+                offset: const Offset(0, -10),
+                child: AnimatedSlide(
+                  offset: logoOffset,
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.easeOutBack,
+                  child: AnimatedScale(
+                    scale: logoScale,
+                    duration: const Duration(milliseconds: 1000),
+                    child: AnimatedOpacity(
+                      opacity: showLogo ? 1 : 0,
+                      duration: const Duration(milliseconds: 800),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: 90,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
 
-            // Nama (efek reveal dari kiri ke kanan)
             if (showName)
               AnimatedBuilder(
                 animation: _revealController,
                 builder: (context, child) {
+                  final screen = MediaQuery.of(context).size;
                   return Padding(
-                    padding: const EdgeInsets.only(left: 80),
+                    padding: EdgeInsets.only(left: screen.width * 0.22),
                     child: ShaderMask(
                       shaderCallback: (Rect bounds) {
                         return LinearGradient(

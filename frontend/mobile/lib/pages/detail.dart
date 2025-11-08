@@ -325,9 +325,7 @@ class _DetailPageState extends State<DetailPage> {
       ? averageRatingForDestination(destination!.id_destination)
       : averageRatingForEvent(event!.id_event);
 
-    final reviews = isDestination
-      ? ratings.where((rat) => rat.destinationId?.id_destination == destination!.id_destination).toList()
-      : ratings.where((rat) => rat.eventId?.id_event == event!.id_event).toList();
+    final reviews = ratings.where((rat) => rat.destinationId?.id_destination == destination?.id_destination).toList();
 
     final destinationPackages = packages.where(
       (pkg) => pkg.destinationId.id_destination == destination?.id_destination
@@ -1140,149 +1138,150 @@ class _DetailPageState extends State<DetailPage> {
                               ),
                             ),
 
-                            SizedBox(
-                              width: double.infinity,
-                              child: Container(
-                                margin: const EdgeInsets.only(top: 30, bottom: 20),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF3F9FF),
-                                  borderRadius: BorderRadius.circular(10)
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    reviews.isEmpty
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(top: 20),
-                                          child: Text("Belum ada ulasan",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.w500
-                                            )
-                                          ),
-                                        )
-                                      : Column(
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 15),
-                                              child: Column(
-                                                children: [
-                                                  const Text("Reviews",
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w700,
-                                                    )
-                                                  ),
-
-                                                  Text(avarageRating.toStringAsFixed(1),
-                                                    style: const TextStyle(
-                                                      fontSize: 37,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w900,
-                                                    )
-                                                  ),
-
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(bottom: 7),
-                                                    child: _ratingStars(rating: avarageRating),
-                                                  ),
-
-                                                  Text(
-                                                    "Based on ${reviews.length} reviews",
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w300
-                                                    )
-                                                  )
-                                                ],
-                                              ),
+                            if(isDestination)
+                              SizedBox(
+                                width: double.infinity,
+                                child: Container(
+                                  margin: const EdgeInsets.only(top: 30, bottom: 20),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F9FF),
+                                    borderRadius: BorderRadius.circular(10)
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      reviews.isEmpty
+                                        ? const Padding(
+                                            padding: EdgeInsets.only(top: 20),
+                                            child: Text("Belum ada ulasan",
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.w500
+                                              )
                                             ),
-                                            const Padding(
-                                              padding: EdgeInsets.only(top: 5, bottom: 20),
-                                              child: Divider(
-                                                thickness: 2,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            ...reviews.map((rev) {
-                                              return Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 30),
+                                          )
+                                        : Column(
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 15),
                                                 child: Column(
-                                                  crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(rev.userId.userName,
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
+                                                    const Text("Reviews",
+                                                      style: TextStyle(
+                                                        fontSize: 22,
                                                         color: Colors.black,
-                                                        fontWeight: FontWeight.w500
+                                                        fontWeight: FontWeight.w700,
                                                       )
                                                     ),
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(right: 5),
-                                                              child: _ratingStars(
-                                                                rating: rev.rating,
-                                                                position: false
-                                                              ),
-                                                            ),
 
-                                                            Text(
-                                                              rev.rating.toStringAsFixed(1),
-                                                              style: const TextStyle(
-                                                                fontSize: 13,
-                                                                color: Colors.black,
-                                                              ))
-                                                          ],
-                                                        ),
-
-                                                        Text(
-                                                          TimeOfDay.fromDateTime(rev.createdAt).format(context),
-                                                          style: const TextStyle(
-                                                            fontSize: 14,
-                                                            color: Colors.grey,
-                                                          )
-                                                        )
-                                                      ],
+                                                    Text(avarageRating.toStringAsFixed(1),
+                                                      style: const TextStyle(
+                                                        fontSize: 37,
+                                                        color: Colors.black,
+                                                        fontWeight: FontWeight.w900,
+                                                      )
                                                     ),
+
                                                     Padding(
-                                                      padding: const EdgeInsets.only(top: 5),
-                                                      child: Text(
-                                                        rev.review,
-                                                        textAlign: TextAlign.justify,
-                                                        style: const TextStyle(
-                                                          fontSize: 13,
-                                                          color: Colors.grey,
-                                                        )
-                                                      ),
+                                                      padding: const EdgeInsets.only(bottom: 7),
+                                                      child: _ratingStars(rating: avarageRating),
                                                     ),
+
+                                                    Text(
+                                                      "Based on ${reviews.length} reviews",
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.black,
+                                                        fontWeight: FontWeight.w300
+                                                      )
+                                                    )
                                                   ],
                                                 ),
-                                              );
-                                            }),
-                                          ],
-                                        ),
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsets.only(top: 5, bottom: 20),
+                                                child: Divider(
+                                                  thickness: 2,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              ...reviews.map((rev) {
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 30),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(rev.userId.userName,
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          color: Colors.black,
+                                                          fontWeight: FontWeight.w500
+                                                        )
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Padding(
+                                                                padding: const EdgeInsets.only(right: 5),
+                                                                child: _ratingStars(
+                                                                  rating: rev.rating,
+                                                                  position: false
+                                                                ),
+                                                              ),
 
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
-                                      child: ButtonCostum(
-                                        text: "Write a review", 
-                                        onPressed: () {
-                                          showReviewPopup(context);
-                                        }
-                                      ),
-                                    )
-                                  ],
+                                                              Text(
+                                                                rev.rating.toStringAsFixed(1),
+                                                                style: const TextStyle(
+                                                                  fontSize: 13,
+                                                                  color: Colors.black,
+                                                                ))
+                                                            ],
+                                                          ),
+
+                                                          Text(
+                                                            TimeOfDay.fromDateTime(rev.createdAt).format(context),
+                                                            style: const TextStyle(
+                                                              fontSize: 14,
+                                                              color: Colors.grey,
+                                                            )
+                                                          )
+                                                        ],
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(top: 5),
+                                                        child: Text(
+                                                          rev.review,
+                                                          textAlign: TextAlign.justify,
+                                                          style: const TextStyle(
+                                                            fontSize: 13,
+                                                            color: Colors.grey,
+                                                          )
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              }),
+                                            ],
+                                          ),
+
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                                        child: ButtonCostum(
+                                          text: "Write a review", 
+                                          onPressed: () {
+                                            showReviewPopup(context);
+                                          }
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         )
                       ),
