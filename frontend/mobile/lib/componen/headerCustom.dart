@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 class Header extends StatelessWidget {
   final VoidCallback? onTapBack;
   final String? title;
-  final VoidCallback onTap;
 
   Header({
     super.key,
     this.onTapBack,
     this.title,
-    required this.onTap,
   });
 
   @override
@@ -54,7 +52,7 @@ class Header extends StatelessWidget {
                   Positioned(
                     right: 0,
                     child: GestureDetector(
-                      onTap: onTap,
+                      onTap: () {},
                       child: Row(
                         children: [
                           Container(

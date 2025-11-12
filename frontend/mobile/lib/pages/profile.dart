@@ -209,7 +209,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(85),
-        child: Header(title: "Profile", onTap: () {}),
+        child: Header(title: "Profile",),
       ),
       body: Stack(
         children: [

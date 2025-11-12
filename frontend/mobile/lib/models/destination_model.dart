@@ -98,7 +98,7 @@ final List<Destination> destinations = [
       SosNearby(
         name: "Ubud Clinic",
         address: "Jl. Raya Ubud No.36, Gianyar, Bali",
-        phone: "+62 361 978 555",
+        phone: "+62361978555",
       ),
     ],
   ),

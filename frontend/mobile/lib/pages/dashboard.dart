@@ -261,7 +261,7 @@ class _DashboardState extends State<Dashboard> {
       backgroundColor: Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(85), 
-        child: Header(onTap: () {})
+        child: Header()
       ),
 
       body: SafeArea(

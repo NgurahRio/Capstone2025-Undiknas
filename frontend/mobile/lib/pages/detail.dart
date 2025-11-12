@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/componen/WhatsApp.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
@@ -343,7 +344,6 @@ class _DetailPageState extends State<DetailPage> {
         child: Header(
           onTapBack: () => Navigator.pop(context),
           title: isDestination ? "Destination" : "Event",
-          onTap: () {},
         )
       ),
       body: SafeArea(
@@ -916,7 +916,9 @@ class _DetailPageState extends State<DetailPage> {
                                                         ButtonCostum(
                                                           height: 48,
                                                           text: "Call Now",
-                                                          onPressed: () {},
+                                                          onPressed: () {
+                                                            openWhatsApp(sos.phone);
+                                                          },
                                                         ),
                                                       ],
                                                     );

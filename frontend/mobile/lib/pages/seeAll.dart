@@ -123,7 +123,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
       backgroundColor: Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(85), 
-        child: Header(onTap: () {})
+        child: Header()
       ),
       body: SafeArea(
         child: Column(

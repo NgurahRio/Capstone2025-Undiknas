@@ -35,7 +35,7 @@ class _EventPageState extends State<EventPage> {
       backgroundColor: Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(100),
-        child: Header(title: "Event", onTap: (){})
+        child: Header(title: "Event",)
       ),
       body: Container(
         child: SingleChildScrollView(

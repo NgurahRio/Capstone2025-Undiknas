@@ -215,7 +215,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
       backgroundColor: Color(0xfff3f9ff),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(85), 
-        child: Header(title: "Bookmark", onTap: () {})
+        child: Header(title: "Bookmark")
       ),
       body: SafeArea(
         child: SingleChildScrollView(
