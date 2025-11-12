@@ -1,1 +1,32 @@
 package subcategory
+
+import (
+	"backend/config"
+	"backend/models"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+// DELETE /admin/subcategory/:id → delete subcategory by ID
+func DeleteSubcategory(c *gin.Context) {
+	id := c.Param("id")
+	var subcategory models.Subcategory
+
+	// Check if subcategory exists
+	if err := config.DB.First(&subcategory, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Subcategory tidak ditemukan"})
+		return
+	}
+
+	// Delete the subcategory
+	if err := config.DB.Delete(&subcategory).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus subcategory"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil menghapus subcategory",
+		"data":    subcategory,
+	})
+}
