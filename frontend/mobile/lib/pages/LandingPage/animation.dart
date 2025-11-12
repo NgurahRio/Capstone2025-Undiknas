@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/LandingPage/firstPage.dart';
+import 'package:mobile/pages/bottonNavigation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AnimationFirst extends StatefulWidget {
   const AnimationFirst({super.key});
@@ -71,17 +74,34 @@ class _AnimationFirstState extends State<AnimationFirst>
       _revealController.forward();
     });
 
-    Future.delayed(const Duration(milliseconds: 5700), () {
+    Future.delayed(const Duration(milliseconds: 5700), () async {
       _changesPages.forward();
-      Navigator.of(context).pushReplacement(_createSmoothFadeRoute());
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+
+      if (!mounted) return;
+
+      if (userId != null) {
+        try {
+          final user = users.firstWhere((u) => u.id_user == userId);
+          User.currentUser = user;
+          Navigator.of(context).pushReplacement(_createSmoothFadeRoute(
+            BottonNavigation(currentUser: user,)
+          ));
+        } catch (_) {
+          Navigator.of(context).pushReplacement(_createSmoothFadeRoute(const FirstPage()));
+        }
+      } else {
+        Navigator.of(context).pushReplacement(_createSmoothFadeRoute(const FirstPage()));
+      }
     });
   }
 
-  /// 🔹 Route custom: Fade in halus dari tengah
-  Route _createSmoothFadeRoute() {
+  Route _createSmoothFadeRoute(Widget nextPage) {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 1000),
-      pageBuilder: (context, animation, secondaryAnimation) => const FirstPage(),
+      pageBuilder: (context, animation, secondaryAnimation) => nextPage,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(parent: animation, curve: Curves.easeInOut);
         return FadeTransition(
