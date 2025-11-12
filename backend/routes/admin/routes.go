@@ -4,6 +4,7 @@ import (
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
+	"backend/controllers/admin/review"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,11 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
 		adminRoutes.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
 		adminRoutes.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
+
+		//review routes
+		adminRoutes.GET("/review", review.GetAllReview)
+		adminRoutes.GET("/review/:id", review.GetReviewByID)
+		adminRoutes.DELETE("/review/:id", review.DeleteReview)
 
 	}
 }
