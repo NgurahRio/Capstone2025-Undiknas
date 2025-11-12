@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
 	"backend/middleware"
 
@@ -12,13 +13,15 @@ func AdminRoutes(r *gin.Engine) {
 	adminRoutes := r.Group("/admin")
 	adminRoutes.Use(middleware.JWTAuthMiddleware(), middleware.RoleIDAuthorization(2)) // 2 = admin
 	{
-		// GET semua user
+		// user routes
 		adminRoutes.GET("/users", user.GetAllUsers)
-
-		// GET user berdasarkan ID
 		adminRoutes.GET("/users/:id", user.GetUserByID)
-
-		// DELETE user berdasarkan ID
 		adminRoutes.DELETE("/users/:id", user.DeleteUser)
+
+		// SubPackage routes
+		adminRoutes.POST("/subpackage", subpackage.CreateSubpackage)
+		adminRoutes.GET("/subpackage", subpackage.GetAllSubpackages)
+		adminRoutes.GET("/subpackage/:id", subpackage.GetSubpackageByID)
+
 	}
 }
