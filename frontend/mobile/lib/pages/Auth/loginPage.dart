@@ -161,7 +161,7 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         Opacity(
                           opacity: _fadeOut.value,
-                          child: Image.asset('assets/name.png'),
+                          child: Image.asset('assets/name.png', height: 45,),
                         ),
                       ],
                     ),
