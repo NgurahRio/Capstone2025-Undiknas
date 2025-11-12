@@ -1,12 +1,11 @@
 package models
 
 type SubPackage struct {
-	ID          int    `json:"id"`
-	Packagetype string `json:"package_type"`
-	Name        string `json:"name"`
-	Image       []byte `json:"image"`
+	ID          uint   `gorm:"primaryKey;column:id_subpackage" json:"id_subpackage"`
+	Jenis       string `gorm:"column:jenispackage" json:"jenispackage"`
+	Image       []byte `gorm:"column:image" json:"image"`
 }
 
 func (SubPackage) TableName() string {
-	return "sub_package"
+	return "subpackage"
 }

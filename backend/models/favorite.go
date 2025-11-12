@@ -1,11 +1,12 @@
 package models
 
 type Favorite struct {
-	ID            uint `gorm:"primaryKey;column:id_favorites" json:"id_favorites"`
+	ID            uint `gorm:"primaryKey;column:id_bookmark" json:"id_bookmark"`
 	UserID        uint `gorm:"column:userId" json:"userId"`
 	DestinationID uint `gorm:"column:destinationId" json:"destinationId"`
+	EventID       uint `gorm:"column:eventId" json:"eventId"`
 }
 
 func (Favorite) TableName() string {
-	return "favorite"
+	return "bookmark"
 }
