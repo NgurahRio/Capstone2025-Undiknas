@@ -568,10 +568,14 @@ class _DashboardState extends State<Dashboard> {
                         itemBuilder: (context, index) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Image.asset(
-                              imageDiscount[index],
-                              fit: BoxFit.cover,
-                            ),
+                            child: Container(
+                              height: 240,
+                              width: 350,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(image: AssetImage(imageDiscount[0]), fit: BoxFit.cover)
+                              ),
+                            )
                           );
                         }  
                       ),

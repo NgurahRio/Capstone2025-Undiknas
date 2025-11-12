@@ -83,7 +83,7 @@ class _BottonNavigationState extends State<BottonNavigation> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  itemsNavigation(icon: Icons.home, selectedIndex: 0),
+                  itemsNavigation(icon: Icons.home_rounded, selectedIndex: 0),
                   
                   itemsNavigation(icon: Icons.calendar_today_rounded, selectedIndex: 1),
                   

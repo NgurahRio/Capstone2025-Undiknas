@@ -30,6 +30,8 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.POST("/subcategory", subcategory.CreateSubcategory)
 		adminRoutes.GET("/subcategory", subcategory.GetAllSubcategories)
 		adminRoutes.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
+		adminRoutes.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
+		adminRoutes.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
 
 	}
 }

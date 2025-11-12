@@ -74,9 +74,9 @@ class CardItems1 extends StatelessWidget {
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            offset: Offset(0, 1.5),   // arah bayangan (kanan, bawah)
-                            blurRadius: 6,           // seberapa blur bayangannya
-                            color: Colors.black54,   // warna bayangan
+                            offset: Offset(0, 1.5),
+                            blurRadius: 6,
+                            color: Colors.black54,
                           ),
                         ],
                       ),
@@ -96,9 +96,9 @@ class CardItems1 extends StatelessWidget {
                               color: Colors.white,
                               shadows: [
                                 Shadow(
-                                  offset: Offset(0, 1.5),   // arah bayangan (kanan, bawah)
-                                  blurRadius: 6,           // seberapa blur bayangannya
-                                  color: Colors.black54,   // warna bayangan
+                                  offset: Offset(0, 1.5),
+                                  blurRadius: 6,
+                                  color: Colors.black54, 
                                 ),
                               ],
                             ),
@@ -110,7 +110,7 @@ class CardItems1 extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.all(5),
                           child: Container(
-                            width: isBookmark == true ? 72 : 65,
+                            width: isBookmark == true ? 70 : 65,
                             padding: const EdgeInsets.only(left: 6),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),

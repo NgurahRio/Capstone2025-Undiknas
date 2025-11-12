@@ -27,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
           
-                Image.asset('assets/l&n.png',),
+                Image.asset('assets/l&n.png', height: 70,),
           
                 Align(
                   alignment: Alignment.centerLeft,
