@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"backend/controllers/admin/group_package"
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
@@ -32,6 +33,13 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
 		adminRoutes.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
 		adminRoutes.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
+
+		// Package routes
+		adminRoutes.POST("/package", group_package.CreatePackage)
+		adminRoutes.GET("/package", group_package.GetAllPackages)
+		adminRoutes.GET("/package/:id", group_package.GetPackageByID)
+		adminRoutes.PUT("/package/:id", group_package.UpdatePackage)
+		adminRoutes.DELETE("/package/:id", group_package.DeletePackage)
 
 	}
 }
