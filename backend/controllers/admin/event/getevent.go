@@ -1,1 +1,40 @@
 package event
+
+import (
+	"backend/config"
+	"backend/models"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+// ✅ GET semua event
+func GetAllEvents(c *gin.Context) {
+	var events []models.Event
+
+	if err := config.DB.Find(&events).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data event"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil semua event",
+		"data":    events,
+	})
+}
+
+// ✅ GET event by ID
+func GetEventByID(c *gin.Context) {
+	id := c.Param("id")
+	var event models.Event
+
+	if err := config.DB.First(&event, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Event tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil data event",
+		"data":    event,
+	})
+}
