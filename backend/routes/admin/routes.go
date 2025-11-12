@@ -22,6 +22,8 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.POST("/subpackage", subpackage.CreateSubpackage)
 		adminRoutes.GET("/subpackage", subpackage.GetAllSubpackages)
 		adminRoutes.GET("/subpackage/:id", subpackage.GetSubpackageByID)
+		adminRoutes.PUT("/subpackage/:id", subpackage.UpdateSubpackage)
+		adminRoutes.DELETE("/subpackage/:id", subpackage.DeleteSubpackage)
 
 	}
 }
