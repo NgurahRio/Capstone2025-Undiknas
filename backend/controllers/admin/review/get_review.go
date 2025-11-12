@@ -9,7 +9,7 @@ import (
 )
 
 // ✅ GET semua review
-func GetAllReviews(c *gin.Context) {
+func GetAllReview(c *gin.Context) {
 	var reviews []models.Review
 
 	if err := config.DB.Find(&reviews).Error; err != nil {
