@@ -1,10 +1,11 @@
 package routes
 
 import (
+	"backend/controllers/admin/group_package"
+	"backend/controllers/admin/review"
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
-	"backend/controllers/admin/review"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,13 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.GET("/review", review.GetAllReview)
 		adminRoutes.GET("/review/:id", review.GetReviewByID)
 		adminRoutes.DELETE("/review/:id", review.DeleteReview)
+
+		// Package routes
+		adminRoutes.POST("/package", group_package.CreatePackage)
+		adminRoutes.GET("/package", group_package.GetAllPackages)
+		adminRoutes.GET("/package/:id", group_package.GetPackageByID)
+		adminRoutes.PUT("/package/:id", group_package.UpdatePackage)
+		adminRoutes.DELETE("/package/:id", group_package.DeletePackage)
 
 	}
 }
