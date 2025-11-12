@@ -17,5 +17,8 @@ func AdminRoutes(r *gin.Engine) {
 
 		// GET user berdasarkan ID
 		adminRoutes.GET("/users/:id", user.GetUserByID)
+
+		// DELETE user berdasarkan ID
+		adminRoutes.DELETE("/users/:id", user.DeleteUser)
 	}
 }
