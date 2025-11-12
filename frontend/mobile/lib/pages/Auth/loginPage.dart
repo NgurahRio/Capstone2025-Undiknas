@@ -137,7 +137,7 @@ class _LoginPageState extends State<LoginPage>
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              final moveX = (screen.width / 2 - logoSize / 2 - screen.width * 0.16) * _moveX.value;
+              final moveX = (screen.width / 2 - logoSize / 2 - screen.width * 0.15) * _moveX.value;
               final moveY = (screen.height / 2 - logoSize / 2 - screen.height * 0.16) * _moveY.value;
           
               return Padding(

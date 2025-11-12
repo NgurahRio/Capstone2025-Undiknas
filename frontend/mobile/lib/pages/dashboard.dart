@@ -468,6 +468,9 @@ class _DashboardState extends State<Dashboard> {
                               title: "Recommended Your Style",
                               onTap: () {
                                 FocusScope.of(context).unfocus();
+                                setState(() {
+                                  _isSearchActive = false;
+                                });
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
