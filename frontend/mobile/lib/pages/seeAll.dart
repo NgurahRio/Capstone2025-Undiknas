@@ -29,7 +29,6 @@ class _SeeAllPageState extends State<SeeAllPage> {
   final LayerLink _editLink = LayerLink();
   final GlobalKey _editKey = GlobalKey();
   OverlayEntry? _overlayEntry;
-
   bool _isDropdownVisible = false;
 
   void _toggleDropdown() {
@@ -50,14 +49,20 @@ class _SeeAllPageState extends State<SeeAllPage> {
     final overlay = Overlay.of(context);
     final RenderBox renderBox = _editKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    final double dropdownWidth = offset.dx + size.width - 13;
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        width: size.width + 275,
+        left: offset.dx,
+        width: dropdownWidth,
         child: CompositedTransformFollower(
+          targetAnchor: Alignment.topRight,
+          followerAnchor: Alignment.topRight,
           link: _editLink,
           showWhenUnlinked: false,
-          offset: Offset(-275, 34),
+          offset: Offset(0, size.height + 4),
           child: StyleDropdown(
             selectedCategory: widget.selectedCategories,
             selectedSubCategories: widget.selectedSubCategories,
@@ -140,7 +145,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
                       child: Icon(Icons.arrow_back_rounded, size: 20,)
                     ),
                   ),
-
+        
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -153,7 +158,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
                       ),
                     ),
                   ),
-
+        
                   CompositedTransformTarget(
                     link: _editLink,
                     key: _editKey,
@@ -177,7 +182,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
                 ],
               ),
             ),
-
+        
             Padding(
               padding: const EdgeInsets.only(left: 17, right: 17, bottom: 5),
               child: FilterApply(
@@ -210,42 +215,41 @@ class _SeeAllPageState extends State<SeeAllPage> {
                 },
               ),
             ),
-
+        
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: GridView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 0.6835 
-                  ), 
-                  itemCount: filteredDestinations.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredDestinations[index];
-                    final ratDest = averageRatingForDestination(item.id_destination);
-                    return CardItems2(
-                      image: item.imageUrl[0], 
-                      title: item.name, 
-                      subTitle: item.description,
-                      rating: ratDest,
-                      category: item.subCategoryId.categoryId.name,
-                      isDestination: true,
-                      onTap: () {
-                        Navigator.push(
-                          context, 
-                          MaterialPageRoute(builder: (context) => DetailPage(
-                            destination: item, 
-                            event: null,
-                          )),
-                        );
-                      },
-                    );
-                  },
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                  child: Wrap(
+                    spacing: 1,
+                    runSpacing: 1,
+                    children: filteredDestinations.map((item) {
+                      final ratDest = averageRatingForDestination(item.id_destination);
+                      return SizedBox(
+                        width: (MediaQuery.of(context).size.width - 30) / 2,
+                        child: CardItems2(
+                          image: item.imageUrl[0],
+                          title: item.name,
+                          subTitle: item.description,
+                          rating: ratDest,
+                          category: item.subCategoryId.categoryId.name,
+                          isDestination: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailPage(destination: item, event: null),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),

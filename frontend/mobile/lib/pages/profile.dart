@@ -214,7 +214,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 60),
+            padding: const EdgeInsets.only(left: 25, right: 25, top: 60),
             child: user == null
                 ? Column(
                     children: [
@@ -239,114 +239,116 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   )
-                : Column(
-                    children: [
-                      if (isChangePassword)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 15, top: 10),
-                              child: Text(
-                                "Change Password",
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        if (isChangePassword)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 15, top: 10),
+                                child: Text(
+                                  "Change Password",
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 25),
-                              child: Column(
-                                children: [
-                                  _passwordField(
-                                    controller: oldPasswordController,
-                                    title: "Old Password",
-                                    isOldPassword: true,
-                                  ),
-                                  _passwordField(
-                                    controller: newPasswordController,
-                                    title: "New Password",
-                                    isNewPassword: true,
-                                  ),
-                                  _passwordField(
-                                    controller: confNewPasswordController,
-                                    title: "Confirm Password",
-                                    isConfirmPassword: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ButtonCostum(
-                              text: "Confirm Change",
-                              height: 55,
-                              onPressed: _handleChangePassword,
-                            ),
-                          ],
-                        )
-                      else
-                        Column(
-                          children: [
-                            Text(
-                              user.userName,
-                              style: const TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            Text(user.email),
-            
-                            Padding(
-                              padding: const EdgeInsets.only(top: 20, bottom: 40),
-                              child: Column(
-                                children: [
-                                  _buttonEdit(
-                                    icon: Icons.manage_accounts,
-                                    title: "Edit name",
-                                    onTap: () {},
-                                  ),
-                                  _buttonEdit(
-                                    icon: Icons.lock_outline,
-                                    title: "Change password",
-                                    onTap: () {
-                                      setState(() {
-                                        isChangePassword = true;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-            
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                backgroundColor: const Color(0xFFE67777),
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 55),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                              ),
-                              onPressed: _handleLogout,
-                              child: const Wrap(
-                                spacing: 5,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Text(
-                                    "Log Out",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 25),
+                                child: Column(
+                                  children: [
+                                    _passwordField(
+                                      controller: oldPasswordController,
+                                      title: "Old Password",
+                                      isOldPassword: true,
                                     ),
-                                  ),
-                                  Icon(Icons.logout),
-                                ],
+                                    _passwordField(
+                                      controller: newPasswordController,
+                                      title: "New Password",
+                                      isNewPassword: true,
+                                    ),
+                                    _passwordField(
+                                      controller: confNewPasswordController,
+                                      title: "Confirm Password",
+                                      isConfirmPassword: true,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                              ButtonCostum(
+                                text: "Confirm Change",
+                                height: 55,
+                                onPressed: _handleChangePassword,
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              Text(
+                                user.userName,
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              Text(user.email),
+                              
+                              Padding(
+                                padding: const EdgeInsets.only(top: 20, bottom: 40),
+                                child: Column(
+                                  children: [
+                                    _buttonEdit(
+                                      icon: Icons.manage_accounts,
+                                      title: "Edit name",
+                                      onTap: () {},
+                                    ),
+                                    _buttonEdit(
+                                      icon: Icons.lock_outline,
+                                      title: "Change password",
+                                      onTap: () {
+                                        setState(() {
+                                          isChangePassword = true;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE67777),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 55),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                ),
+                                onPressed: _handleLogout,
+                                child: const Wrap(
+                                  spacing: 5,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Log Out",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Icon(Icons.logout),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                ),
           ),
 
           if(isChangePassword)

@@ -133,139 +133,141 @@ class _LoginPageState extends State<LoginPage>
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),
       body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final moveX = (screen.width / 2 - logoSize / 2 - screen.width * 0.16) * _moveX.value;
-            final moveY = (screen.height / 2 - logoSize / 2 - screen.height * 0.16) * _moveY.value;
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 35),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Transform.translate(
-                        offset: Offset(moveX, moveY),
-                        child: Transform.scale(
-                          scale: _scaleUp.value,
-                          child: Image.asset(
-                            'assets/logo.png',
-                            height: logoSize,
-                          ),
-                        ),
-                      ),
-                      Opacity(
-                        opacity: _fadeOut.value,
-                        child: Image.asset('assets/name.png'),
-                      ),
-                    ],
-                  ),
-
-                  Opacity(
-                    opacity: _fadeOut.value,
-                    child: Column(
+        child: SingleChildScrollView(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final moveX = (screen.width / 2 - logoSize / 2 - screen.width * 0.16) * _moveX.value;
+              final moveY = (screen.height / 2 - logoSize / 2 - screen.height * 0.16) * _moveY.value;
+          
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 40, bottom: 15),
-                            child: const Text(
-                              "Log in",
-                              style: TextStyle(
-                                fontSize: 35,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Transform.translate(
+                          offset: Offset(moveX, moveY),
+                          child: Transform.scale(
+                            scale: _scaleUp.value,
+                            child: Image.asset(
+                              'assets/logo.png',
+                              height: logoSize,
                             ),
                           ),
                         ),
-                        FieldTextCustom(
-                          controller: emailController,
-                          labelText: "Email",
+                        Opacity(
+                          opacity: _fadeOut.value,
+                          child: Image.asset('assets/name.png'),
                         ),
-                        FieldTextCustom(
-                          controller: passwordController,
-                          labelText: "Password",
-                          isPassword: true,
-                          obscurePass: true,
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 10),
-                            child: InkWell(
+                      ],
+                    ),
+          
+                    Opacity(
+                      opacity: _fadeOut.value,
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 40, bottom: 15),
                               child: const Text(
-                                "Forgot Password?",
+                                "Log in",
                                 style: TextStyle(
-                                  color: Color(0xFF8AC4FA),
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 35,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ForgetPasswordPage(),
-                                  ),
-                                );
-                              },
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20, bottom: 15),
-                          child: ButtonCostum(
-                            text: "Login",
-                            onPressed: _onLoginPressed,
+                          FieldTextCustom(
+                            controller: emailController,
+                            labelText: "Email",
                           ),
-                        ),
-                        ButtonCostum(
-                          text: "Explore as Guest",
-                          onPressed: () async {
-                            await _controller.forward();
-                            Navigator.pushAndRemoveUntil(
-                              context, 
-                              MaterialPageRoute(builder: (context) => BottonNavigation()), 
-                              (route) => false
-                            );
-                          },
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 40),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text("Don't have a UBX account? "),
-                              InkWell(
+                          FieldTextCustom(
+                            controller: passwordController,
+                            labelText: "Password",
+                            isPassword: true,
+                            obscurePass: true,
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 10),
+                              child: InkWell(
                                 child: const Text(
-                                  "Sign Up",
+                                  "Forgot Password?",
                                   style: TextStyle(
                                     color: Color(0xFF8AC4FA),
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                                 onTap: () {
-                                  Navigator.pushReplacement(
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => RegisterPage(),
+                                      builder: (context) => ForgetPasswordPage(),
                                     ),
                                   );
                                 },
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, bottom: 15),
+                            child: ButtonCostum(
+                              text: "Login",
+                              onPressed: _onLoginPressed,
+                            ),
+                          ),
+                          ButtonCostum(
+                            text: "Explore as Guest",
+                            onPressed: () async {
+                              await _controller.forward();
+                              Navigator.pushAndRemoveUntil(
+                                context, 
+                                MaterialPageRoute(builder: (context) => BottonNavigation()), 
+                                (route) => false
+                              );
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("Don't have a UBX account? "),
+                                InkWell(
+                                  child: const Text(
+                                    "Sign Up",
+                                    style: TextStyle(
+                                      color: Color(0xFF8AC4FA),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RegisterPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

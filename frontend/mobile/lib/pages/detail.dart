@@ -126,6 +126,7 @@ class _DetailPageState extends State<DetailPage> {
     required ValueSetter<OverlayEntry> onSaveOverlay,
     required VoidCallback onVisibleChange,
     required Widget content,
+    bool isSafety = false,
   }) {
     final overlay = Overlay.of(context);
     final RenderBox renderBox = keyButton.currentContext!.findRenderObject() as RenderBox;
@@ -136,9 +137,11 @@ class _DetailPageState extends State<DetailPage> {
       builder: (context) => Positioned(
         left: offset.dx,
         child: CompositedTransformFollower(
+          targetAnchor: isSafety ? Alignment.topRight : Alignment.topLeft,
+          followerAnchor: isSafety ? Alignment.topRight : Alignment.topLeft,
           link: link,
           showWhenUnlinked: false,
-          offset: Offset(0, size.height + 8),
+          offset: Offset(0, size.height + 4),
           child: Material(
             color: Colors.white,
             elevation: 4,
@@ -272,7 +275,7 @@ class _DetailPageState extends State<DetailPage> {
                           print("Rating: $rating");
                           print("Review: ${reviewController.text}");
 
-                          Navigator.pop(context); // Tutup popup
+                          Navigator.pop(context);
                         },
                       )
                     ],
@@ -853,8 +856,10 @@ class _DetailPageState extends State<DetailPage> {
                                               onSaveOverlay: (sos) => _overlaySos = sos,
                                               onVisibleChange: () =>
                                                   setState(() => _isDropdownSos = true),
-                                              content: SizedBox(
-                                                width: 220,
+                                              content: ConstrainedBox(
+                                                constraints: BoxConstraints(
+                                                  maxWidth: 200,
+                                                ),
                                                 child: Column(
                                                   children: destination.sosNearby!.map((sos) {
                                                     return Column(
@@ -894,12 +899,10 @@ class _DetailPageState extends State<DetailPage> {
                                                               fontWeight: FontWeight.w400),
                                                         ),
                                                         Padding(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(vertical: 15),
+                                                          padding:const EdgeInsets.symmetric(vertical: 15),
                                                           child: Row(
                                                             children: [
-                                                              const Icon(Icons.phone,
-                                                                  color: Color(0xFF8AC4FA)),
+                                                              const Icon(Icons.phone,color: Color(0xFF8AC4FA)),
                                                               Text(
                                                                 sos.phone,
                                                                 style: const TextStyle(
@@ -1042,8 +1045,8 @@ class _DetailPageState extends State<DetailPage> {
                                               link: _safetyLink,
                                               keyButton: _safetyKey,
                                               onSaveOverlay: (overlay) => _overlaySafety = overlay,
-                                              onVisibleChange: () =>
-                                                  setState(() => _isDropdownSafety = true),
+                                              onVisibleChange: () =>setState(() => _isDropdownSafety = true),
+                                              isSafety: true,
                                               content: SizedBox(
                                                 width: 180,
                                                 child: Column(

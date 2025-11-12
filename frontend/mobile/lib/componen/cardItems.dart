@@ -28,7 +28,7 @@ class CardItems1 extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 200,
+          width: MediaQuery.of(context).size.width / 2,
           height: 190,
           decoration: BoxDecoration(
             image: DecorationImage(
@@ -179,7 +179,7 @@ class CardItems2 extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 210,
+        width: MediaQuery.of(context).size.width / 2,
         child: Card(
           color: Colors.white,
           elevation: 4,
