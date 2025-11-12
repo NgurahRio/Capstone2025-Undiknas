@@ -37,7 +37,7 @@ class Header extends StatelessWidget {
                         onTap: onTapBack,
                         child: Icon(Icons.arrow_back_ios),
                       )
-                    : Image.asset('assets/l&n.png', scale: 2.3),
+                    : Image.asset('assets/l&n.png', height: 30,),
                   if(title != null && title!.isNotEmpty)
                     Center(
                       child: Text(

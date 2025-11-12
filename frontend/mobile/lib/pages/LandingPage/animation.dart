@@ -17,7 +17,7 @@ class _AnimationFirstState extends State<AnimationFirst>
   bool showOval = true;
   bool showName = false;
   Offset logoOffset = const Offset(0, 0.7);
-  double logoScale = 1.8;
+  double logoScale = 1;
   late AnimationController _revealController;
   late AnimationController _changesPages;
 
@@ -40,7 +40,7 @@ class _AnimationFirstState extends State<AnimationFirst>
       setState(() {
         showLogo = true;
         logoOffset = const Offset(0, -1);
-        logoScale = 1.8;
+        logoScale = 1.2;
       });
     });
 
@@ -48,7 +48,7 @@ class _AnimationFirstState extends State<AnimationFirst>
     Future.delayed(const Duration(milliseconds: 1750), () {
       setState(() {
         logoOffset = const Offset(0, 0);
-        logoScale = 1.4;
+        logoScale = 0.95;
       });
     });
 
@@ -163,7 +163,7 @@ class _AnimationFirstState extends State<AnimationFirst>
                       duration: const Duration(milliseconds: 800),
                       child: Image.asset(
                         'assets/logo.png',
-                        width: 90,
+                        width: 87,
                       ),
                     ),
                   ),
@@ -177,7 +177,7 @@ class _AnimationFirstState extends State<AnimationFirst>
                 builder: (context, child) {
                   final screen = MediaQuery.of(context).size;
                   return Padding(
-                    padding: EdgeInsets.only(left: screen.width * 0.22),
+                    padding: EdgeInsets.only(left: screen.width * 0.215, bottom: 10),
                     child: ShaderMask(
                       shaderCallback: (Rect bounds) {
                         return LinearGradient(
@@ -196,7 +196,7 @@ class _AnimationFirstState extends State<AnimationFirst>
                       blendMode: BlendMode.dstOut,
                       child: Image.asset(
                         'assets/name.png',
-                        scale: 0.8,
+                        height: 65,
                       ),
                     ),
                   );

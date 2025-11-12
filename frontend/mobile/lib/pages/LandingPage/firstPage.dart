@@ -15,7 +15,7 @@ class FirstPage extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 25),
-                child: Image.asset('assets/l&n.png', height: 45),
+                child: Image.asset('assets/l&n.png', height: 30),
               ),
           
               Image.asset('assets/pana.png'),

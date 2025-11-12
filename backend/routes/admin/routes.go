@@ -26,7 +26,10 @@ func AdminRoutes(r *gin.Engine) {
 		adminRoutes.PUT("/subpackage/:id", subpackage.UpdateSubpackage)
 		adminRoutes.DELETE("/subpackage/:id", subpackage.DeleteSubpackage)
 
-		// Subcategory routes
+		// SubCategory routes
+		adminRoutes.POST("/subcategory", subcategory.CreateSubcategory)
+		adminRoutes.GET("/subcategory", subcategory.GetAllSubcategories)
+		adminRoutes.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
 		adminRoutes.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
 		adminRoutes.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
 
