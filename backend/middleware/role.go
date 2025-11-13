@@ -6,37 +6,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RoleIDAuthorization(requiredRole uint) gin.HandlerFunc {
+func RoleOnly(roles ...uint) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		roleIDValue, exists := c.Get("role_id")
+		roleVal, exists := c.Get("role_id")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Role not found in token"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: no role info"})
 			c.Abort()
 			return
 		}
 
-		var roleID uint
+		userRole := roleVal.(uint)
 
-		switch v := roleIDValue.(type) {
-		case float64:
-			roleID = uint(v)
-		case uint:
-			roleID = v
-		case int:
-			roleID = uint(v)
-		default:
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid role type"})
-			c.Abort()
-			return
+		for _, r := range roles {
+			if r == userRole {
+				c.Next()
+				return
+			}
 		}
 
-		if roleID != requiredRole {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied (not admin)"})
-			c.Abort()
-			return
-		}
-
-		c.Next()
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient role"})
+		c.Abort()
 	}
 }
