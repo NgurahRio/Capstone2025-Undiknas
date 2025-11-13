@@ -18,11 +18,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRouter -> router utama backend
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// 🧩 Global Middleware (CORS bawaan Gin)
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -34,9 +32,11 @@ func SetupRouter() *gin.Engine {
 
 	r.POST("/admin/login", auth.LoginAdmin)
 
-	// 🔐 Group route admin dengan proteksi JWT + Role Admin
 	admin := r.Group("/admin")
-	admin.Use(middleware.JWTAuthMiddleware(), middleware.RoleIDAuthorization(2)) // 2 = Admin
+	admin.Use(
+		middleware.JWTAuthMiddleware(),
+		middleware.RoleOnly(2),
+	)
 
 	{
 		// user routes
