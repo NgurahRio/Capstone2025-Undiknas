@@ -6,27 +6,37 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RoleIDAuthorization memeriksa apakah role_id dari token sesuai dengan allowed ID
-func RoleIDAuthorization(allowedIDs ...int) gin.HandlerFunc {
+func RoleIDAuthorization(requiredRole uint) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		roleIDValue, exists := c.Get("role_id")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Role ID tidak ditemukan di token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Role not found in token"})
 			c.Abort()
 			return
 		}
 
-		// JWT claims disimpan sebagai float64, jadi perlu dikonversi
-		roleID := int(roleIDValue.(float64))
+		var roleID uint
 
-		for _, allowed := range allowedIDs {
-			if roleID == allowed {
-				c.Next()
-				return
-			}
+		switch v := roleIDValue.(type) {
+		case float64:
+			roleID = uint(v)
+		case uint:
+			roleID = v
+		case int:
+			roleID = uint(v)
+		default:
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid role type"})
+			c.Abort()
+			return
 		}
 
-		c.JSON(http.StatusForbidden, gin.H{"error": "Akses ditolak, bukan admin"})
-		c.Abort()
+		if roleID != requiredRole {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied (not admin)"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
 	}
 }
