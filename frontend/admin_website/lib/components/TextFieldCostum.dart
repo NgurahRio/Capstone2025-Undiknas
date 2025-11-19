@@ -1,3 +1,4 @@
+import 'package:admin_website/components/CurrencyFormat.dart';
 import 'package:flutter/material.dart';
 
 class TextFieldCostum extends StatefulWidget {
@@ -239,7 +240,7 @@ class _PriceFieldState extends State<PriceField> {
 
       if (clean.isEmpty) return;
 
-      final formatted = _formatRupiah(clean);
+      final formatted = formatRupiah(clean);
 
       if (formatted != text) {
         widget.controller.value = TextEditingValue(
@@ -248,14 +249,6 @@ class _PriceFieldState extends State<PriceField> {
         );
       }
     });
-  }
-
-  String _formatRupiah(String value) {
-    final number = int.tryParse(value) ?? 0;
-    return number.toString().replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (match) => '.',
-    );
   }
 
   @override
