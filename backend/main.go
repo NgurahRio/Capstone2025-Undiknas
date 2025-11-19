@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"backend/config"
+	routes "backend/routes/admin"
+	"fmt"
+)
 
 func main() {
-	fmt.Println("🚀 Course Service berjalan di http://localhost:8081 🚀")
+	config.ConnectDB()
+	r := routes.SetupRouter()
+
+	fmt.Println("🚀 Backend server berjalan di http://localhost:8080 🚀")
+	r.Run(":8080")
+
 }

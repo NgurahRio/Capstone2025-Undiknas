@@ -1,67 +1,103 @@
 package routes
 
 import (
+	"backend/controllers/admin/auth"
 	"backend/controllers/admin/category"
+	"backend/controllers/admin/destination"
 	"backend/controllers/admin/event"
 	"backend/controllers/admin/group_package"
 	"backend/controllers/admin/review"
+	"backend/controllers/admin/sos"
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
 	"backend/middleware"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func AdminRoutes(r *gin.Engine) {
-	// Group route khusus admin
-	adminRoutes := r.Group("/admin")
-	adminRoutes.Use(middleware.JWTAuthMiddleware(), middleware.RoleIDAuthorization(2)) // 2 = admin
+func SetupRouter() *gin.Engine {
+	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	r.POST("/admin/login", auth.LoginAdmin)
+
+	admin := r.Group("/admin")
+	admin.Use(
+		middleware.JWTAuthMiddleware(),
+		middleware.RoleOnly(2),
+	)
+
 	{
 		// user routes
-		adminRoutes.GET("/users", user.GetAllUsers)
-		adminRoutes.GET("/users/:id", user.GetUserByID)
-		adminRoutes.DELETE("/users/:id", user.DeleteUser)
+		admin.GET("/users", user.GetAllUsers)
+		admin.GET("/users/:id", user.GetUserByID)
+		admin.DELETE("/users/:id", user.DeleteUser)
 
 		// SubPackage routes
-		adminRoutes.POST("/subpackage", subpackage.CreateSubpackage)
-		adminRoutes.GET("/subpackage", subpackage.GetAllSubpackages)
-		adminRoutes.GET("/subpackage/:id", subpackage.GetSubpackageByID)
-		adminRoutes.PUT("/subpackage/:id", subpackage.UpdateSubpackage)
-		adminRoutes.DELETE("/subpackage/:id", subpackage.DeleteSubpackage)
+		admin.POST("/subpackage", subpackage.CreateSubpackage)
+		admin.GET("/subpackage", subpackage.GetAllSubpackages)
+		admin.GET("/subpackage/:id", subpackage.GetSubpackageByID)
+		admin.PUT("/subpackage/:id", subpackage.UpdateSubpackage)
+		admin.DELETE("/subpackage/:id", subpackage.DeleteSubpackage)
 
 		// SubCategory routes
-		adminRoutes.POST("/subcategory", subcategory.CreateSubcategory)
-		adminRoutes.GET("/subcategory", subcategory.GetAllSubcategories)
-		adminRoutes.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
-		adminRoutes.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
-		adminRoutes.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
+		admin.POST("/subcategory", subcategory.CreateSubcategory)
+		admin.GET("/subcategory", subcategory.GetAllSubcategories)
+		admin.GET("/subcategory/:id", subcategory.GetSubcategoryByID)
+		admin.PUT("/subcategory/:id", subcategory.UpdateSubcategory)
+		admin.DELETE("/subcategory/:id", subcategory.DeleteSubcategory)
 
 		// Category routes
-		adminRoutes.POST("/category", category.CreateCategory)
-		adminRoutes.GET("/category", category.GetAllCategories)
-		adminRoutes.GET("/category/:id", category.GetCategoryByID)
-		adminRoutes.PUT("/category/:id", category.UpdateCategory)
-		adminRoutes.DELETE("/category/:id", category.DeleteCategory)
+		admin.POST("/category", category.CreateCategory)
+		admin.GET("/category", category.GetAllCategories)
+		admin.GET("/category/:id", category.GetCategoryByID)
+		admin.PUT("/category/:id", category.UpdateCategory)
+		admin.DELETE("/category/:id", category.DeleteCategory)
+
+		// Destination routes
+		admin.POST("/destination", destination.CreateDestination)
+		admin.GET("/destination", destination.GetAllDestinations)
+		admin.GET("/destination/:id", destination.GetDestinationByID)
+		admin.PUT("/destination/:id", destination.UpdateDestination)
+		admin.DELETE("/destination/:id", destination.DeleteDestination)
 
 		//review routes
-		adminRoutes.GET("/review", review.GetAllReview)
-		adminRoutes.GET("/review/:id", review.GetReviewByID)
-		adminRoutes.DELETE("/review/:id", review.DeleteReview)
+		admin.GET("/review", review.GetAllReview)
+		admin.GET("/review/:id", review.GetReviewByID)
+		admin.DELETE("/review/:id", review.DeleteReview)
 
 		// Package routes
-		adminRoutes.POST("/package", group_package.CreatePackage)
-		adminRoutes.GET("/package", group_package.GetAllPackages)
-		adminRoutes.GET("/package/:id", group_package.GetPackageByID)
-		adminRoutes.PUT("/package/:id", group_package.UpdatePackage)
-		adminRoutes.DELETE("/package/:id", group_package.DeletePackage)
+		admin.POST("/package", group_package.CreatePackage)
+		admin.GET("/package", group_package.GetAllPackages)
+		admin.GET("/package/:id", group_package.GetPackageByID)
+		admin.PUT("/package/:id", group_package.UpdatePackage)
+		admin.DELETE("/package/:id", group_package.DeletePackage)
 
 		// Event routes
-		adminRoutes.PUT("/event/:id", event.UpdateEvent)
-		adminRoutes.DELETE("/event/:id", event.DeleteEvent)
-		adminRoutes.POST("/event", event.CreateEvent)
-		adminRoutes.GET("/event", event.GetAllEvents)
-		adminRoutes.GET("/event/:id", event.GetEventByID)
+		admin.POST("/event", event.CreateEvent)
+		admin.GET("/event", event.GetAllEvents)
+		admin.GET("/event/:id", event.GetEventByID)
+		admin.PUT("/event/:id", event.UpdateEvent)
+		admin.DELETE("/event/:id", event.DeleteEvent)
 
+		// SOS routes
+		admin.POST("/sos", sos.CreateSOS)
+		admin.GET("/sos", sos.GetAllSOS)
+		admin.GET("/sos/:id", sos.GetSOSByID)
+		admin.PUT("/sos/:id", sos.UpdateSOS)
+		admin.DELETE("/sos/:id", sos.DeleteSOS)
 	}
+
+	return r
 }
