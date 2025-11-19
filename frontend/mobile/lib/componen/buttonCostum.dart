@@ -4,14 +4,12 @@ class ButtonCostum extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
   final double? height;
-  final bool? isLogout;
 
   const ButtonCostum({
     super.key,
     required this.text,
     required this.onPressed,
     this.height,
-    this.isLogout
   });
 
   @override
