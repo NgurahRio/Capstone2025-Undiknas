@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/CurrencyFormat.dart';
 import 'package:admin_website/components/Table/TabelContent.dart';
 import 'package:admin_website/components/Table/TableHeader.dart';
@@ -7,62 +8,54 @@ import 'package:admin_website/models/package_model.dart';
 import 'package:flutter/material.dart';
 import 'package:admin_website/components/Destination/DetailDestination.dart';
 
-Widget labelContent ({
-  required String text,
-  double? paddingTop,
-}) {
-  return Padding(
-    padding: EdgeInsets.only(bottom: 10, top: paddingTop ?? 20),
-    child: Text(
-      text, 
-      style: TextStyle(
-        fontSize: 16, 
-        fontWeight: FontWeight.w600, 
-        color: Colors.black
-      )
-    ),
-  );
-}
+OverlayEntry? _overlayDest;
+final LayerLink _destLink = LayerLink();
+final GlobalKey _destKey = GlobalKey();
+bool _isDropdownDest = false;
 
-Widget cardContent ({
-  required String title,
-  String? text,
-  Widget? content,
+void _showDestination({
+  required BuildContext context,
+  required int id,
 }) {
-  return Padding(
-    padding: const EdgeInsets.only(top: 10),
-    child: Card(
-      color: Colors.white,
-      shape: ContinuousRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      shadowColor: Colors.black54,
-      elevation: 10,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            labelContent(
-              text: title,
-              paddingTop: 0
-            ),
+  if (_isDropdownDest && _overlayDest != null) {
+    _overlayDest!.remove();
+    _overlayDest = null;
+    _isDropdownDest = false;
+    return;
+  }
 
-            if (content != null)
-              content
-            else
-              Text(
-                text ?? "",
-                style: const TextStyle(
-                  color: Colors.black87,
-                ),
-              ),
-          ],
+  final overlay = Overlay.of(context);
+  final renderBox = _destKey.currentContext!.findRenderObject() as RenderBox;
+  final size = renderBox.size;
+  final offset = renderBox.localToGlobal(Offset.zero);
+
+  final entry = OverlayEntry(
+    builder: (context) => Positioned(
+      left: offset.dx,
+      width: 300,
+      height: 350,
+      child: CompositedTransformFollower(
+        link: _destLink,
+        showWhenUnlinked: false,
+        offset: Offset(size.width, 0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Material(
+            color: Colors.white,
+            elevation: 4,
+            borderRadius: BorderRadius.circular(15),
+            child: DetailDestination(id: id, isSmall: true,),
+          ),
         ),
       ),
     ),
   );
+
+  overlay.insert(entry);
+  _overlayDest = entry;
+  _isDropdownDest = true;
 }
+
 
 void showDetailPackage(
   BuildContext context,
@@ -77,6 +70,8 @@ void showDetailPackage(
     return data.length > 200 || data.startsWith("iVBOR") || data.contains("data:image");
   }
 
+  final imageDest = pac.destinationId.imageUrl[0];
+
   showDialog(
     context: context, 
     barrierDismissible: true,
@@ -87,7 +82,8 @@ void showDetailPackage(
           borderRadius: BorderRadius.circular(18),
         ),
         child: SizedBox(
-          width: 550,
+          key: _destKey,
+          width: MediaQuery.of(context).size.width * 0.45,
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(15),
@@ -120,17 +116,84 @@ void showDetailPackage(
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Stack(
                       children: [
-                        GestureDetector(
-                          onTap: () => showDetailDestination(context, pac.destinationId.id_destination),
-                          child: cardContent(
-                            title: "Destination",
-                            text: pac.destinationId.name
+                        CompositedTransformTarget(
+                          link: _destLink,
+                          child: GestureDetector(
+                            onTap: () {
+                              _showDestination(
+                                context: context, 
+                                id: pac.destinationId.id_destination
+                              );
+                            },
+                            child: SizedBox(
+                              width: 350,
+                              child: CardCostum(
+                                content: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        margin: EdgeInsets.only(right: 10),
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: isBase64(imageDest)
+                                              ? MemoryImage(base64Decode(imageDest)) as ImageProvider
+                                              : NetworkImage(imageDest)
+                                          )
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(bottom: 3),
+                                              child: Text(
+                                                pac.destinationId.name,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 16
+                                                ),
+                                              ),
+                                            ),
+                                        
+                                            Row(
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.only(right: 5),
+                                                  child: Icon(
+                                                    Icons.location_on,
+                                                    color: Colors.red, size: 12
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    pac.destinationId.location,
+                                                    style: TextStyle(
+                                                      color: Colors.black87,
+                                                      fontSize: 11
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ),
+                            ),
                           ),
                         ),
                     
                         Positioned(
-                          top: 7,
-                          right: 0,
+                          top: 3,
+                          right: 3,
                           child: Icon(Icons.ads_click, color: Color(0xFF8AC4Fa),)
                         )
                       ],
@@ -141,7 +204,7 @@ void showDetailPackage(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
-                        TableHeader(title: "Package Type"),
+                        TableHeader(title: "Package dest"),
                         TableHeader(title: "Included"),
                         TableHeader(title: "Price"),             
                       ],
@@ -152,22 +215,22 @@ void showDetailPackage(
 
                   ...pac.subPackage.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final type = entry.value;
+                    final dest = entry.value;
 
-                    final bool isType = index % 2 == 0;
+                    final bool isdest = index % 2 == 0;
 
-                    final includesList = pac.includes[type.id_subPackage] ?? [];
+                    final includesList = pac.includes[dest.id_subPackage] ?? [];
 
-                    final price = pac.getPrice(type.id_subPackage);
+                    final price = pac.getPrice(dest.id_subPackage);
 
                     return Container(
-                      color: isType ? Colors.white : const Color(0xFFEDF6FF),
+                      color: isdest ? Colors.white : const Color(0xFFEDF6FF),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           
                           TableContent(
-                            title: type.name,
+                            title: dest.name,
                           ),
                       
                           TableContent(
@@ -223,5 +286,12 @@ void showDetailPackage(
         ),
       );
     }
-  );
+  ).then((_) {
+    if (_overlayDest != null) {
+      _overlayDest!.remove();
+      _overlayDest = null;
+    }
+
+    _isDropdownDest = false;
+  });
 }
