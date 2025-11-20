@@ -1,4 +1,5 @@
 import 'package:admin_website/components/CurrencyFormat.dart';
+import 'package:admin_website/layout/responsive.dart';
 import 'package:flutter/material.dart';
 
 class TextFieldCostum extends StatefulWidget {
@@ -55,7 +56,7 @@ class _TextFieldCostumState extends State<TextFieldCostum> {
           filled: true,
           fillColor: Colors.transparent,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(5),
             borderSide: const BorderSide(
@@ -173,10 +174,22 @@ class SearchFieldCostum extends StatefulWidget {
 }
 
 class _SearchFieldCostumState extends State<SearchFieldCostum> {
+
   @override
   Widget build(BuildContext context) {
+
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+    final isDesktop = Responsive.isDesktop(context);
+
+    final double width = isDesktop
+      ? 300 
+      : isTablet
+        ? 250
+        : MediaQuery.of(context).size.width * 0.45;
+    
     return SizedBox(
-      width: 300,
+      width: width,
       child: TextField(
         controller: widget.controller,
         style: const TextStyle(

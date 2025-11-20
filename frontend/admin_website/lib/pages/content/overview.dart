@@ -1,5 +1,6 @@
 import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/HeaderCostum.dart';
+import 'package:admin_website/layout/responsive.dart';
 import 'package:admin_website/models/category_model.dart';
 import 'package:admin_website/models/destination_model.dart';
 import 'package:admin_website/models/event_model.dart';
@@ -54,11 +55,11 @@ class _OverviewPageState extends State<OverviewPage> {
                   child: GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: Responsive.isDesktop(context) ? 2 : 1,
                       mainAxisSpacing: 10,
                       crossAxisSpacing: 30,
-                      childAspectRatio: 5,
+                      mainAxisExtent: 100
                     ), 
                     itemCount: overviewItems.length,
                     itemBuilder: (context, index) {
@@ -70,12 +71,15 @@ class _OverviewPageState extends State<OverviewPage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("${item["title"]}"),
-                  
+                            Text(
+                              "${item["title"]}",
+                              style: TextStyle(fontSize: Responsive.text(context, 16)),
+                            ),
+
                             Text(
                               "${item["value"]}",
-                              style: const TextStyle(fontSize: 40),
-                            )
+                              style: TextStyle(fontSize: Responsive.text(context, 40)),
+                            ),
                           ],
                         ),
                       );

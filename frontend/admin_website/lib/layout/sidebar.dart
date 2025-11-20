@@ -1,3 +1,4 @@
+import 'package:admin_website/layout/responsive.dart';
 import 'package:admin_website/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,103 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   bool hoverLogout = false;
+
+  bool isOpenSidebar = false;
+
+  Widget sidebarContent () {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      child: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 20, bottom: 10),
+            child: Text(
+              textAlign: TextAlign.center,
+              "Travora Manager",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 30),
+              child: Column(
+                children: [
+                  _listTileCostum(
+                    title: "Overview", 
+                    route: '/'
+                  ),
+                  _listTileCostum(
+                    title: "Destinations", 
+                    route: '/destination'
+                  ),
+                  _listTileCostum(
+                    title: "Events",
+                    route: '/event'
+                    ),
+                  _listTileCostum(
+                    title: "Packages", 
+                    route: '/package'
+                  ),
+                  _listTileCostum(
+                    title: "Categories", 
+                    route: '/category'
+                  ),
+                  _listTileCostum(
+                    title: "Reviews", 
+                    route: '/review'
+                  ),
+                  _listTileCostum(
+                    title: "Users", 
+                    route: '/user'
+                  ),
+                  _listTileCostum(
+                    title: "SOS", 
+                    route: '/sos'
+                  ),
+                  _listTileCostum(
+                    title: "Facilities", 
+                    route: '/facility'
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => _handleLogout(),
+                onHover: (value) {
+                  setState(() => hoverLogout = value);
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  backgroundColor: hoverLogout
+                      ? const Color(0xFFE06666)
+                      : const Color(0xFFFF8484),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                child: const Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  children: [
+                    Text("Logout", style: TextStyle(fontSize: 13)),
+                    Icon(Icons.logout, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   void _handleLogout() {
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -43,119 +141,100 @@ class _SidebarState extends State<Sidebar> {
 
   @override
   Widget build(BuildContext context) {
+
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+    final isDesktop = Responsive.isDesktop(context);
+
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          Container(
-            margin: const EdgeInsets.only(right: 2),
-            width: 200,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.25),
-                  blurRadius: 2,
-                  offset: const Offset(2, 0),
+          Row(
+            children: [
+              if(isDesktop || isTablet) ...[
+                Container(
+                  margin: const EdgeInsets.only(right: 2),
+                  width: isTablet ? 180 : 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.25),
+                        blurRadius: 2,
+                        offset: const Offset(2, 0),
+                      ),
+                    ],
+                  ),
+                  child: sidebarContent(),
                 ),
               ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 20, bottom: 10),
-                    child: Text(
-                      textAlign: TextAlign.center,
-                      "Travora Admin",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Column(
-                        children: [
-                          _listTileCostum(
-                            title: "Overview", 
-                            route: '/'
-                          ),
-                          _listTileCostum(
-                            title: "Destinations", 
-                            route: '/destination'
-                          ),
-                          _listTileCostum(
-                            title: "Events",
-                            route: '/event'
-                            ),
-                          _listTileCostum(
-                            title: "Packages", 
-                            route: '/package'
-                          ),
-                          _listTileCostum(
-                            title: "Categories", 
-                            route: '/category'
-                          ),
-                          _listTileCostum(
-                            title: "Reviews", 
-                            route: '/review'
-                          ),
-                          _listTileCostum(
-                            title: "Users", 
-                            route: '/user'
-                          ),
-                          _listTileCostum(
-                            title: "SOS", 
-                            route: '/sos'
-                          ),
-                          _listTileCostum(
-                            title: "Facilities", 
-                            route: '/facility'
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => _handleLogout(),
-                        onHover: (value) {
-                          setState(() => hoverLogout = value);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          backgroundColor: hoverLogout
-                              ? const Color(0xFFE06666)
-                              : const Color(0xFFFF8484),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                        child: const Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 6,
-                          children: [
-                            Text("Logout", style: TextStyle(fontSize: 13)),
-                            Icon(Icons.logout, size: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
+          
+              Expanded(
+                child: widget.content,
+              )
+            ],
+          ),
+          if (isMobile && isOpenSidebar) ...[
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => isOpenSidebar = false);
+                },
+                child: Container(
+                  color: Colors.black.withOpacity(0.4),
+                ),
               ),
             ),
-          ),
 
-          Expanded(
-            child: widget.content,
-          )
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 250),
+                width: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: Offset(3, 0),
+                    )
+                  ],
+                ),
+                child: sidebarContent(),
+              ),
+            )
+          ],
+
+          if(isMobile)
+            Positioned(
+              top: 10,
+              left: isOpenSidebar ? 200 + 10 : 10,
+              child: GestureDetector(
+                onTap:() {
+                  setState(() {
+                    isOpenSidebar = !isOpenSidebar;
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black38,
+                        offset: Offset(2, 2),
+                        blurRadius: 4
+                      )
+                    ]
+                  ),
+                  child: Icon(Icons.menu, color: Colors.black,),
+                ),
+              )
+            )
         ],
       ),
     );

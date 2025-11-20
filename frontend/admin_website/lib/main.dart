@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:admin_website/routes/router.dart';
 import 'package:admin_website/services/auth_service.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';

@@ -27,7 +27,7 @@ class _ButtonCostumState extends State<ButtonCostum> {
       onPressed: widget.onPressed,
       onHover: (value) => setState(() => hover = value),
       style: TextButton.styleFrom(
-        minimumSize: Size(widget.width ?? 150, 47),
+        minimumSize: Size(widget.width ?? 150, 43),
         backgroundColor: hover
             ? const Color(0xFF6BB5F7)
             : const Color(0xFF8AC4FA),
@@ -77,7 +77,7 @@ class _ButtonCostum2State extends State<ButtonCostum2> {
       onPressed: widget.onPressed,
       onHover: (value) => setState(() => hover = value),
       style: TextButton.styleFrom(
-        minimumSize: Size(double.infinity, 45),
+        minimumSize: Size(double.infinity, 43),
         backgroundColor: hover
             ? const Color(0xFF6BB5F7)
             : const Color(0xFF8AC4FA),
@@ -126,7 +126,7 @@ class _ButtonCostum3State extends State<ButtonCostum3> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: hover ? const Color(0xFFB8B8B8) : Colors.white,
             borderRadius: BorderRadius.circular(5),

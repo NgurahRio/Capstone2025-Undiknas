@@ -1,5 +1,6 @@
 import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/TextFieldCostum.dart';
+import 'package:admin_website/layout/responsive.dart';
 import 'package:admin_website/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,9 +23,13 @@ class _HeaderCostumState extends State<HeaderCostum> {
 
     final auth = Provider.of<AuthService>(context, listen: false);
 
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+    final isDesktop = Responsive.isDesktop(context);
+
     return CardCostum(
       content: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -32,7 +37,8 @@ class _HeaderCostumState extends State<HeaderCostum> {
               spacing: 30,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                const Text("Dashboard"),
+                if(isDesktop)
+                  Text("Dashboard"),
         
                 SearchFieldCostum(
                   controller: widget.controller, 
@@ -45,25 +51,26 @@ class _HeaderCostumState extends State<HeaderCostum> {
               spacing: 5,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
-                  "${auth.loggedUser?.userName} | Travora Manager"
+                Text(isDesktop
+                  ? "${auth.loggedUser?.userName} | Travora Manager"
+                  : "${auth.loggedUser?.userName}"
                 ),
         
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(
-                      color: Colors.black54,
-                      width: 1
-                    )
-                  ),
-                  child: Icon(
-                    Icons.person_outline, 
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
                     color: Colors.black54,
-                    size: 30,
-                  ),
-                )
+                    width: 1
+                  )
+                ),
+                child: Icon(
+                  Icons.person_outline, 
+                  color: Colors.black54,
+                  size: 30,
+                ),
+              )
               ],
             )
           ],

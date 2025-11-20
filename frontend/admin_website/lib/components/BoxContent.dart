@@ -174,7 +174,7 @@ class _BoxImageContentState extends State<BoxImageContent> {
     return Expanded(
       child: Container(
         padding: widget.images.isEmpty 
-          ? EdgeInsets.symmetric(horizontal: 15, vertical: 10)
+          ? EdgeInsets.symmetric(horizontal: 15, vertical: 7)
           : EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: Colors.white,

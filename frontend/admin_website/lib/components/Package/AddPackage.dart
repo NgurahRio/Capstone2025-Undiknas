@@ -374,7 +374,7 @@ class _AddPackageState extends State<AddPackage> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black54, width: 0.5),
                       borderRadius: BorderRadius.circular(5),
@@ -390,7 +390,11 @@ class _AddPackageState extends State<AddPackage> {
                             fontSize: 13,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down),
+                        Icon(
+                          _isDropdownDestination
+                          ? Icons.arrow_drop_up
+                          : Icons.arrow_drop_down
+                        ),
                       ],
                     ),
                   ),
@@ -463,7 +467,7 @@ class _AddPackageState extends State<AddPackage> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black54, width: 0.5),
                       borderRadius: BorderRadius.circular(5),
@@ -481,7 +485,11 @@ class _AddPackageState extends State<AddPackage> {
                             fontSize: 13,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down),
+                        Icon(
+                          _isDropdownType
+                          ? Icons.arrow_drop_up
+                          : Icons.arrow_drop_down
+                        ),
                       ],
                     ),
                   ),
@@ -506,8 +514,8 @@ class _AddPackageState extends State<AddPackage> {
                             Row(
                               children: [
                                 Container(
-                                  height: 40,
-                                  width: 40,
+                                  height: 35,
+                                  width: 35,
                                   decoration: BoxDecoration(
                                     border: Border.all(color: Colors.black54, width: 0.5),
                                     borderRadius: BorderRadius.circular(5),

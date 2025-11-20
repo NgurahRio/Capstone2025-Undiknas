@@ -369,7 +369,7 @@ class _AddDestinationState extends State<AddDestination> {
                   children: categories.map((cat) {
                     return Container(
                       width: 130,
-                      height: 40,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: Colors.black54, width: 0.5),
@@ -423,7 +423,7 @@ class _AddDestinationState extends State<AddDestination> {
                         final isSubSelected = selectedSubCategories.contains(sub.id_subCategory);
                         return Container(
                           width: 130,
-                          height: 40,
+                          height: 35,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: Colors.black54, width: 0.5),
@@ -485,7 +485,7 @@ class _AddDestinationState extends State<AddDestination> {
                 children: facilities.map((fac) {
                   return IntrinsicWidth(
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: Colors.black54, width: 0.5),
@@ -752,7 +752,7 @@ class _AddDestinationState extends State<AddDestination> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black54, width: 0.5),
                       borderRadius: BorderRadius.circular(5),
@@ -770,7 +770,11 @@ class _AddDestinationState extends State<AddDestination> {
                             fontSize: 13,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down),
+                        Icon(
+                          _isDropdownSOS 
+                          ? Icons.arrow_drop_up
+                          : Icons.arrow_drop_down
+                        ),
                       ],
                     ),
                   ),
