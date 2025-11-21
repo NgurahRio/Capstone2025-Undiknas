@@ -22,9 +22,6 @@ class _HeaderCostumState extends State<HeaderCostum> {
   Widget build(BuildContext context) {
 
     final auth = Provider.of<AuthService>(context, listen: false);
-
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
     final isDesktop = Responsive.isDesktop(context);
 
     return CardCostum(
