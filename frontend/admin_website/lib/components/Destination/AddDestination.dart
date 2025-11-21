@@ -102,7 +102,7 @@ class _AddDestinationState extends State<AddDestination> {
 
       selectedFasility = d.facilities?.map((f) => f.id_facility).toList() ?? [];
 
-      selectedCategories = d.subCategoryId.map((cat) => cat.categoryId.id_category).toList();
+      selectedCategories = d.subCategoryId.map((cat) => cat.categoryId.id_category).toSet().toList();
       selectedSubCategories = d.subCategoryId.map((subc) => subc.id_subCategory).toList();
 
       selectedSOS = d.sos?.isNotEmpty == true ? d.sos!.first : null;
