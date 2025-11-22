@@ -11,6 +11,7 @@ import (
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
+	"backend/controllers/admin/facility"
 	"backend/middleware"
 	"time"
 
@@ -97,6 +98,13 @@ func SetupRouter() *gin.Engine {
 		admin.GET("/sos/:id", sos.GetSOSByID)
 		admin.PUT("/sos/:id", sos.UpdateSOS)
 		admin.DELETE("/sos/:id", sos.DeleteSOS)
+
+		// Facility routes
+		admin.DELETE("/facility/:id", facility.DeleteFacility)
+		admin.PUT("/facility/:id", facility.UpdateFacility)
+		admin.POST("/facility", facility.CreateFacility)
+		admin.GET("/facility/destination/:destinationId", facility.GetFacilityByDestination)
+	
 	}
 
 	return r
