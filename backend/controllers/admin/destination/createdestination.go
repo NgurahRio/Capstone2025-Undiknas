@@ -18,7 +18,6 @@ func CreateDestination(c *gin.Context) {
 		Description   string `json:"description"`
 		ImageURL      []byte `json:"image_url"`
 		FileType      string `json:"file_type"`
-		Fasilitas     string `json:"fasilitas"`
 		Do            string `json:"do"`
 		Dont          string `json:"dont"`
 		Safety        string `json:"safety"`
@@ -38,7 +37,6 @@ func CreateDestination(c *gin.Context) {
 		Description:   input.Description,
 		ImageURL:      input.ImageURL,
 		FileType:      input.FileType,
-		Fasilitas:     input.Fasilitas,
 		Do:            input.Do,
 		Dont:          input.Dont,
 		Safety:        input.Safety,
