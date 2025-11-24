@@ -83,7 +83,7 @@ void showDetailPackage(
         ),
         child: SizedBox(
           key: _destKey,
-          width: MediaQuery.of(context).size.width * 0.45,
+          width: 500,
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(15),
