@@ -60,9 +60,6 @@ func UpdateDestination(c *gin.Context) {
 	if input.FileType != "" {
 		destination.FileType = input.FileType
 	}
-	if input.Fasilitas != "" {
-		destination.Fasilitas = input.Fasilitas
-	}
 	if input.Do != "" {
 		destination.Do = input.Do
 	}
