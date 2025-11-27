@@ -14,6 +14,8 @@ type Event struct {
 	Do            string  `gorm:"column:do" json:"do"`
 	Dont          string  `gorm:"column:dont" json:"dont"`
 	Safety        string  `gorm:"column:safety" json:"safety"`
+	Longitude     float64 `gorm:"column:longitude" json:"longitude"`
+	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
 }
 
 func (Event) TableName() string {
