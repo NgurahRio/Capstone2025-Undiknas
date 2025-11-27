@@ -6,7 +6,6 @@ type Package struct {
 	SubPackageID  uint    `gorm:"column:subPackageId;not null" json:"subPackageId"`
 	Price         float64 `gorm:"column:price" json:"price"`
 	Include       string  `gorm:"column:include" json:"include"`
-	NotInclude    string  `gorm:"column:notinclude" json:"notinclude"`
 }
 
 func (Package) TableName() string {
