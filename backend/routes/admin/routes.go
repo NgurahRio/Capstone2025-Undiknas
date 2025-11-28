@@ -5,13 +5,13 @@ import (
 	"backend/controllers/admin/category"
 	"backend/controllers/admin/destination"
 	"backend/controllers/admin/event"
+	"backend/controllers/admin/facility"
 	"backend/controllers/admin/group_package"
 	"backend/controllers/admin/review"
 	"backend/controllers/admin/sos"
 	"backend/controllers/admin/subcategory"
 	"backend/controllers/admin/subpackage"
 	"backend/controllers/admin/user"
-	"backend/controllers/admin/facility"
 	"backend/middleware"
 	"time"
 
@@ -103,8 +103,9 @@ func SetupRouter() *gin.Engine {
 		admin.DELETE("/facility/:id", facility.DeleteFacility)
 		admin.PUT("/facility/:id", facility.UpdateFacility)
 		admin.POST("/facility", facility.CreateFacility)
-		admin.GET("/facility/destination/:destinationId", facility.GetFacilityByDestination)
-	
+		admin.GET("/facility", facility.GetAllFacility)
+		admin.GET("/facility/:id", facility.GetFacilityByID)
+
 	}
 
 	return r
