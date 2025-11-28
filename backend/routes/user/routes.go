@@ -2,6 +2,7 @@ package routes
 
 import (
 	"backend/controllers/user/auth"
+	userfav "backend/controllers/user/favorite"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,11 @@ func SetupUserRoutes(r *gin.Engine) {
 
     // Public login
     r.POST("/user/login", auth.LoginUser)
+
+    // Favorites (requires auth)
+    r.POST("/user/favorite", middleware.JWTAuthMiddleware(), userfav.AddFavorite)
+    r.GET("/user/favorite", middleware.JWTAuthMiddleware(), userfav.GetUserFavorites)
+    r.DELETE("/user/favorite/:destinationId", middleware.JWTAuthMiddleware(), userfav.DeleteFavorite)
 
     // Logout requires a valid (non-blacklisted) token
     r.POST("/user/logout", middleware.JWTAuthMiddleware(), auth.LogoutUser)
