@@ -8,12 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET /admin/package → get all packages
 func GetAllPackages(c *gin.Context) {
 	var packages []models.Package
 
 	if err := config.DB.Find(&packages).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data package"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal mengambil data package",
+		})
 		return
 	}
 
@@ -23,13 +24,14 @@ func GetAllPackages(c *gin.Context) {
 	})
 }
 
-// GET /admin/package/:id → get package by ID
 func GetPackageByID(c *gin.Context) {
 	id := c.Param("id")
 	var pkg models.Package
 
-	if err := config.DB.First(&pkg, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Package tidak ditemukan"})
+	if err := config.DB.First(&pkg, "id_package = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Package tidak ditemukan",
+		})
 		return
 	}
 
