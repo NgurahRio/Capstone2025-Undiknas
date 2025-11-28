@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ GET semua event
 func GetAllEvents(c *gin.Context) {
 	var events []models.Event
 
@@ -23,12 +22,11 @@ func GetAllEvents(c *gin.Context) {
 	})
 }
 
-// ✅ GET event by ID
 func GetEventByID(c *gin.Context) {
 	id := c.Param("id")
 	var event models.Event
 
-	if err := config.DB.First(&event, id).Error; err != nil {
+	if err := config.DB.First(&event, "id_event = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Event tidak ditemukan"})
 		return
 	}
