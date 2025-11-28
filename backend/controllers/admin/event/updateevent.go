@@ -3,61 +3,103 @@ package event
 import (
 	"backend/config"
 	"backend/models"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ UPDATE event
 func UpdateEvent(c *gin.Context) {
 	id := c.Param("id")
+
 	var event models.Event
-
-	if err := config.DB.First(&event, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Event tidak ditemukan"})
+	if err := config.DB.First(&event, "id_event = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Event tidak ditemukan",
+		})
 		return
 	}
 
-	var input struct {
-		DestinationID int     `json:"destinationId"`
-		NameEvent     string  `json:"nameevent"`
-		StartDate     string  `json:"start_date"`
-		EndDate       string  `json:"end_date"`
-		Description   string  `json:"description"`
-		StartTime     string  `json:"start_time"`
-		EndTime       string  `json:"end_time"`
-		Price         float64 `json:"price"`
-		Maps          string  `json:"maps"`
-		Do            string  `json:"do"`
-		Dont          string  `json:"dont"`
-		Safety        string  `json:"safety"`
+	updated := gin.H{}
+
+	if destStr := c.PostForm("destinationId"); destStr != "" {
+		if destInt, err := strconv.Atoi(destStr); err == nil && destInt >= 0 {
+			tmp := uint(destInt)
+			event.DestinationID = &tmp
+			updated["destinationId"] = destInt
+		}
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	stringFields := map[string]*string{
+		"nameevent":   &event.Name,
+		"start_date":  &event.StartDate,
+		"end_date":    &event.EndDate,
+		"description": &event.Description,
+		"start_time":  &event.StartTime,
+		"end_time":    &event.EndTime,
+		"maps":        &event.Maps,
+		"do":          &event.Do,
+		"dont":        &event.Dont,
+		"safety":      &event.Safety,
+	}
+
+	for key, field := range stringFields {
+		if val := c.PostForm(key); val != "" {
+			*field = val
+			updated[key] = val
+		}
+	}
+
+	if priceStr := c.PostForm("price"); priceStr != "" {
+		if price, err := strconv.ParseFloat(priceStr, 64); err == nil {
+			event.Price = price
+			updated["price"] = price
+		}
+	}
+
+	if lonStr := c.PostForm("longitude"); lonStr != "" {
+		if lon, err := strconv.ParseFloat(lonStr, 64); err == nil {
+			event.Longitude = lon
+			updated["longitude"] = lon
+		}
+	}
+
+	if latStr := c.PostForm("latitude"); latStr != "" {
+		if lat, err := strconv.ParseFloat(latStr, 64); err == nil {
+			event.Latitude = lat
+			updated["latitude"] = lat
+		}
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		f, _ := file.Open()
+		defer f.Close()
+
+		imgBytes, _ := io.ReadAll(f)
+		event.Image = imgBytes
+
+		updated["image"] = "uploaded"
+	}
+
+	if len(updated) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Tidak ada perubahan",
+			"data":    gin.H{},
+		})
 		return
 	}
 
-	if err := config.DB.Model(&event).Updates(models.Event{
-		DestinationID: uint(input.DestinationID),
-		Name:          input.NameEvent,
-		StartDate:     input.StartDate,
-		EndDate:       input.EndDate,
-		Description:   input.Description,
-		StartTime:     input.StartTime,
-		EndTime:       input.EndTime,
-		Price:         input.Price,
-		Maps:          input.Maps,
-		Do:            input.Do,
-		Dont:          input.Dont,
-		Safety:        input.Safety,
-	}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui event"})
+	if err := config.DB.Save(&event).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal memperbarui event",
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Event berhasil diperbarui",
-		"data":    event,
+		"data":    updated,
 	})
 }
