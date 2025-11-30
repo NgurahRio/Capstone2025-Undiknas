@@ -2,28 +2,35 @@ package routes
 
 import (
 	"backend/controllers/user/auth"
+	"backend/controllers/user/destination"
 	userfav "backend/controllers/user/favorite"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-// SetupUserRoutes registers user-related routes on the provided engine.
 func SetupUserRoutes(r *gin.Engine) {
-    // Public registration
-    r.POST("/user/register", auth.RegisterUser)
 
-    // Public login
-    r.POST("/user/login", auth.LoginUser)
+	r.POST("/user/register", auth.RegisterUser)
+	r.POST("/user/login", auth.LoginUser)
 
-    // Favorites (requires auth)
-    r.POST("/user/favorite", middleware.JWTAuthMiddleware(), userfav.AddFavorite)
-    r.GET("/user/favorite", middleware.JWTAuthMiddleware(), userfav.GetUserFavorites)
-    r.DELETE("/user/favorite/:destinationId", middleware.JWTAuthMiddleware(), userfav.DeleteFavorite)
+	user := r.Group("/user",
+		middleware.JWTAuthMiddleware(),
+		middleware.RoleOnly(1),
+	)
 
-    // Profile
-    r.PUT("/user/profile", middleware.JWTAuthMiddleware(), auth.UpdateProfile)
+	// Favorites
+	user.POST("/favorite", userfav.AddFavorite)
+	user.GET("/favorite", userfav.GetUserFavorites)
+	user.DELETE("/favorite/:destinationId", userfav.DeleteFavorite)
 
-    // Logout requires a valid (non-blacklisted) token
-    r.POST("/user/logout", middleware.JWTAuthMiddleware(), auth.LogoutUser)
+	// Profile
+	user.PUT("/profile", auth.UpdateProfile)
+
+	// Logout
+	user.POST("/logout", auth.LogoutUser)
+
+	// Destinations
+	user.GET("/destinations", destination.GetAllDestinationsUser)
+	user.GET("/destinations/:id", destination.GetDestinationByIDUser)
 }
