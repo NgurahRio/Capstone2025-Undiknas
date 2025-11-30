@@ -2,10 +2,12 @@ package routes
 
 import (
 	"backend/controllers/user/auth"
+	"backend/controllers/user/category"
 	"backend/controllers/user/destination"
 	"backend/controllers/user/event"
 	userfav "backend/controllers/user/favorite"
 	"backend/controllers/user/review"
+	"backend/controllers/user/subcategory"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -45,4 +47,12 @@ func SetupUserRoutes(r *gin.Engine) {
 	// Events
 	user.GET("/events", event.GetAllEventsUser)
 	user.GET("/events/:id", event.GetEventByIDUser)
+
+	// Categories
+	user.GET("/categories", category.GetAllCategoriesUser)
+	user.GET("/categories/:id", category.GetCategoryByIDUser)
+
+	// Subcategories
+	user.GET("/subcategories", subcategory.GetAllSubcategoriesUser)
+	user.GET("/subcategories/:id", subcategory.GetSubcategoryByIDUser)
 }
