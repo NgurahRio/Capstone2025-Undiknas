@@ -4,6 +4,7 @@ import (
 	"backend/controllers/user/auth"
 	"backend/controllers/user/destination"
 	userfav "backend/controllers/user/favorite"
+	"backend/controllers/user/review"
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -33,4 +34,10 @@ func SetupUserRoutes(r *gin.Engine) {
 	// Destinations
 	user.GET("/destinations", destination.GetAllDestinationsUser)
 	user.GET("/destinations/:id", destination.GetDestinationByIDUser)
+
+	// Reviews
+	user.POST("/review", review.AddReview)
+	user.GET("/review", review.GetReviews)
+	user.PUT("/review/:id", review.UpdateReview)
+	user.DELETE("/review/:id", review.DeleteReview)
 }
