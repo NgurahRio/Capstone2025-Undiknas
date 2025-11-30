@@ -3,6 +3,7 @@ package routes
 import (
 	"backend/controllers/user/auth"
 	"backend/controllers/user/destination"
+	"backend/controllers/user/event"
 	userfav "backend/controllers/user/favorite"
 	"backend/controllers/user/review"
 	"backend/middleware"
@@ -40,4 +41,8 @@ func SetupUserRoutes(r *gin.Engine) {
 	user.GET("/review", review.GetReviews)
 	user.PUT("/review/:id", review.UpdateReview)
 	user.DELETE("/review/:id", review.DeleteReview)
+
+	// Events
+	user.GET("/events", event.GetAllEventsUser)
+	user.GET("/events/:id", event.GetEventByIDUser)
 }
