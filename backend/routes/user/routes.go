@@ -21,6 +21,9 @@ func SetupUserRoutes(r *gin.Engine) {
     r.GET("/user/favorite", middleware.JWTAuthMiddleware(), userfav.GetUserFavorites)
     r.DELETE("/user/favorite/:destinationId", middleware.JWTAuthMiddleware(), userfav.DeleteFavorite)
 
+    // Profile
+    r.PUT("/user/profile", middleware.JWTAuthMiddleware(), auth.UpdateProfile)
+
     // Logout requires a valid (non-blacklisted) token
     r.POST("/user/logout", middleware.JWTAuthMiddleware(), auth.LogoutUser)
 }
