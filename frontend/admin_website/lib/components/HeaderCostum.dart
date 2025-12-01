@@ -7,10 +7,12 @@ import 'package:provider/provider.dart';
 
 class HeaderCostum extends StatefulWidget {
   final TextEditingController controller;
+  final bool isSearch;
 
   const HeaderCostum({
     required this.controller,
     super.key,
+    this.isSearch = true,
   });
 
   @override
@@ -36,11 +38,12 @@ class _HeaderCostumState extends State<HeaderCostum> {
               children: [
                 if(isDesktop)
                   Text("Dashboard"),
-        
-                SearchFieldCostum(
-                  controller: widget.controller, 
-                  hintText: "search"
-                )
+
+                if(widget.isSearch)
+                  SearchFieldCostum(
+                    controller: widget.controller, 
+                    hintText: "search"
+                  )
               ],
             ),
         

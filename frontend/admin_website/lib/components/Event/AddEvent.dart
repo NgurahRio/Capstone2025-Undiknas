@@ -337,7 +337,7 @@ class _AddEventState extends State<AddEvent> {
                 ],
               ),
 
-              fieldLabel(text: "Destination Name"),
+              fieldLabel(text: "Event Name"),
 
               TextFieldCostum(
                 controller: eventName, 
