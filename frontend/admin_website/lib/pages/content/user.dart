@@ -96,7 +96,6 @@ class _UserPageState extends State<UserPage> {
                             TableHeader(title: "Name"),
                             TableHeader(title: "Email"),
                             TableHeader(title: "Role"),
-                            TableHeader(title: "Status"),
                           ],
                         ),
                       ),
@@ -110,7 +109,7 @@ class _UserPageState extends State<UserPage> {
                         final bool isEven = index % 2 == 0;
 
                         return Container(
-                          color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
+                          color: isEven ? Colors.white : const Color(0xFFEDF6FF),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
@@ -118,7 +117,6 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email),
                                 TableContent(title: user.roleid.role_name),
-                                TableContent(title: "Active", isStatus: true,),
                               ],
                             ),
                           ),
@@ -146,7 +144,6 @@ class _UserPageState extends State<UserPage> {
                             TableHeader(title: "Name"),
                             TableHeader(title: "Email", flex: 2,),
                             TableHeader(title: "Role"),
-                            TableHeader(title: "Status"),
                             TableHeader(title: "Action"),             
                           ],
                         ),
@@ -161,7 +158,7 @@ class _UserPageState extends State<UserPage> {
                         final bool isEven = index % 2 == 0;
 
                         return Container(
-                          color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
+                          color: isEven ? Colors.white : const Color(0xFFEDF6FF),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
@@ -169,7 +166,6 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email, flex: 2,),
                                 TableContent(title: user.roleid.role_name),
-                                TableContent(title: "Active", isStatus: true,),
 
                                 Expanded(
                                   flex: 1,
