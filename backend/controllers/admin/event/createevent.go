@@ -3,50 +3,108 @@ package event
 import (
 	"backend/config"
 	"backend/models"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ CREATE event
 func CreateEvent(c *gin.Context) {
-	var input struct {
-		DestinationID int     `json:"destinationId" binding:"required"`
-		NameEvent     string  `json:"nameevent" binding:"required"`
-		StartDate     string  `json:"start_date"`
-		EndDate       string  `json:"end_date"`
-		Description   string  `json:"description"`
-		StartTime     string  `json:"start_time"`
-		EndTime       string  `json:"end_time"`
-		Price         float64 `json:"price"`
-		Maps          string  `json:"maps"`
-		Do            string  `json:"do"`
-		Dont          string  `json:"dont"`
-		Safety        string  `json:"safety"`
-	}
+	destinationIDStr := c.PostForm("destinationId")
+	nameEvent := c.PostForm("nameevent")
+	startDate := c.PostForm("start_date")
+	endDate := c.PostForm("end_date")
+	description := c.PostForm("description")
+	startTime := c.PostForm("start_time")
+	endTime := c.PostForm("end_time")
+	priceStr := c.PostForm("price")
+	maps := c.PostForm("maps")
+	doField := c.PostForm("do")
+	dontField := c.PostForm("dont")
+	safety := c.PostForm("safety")
+	longitudeStr := c.PostForm("longitude")
+	latitudeStr := c.PostForm("latitude")
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if nameEvent == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "nameevent wajib diisi",
+		})
 		return
 	}
 
+	var destIDPointer *uint = nil
+	if destinationIDStr != "" {
+		dID, convErr := strconv.Atoi(destinationIDStr)
+		if convErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "destinationId harus angka",
+			})
+			return
+		}
+
+		tmp := uint(dID)
+		destIDPointer = &tmp
+	}
+
+	var price float64 = 0
+	if priceStr != "" {
+		price, _ = strconv.ParseFloat(priceStr, 64)
+	}
+
+	var longitude float64 = 0
+	if longitudeStr != "" {
+		longitude, _ = strconv.ParseFloat(longitudeStr, 64)
+	}
+
+	var latitude float64 = 0
+	if latitudeStr != "" {
+		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
+	}
+
+	file, err := c.FormFile("image")
+	var imageBytes []byte
+
+	if err == nil {
+		openedFile, openErr := file.Open()
+		if openErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file"})
+			return
+		}
+		defer openedFile.Close()
+
+		imageBytes, err = io.ReadAll(openedFile)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file"})
+			return
+		}
+	}
+
 	event := models.Event{
-		DestinationID: uint(input.DestinationID),
-		Name:          input.NameEvent,
-		StartDate:     input.StartDate,
-		EndDate:       input.EndDate,
-		Description:   input.Description,
-		StartTime:     input.StartTime,
-		EndTime:       input.EndTime,
-		Price:         input.Price,
-		Maps:          input.Maps,
-		Do:            input.Do,
-		Dont:          input.Dont,
-		Safety:        input.Safety,
+		Name:        nameEvent,
+		StartDate:   startDate,
+		EndDate:     endDate,
+		Description: description,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Price:       price,
+		Maps:        maps,
+		Do:          doField,
+		Dont:        dontField,
+		Safety:      safety,
+		Longitude:   longitude,
+		Latitude:    latitude,
+		Image:       imageBytes,
+	}
+
+	if destIDPointer != nil {
+		event.DestinationID = destIDPointer
 	}
 
 	if err := config.DB.Create(&event).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan event"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal menambahkan event",
+		})
 		return
 	}
 

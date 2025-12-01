@@ -14,6 +14,19 @@ type TokenPayload struct {
 	RoleID uint
 }
 
+// Simple in-memory blacklist. For production, replace with Redis or persistent store.
+var tokenBlacklist = make(map[string]bool)
+
+// BlacklistToken adds a token to the blacklist.
+func BlacklistToken(token string) {
+	tokenBlacklist[token] = true
+}
+
+// IsTokenBlacklisted checks if a token is blacklisted.
+func IsTokenBlacklisted(token string) bool {
+	return tokenBlacklist[token]
+}
+
 func GenerateToken(userID uint, roleID uint) (string, error) {
 
 	claims := jwt.MapClaims{

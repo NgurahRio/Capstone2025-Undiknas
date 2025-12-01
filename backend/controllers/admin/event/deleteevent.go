@@ -8,18 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ DELETE event
 func DeleteEvent(c *gin.Context) {
 	id := c.Param("id")
 	var event models.Event
 
-	if err := config.DB.First(&event, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Event tidak ditemukan"})
+	if err := config.DB.First(&event, "id_event = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Event tidak ditemukan",
+		})
 		return
 	}
 
 	if err := config.DB.Delete(&event).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus event"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal menghapus event",
+		})
 		return
 	}
 

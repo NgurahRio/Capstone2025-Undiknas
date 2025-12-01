@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllEvents(c *gin.Context) {
+func GetAllEventsUser(c *gin.Context) {
 	var events []models.Event
 
 	if err := config.DB.Find(&events).Error; err != nil {
@@ -22,7 +22,7 @@ func GetAllEvents(c *gin.Context) {
 	})
 }
 
-func GetEventByID(c *gin.Context) {
+func GetEventByIDUser(c *gin.Context) {
 	id := c.Param("id")
 	var event models.Event
 

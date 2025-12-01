@@ -24,6 +24,14 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenStr := strings.TrimPrefix(auth, "Bearer ")
+
+		// Cek apakah token sudah di-blacklist
+		if IsTokenBlacklisted(tokenStr) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token telah di-blacklist"})
+			c.Abort()
+			return
+		}
+
 		payload, err := ValidateToken(tokenStr)
 
 		if err != nil {

@@ -8,25 +8,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DELETE /admin/package/:id → delete package by ID
 func DeletePackage(c *gin.Context) {
 	id := c.Param("id")
 	var pkg models.Package
 
-	// Check if package exists
-	if err := config.DB.First(&pkg, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Package tidak ditemukan"})
+	if err := config.DB.First(&pkg, "id_package = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Package tidak ditemukan",
+		})
 		return
 	}
 
-	// Delete the package
 	if err := config.DB.Delete(&pkg).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus package"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal menghapus package",
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Berhasil menghapus package",
-		"data":    pkg,
+		"message": "Package berhasil dihapus",
 	})
 }

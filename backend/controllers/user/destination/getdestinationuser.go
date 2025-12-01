@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllDestinations(c *gin.Context) {
+func GetAllDestinationsUser(c *gin.Context) {
 	var destinations []models.Destination
 
 	if err := config.DB.Find(&destinations).Error; err != nil {
@@ -103,7 +103,7 @@ func GetAllDestinations(c *gin.Context) {
 	})
 }
 
-func GetDestinationByID(c *gin.Context) {
+func GetDestinationByIDUser(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination

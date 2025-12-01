@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ GET semua subpackage
 func GetAllSubpackages(c *gin.Context) {
 	var subpackages []models.SubPackage
 
@@ -23,13 +22,14 @@ func GetAllSubpackages(c *gin.Context) {
 	})
 }
 
-// ✅ GET subpackage by ID
 func GetSubpackageByID(c *gin.Context) {
 	id := c.Param("id")
 	var subpackage models.SubPackage
 
-	if err := config.DB.First(&subpackage, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subpackage tidak ditemukan"})
+	if err := config.DB.First(&subpackage, "id_subpackage = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "ID Subpackage tidak ditemukan",
+		})
 		return
 	}
 

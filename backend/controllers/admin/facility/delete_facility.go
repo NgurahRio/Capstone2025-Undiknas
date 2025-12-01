@@ -1,20 +1,33 @@
 package facility
 
 import (
-    "backend/config"
-    "backend/models"
-    "net/http"
+	"backend/config"
+	"backend/models"
+	"net/http"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func DeleteFacility(c *gin.Context) {
-    id := c.Param("id")
+	id := c.Param("id")
 
-    if err := config.DB.Delete(&models.Facility{}, "id_facility = ?", id).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	var facility models.Facility
 
-    c.JSON(http.StatusOK, gin.H{"message": "Facility deleted successfully"})
+	if err := config.DB.First(&facility, "id_facility = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Fasilitas tidak ditemukan",
+		})
+		return
+	}
+
+	if err := config.DB.Delete(&facility).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal menghapus fasilitas",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Fasilitas berhasil dihapus",
+	})
 }

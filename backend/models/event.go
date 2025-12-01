@@ -2,7 +2,7 @@ package models
 
 type Event struct {
 	ID            uint    `gorm:"primaryKey;column:id_event" json:"id_event"`
-	DestinationID uint    `gorm:"column:destinationId" json:"destinationId"`
+	DestinationID *uint   `gorm:"column:destinationId" json:"destinationId"`
 	Name          string  `gorm:"column:nameevent;not null" json:"nameevent"`
 	StartDate     string  `gorm:"column:start_date" json:"start_date"`
 	EndDate       string  `gorm:"column:end_date" json:"end_date"`
@@ -14,6 +14,9 @@ type Event struct {
 	Do            string  `gorm:"column:do" json:"do"`
 	Dont          string  `gorm:"column:dont" json:"dont"`
 	Safety        string  `gorm:"column:safety" json:"safety"`
+	Longitude     float64 `gorm:"column:longitude" json:"longitude"`
+	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
+	Image         []byte  `gorm:"column:image" json:"image"`
 }
 
 func (Event) TableName() string {
