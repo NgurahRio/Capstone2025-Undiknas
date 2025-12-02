@@ -10,10 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ======================================================
-// GET ALL PACKAGES
-// GET /packages
-// ======================================================
 func GetAllPackages(c *gin.Context) {
 	var pkgs []models.Packages
 
@@ -24,13 +20,62 @@ func GetAllPackages(c *gin.Context) {
 		return
 	}
 
-	// Parse SubPackageData ke JSON map
 	result := []gin.H{}
 
+	type subPackageDetail struct {
+		Price       float64 `json:"price"`
+		Image       string  `json:"image"`
+		Packagetype string  `json:"packagetype,omitempty"`
+	}
+
+	subIDs := map[uint]struct{}{}
+
 	for _, pkg := range pkgs {
-		var subData map[string]interface{}
+		subData := map[string]subPackageDetail{}
 		if pkg.SubPackageData != "" {
 			json.Unmarshal([]byte(pkg.SubPackageData), &subData)
+		}
+
+		for subIDStr := range subData {
+			if subIDUint, err := strconv.Atoi(subIDStr); err == nil {
+				subIDs[uint(subIDUint)] = struct{}{}
+			}
+		}
+	}
+
+	subTypeByID := map[string]string{}
+	if len(subIDs) > 0 {
+		ids := make([]uint, 0, len(subIDs))
+		for id := range subIDs {
+			ids = append(ids, id)
+		}
+
+		var subs []models.SubPackage
+		if err := config.DB.Where("id_subpackage IN ?", ids).Find(&subs).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal mengambil data subpackage",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, sub := range subs {
+			subTypeByID[strconv.Itoa(int(sub.ID))] = sub.Packagetype
+		}
+	}
+
+	for _, pkg := range pkgs {
+		subData := map[string]subPackageDetail{}
+		if pkg.SubPackageData != "" {
+			json.Unmarshal([]byte(pkg.SubPackageData), &subData)
+		}
+
+		for subID := range subData {
+			if packType, ok := subTypeByID[subID]; ok {
+				detail := subData[subID]
+				detail.Packagetype = packType
+				subData[subID] = detail
+			}
 		}
 
 		result = append(result, gin.H{
@@ -46,10 +91,6 @@ func GetAllPackages(c *gin.Context) {
 	})
 }
 
-// ======================================================
-// GET PACKAGE BY DESTINATION ID
-// GET /packages/:destinationId
-// ======================================================
 func GetPackageByDestinationID(c *gin.Context) {
 	destIDStr := c.Param("destinationId")
 	if destIDStr == "" {
@@ -63,24 +104,22 @@ func GetPackageByDestinationID(c *gin.Context) {
 		return
 	}
 
-	// Pastikan destination ada
 	var dest models.Destination
 	if err := config.DB.First(&dest, "id_destination = ?", destID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "destinationId tidak ditemukan di database"})
 		return
 	}
 
-	// Ambil packages
 	var pkg models.Packages
 	if err := config.DB.First(&pkg, "destinationId = ?", destID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Package untuk destinationId ini belum ada"})
 		return
 	}
 
-	// Parse subPackageData
 	type subPackageDetail struct {
-		Price float64 `json:"price"`
-		Image string  `json:"image"`
+		Price       float64 `json:"price"`
+		Image       string  `json:"image"`
+		Packagetype string  `json:"packagetype,omitempty"`
 	}
 
 	subData := map[string]subPackageDetail{}
@@ -91,6 +130,32 @@ func GetPackageByDestinationID(c *gin.Context) {
 				"error":   err.Error(),
 			})
 			return
+		}
+	}
+
+	subIDs := []uint{}
+	for subIDStr := range subData {
+		if subIDUint, err := strconv.Atoi(subIDStr); err == nil {
+			subIDs = append(subIDs, uint(subIDUint))
+		}
+	}
+
+	if len(subIDs) > 0 {
+		var subs []models.SubPackage
+		if err := config.DB.Where("id_subpackage IN ?", subIDs).Find(&subs).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal mengambil data subpackage",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, sub := range subs {
+			key := strconv.Itoa(int(sub.ID))
+			if detail, ok := subData[key]; ok {
+				detail.Packagetype = sub.Packagetype
+				subData[key] = detail
+			}
 		}
 	}
 
