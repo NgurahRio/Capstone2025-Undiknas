@@ -15,9 +15,6 @@ import (
 
 func CreatePackages(c *gin.Context) {
 
-	// ============================
-	// VALIDASI destinationId
-	// ============================
 	destIDStr := c.PostForm("destinationId")
 	if destIDStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "destinationId wajib diisi"})
@@ -29,19 +26,15 @@ func CreatePackages(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "destinationId harus berupa angka"})
 		return
 	}
-
-	// Cek apakah destination ada
 	var destCheck models.Destination
 	if err := config.DB.First(&destCheck, "id_destination = ?", destID).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "destinationId tidak ditemukan di database"})
 		return
 	}
 
-	// ============================
-	// Ambil array dari Form-Data (TANPA [])
-	// ============================
 	subIDs := c.PostFormArray("subPackageId")
 	prices := c.PostFormArray("price")
+	includeNames := c.PostFormArray("includeName")
 
 	form, formErr := c.MultipartForm()
 	if formErr != nil {
@@ -51,16 +44,10 @@ func CreatePackages(c *gin.Context) {
 
 	files := form.File["image"]
 
-	// ============================
-	// DEBUG (PENTING!!)
-	// ============================
 	fmt.Println("DEBUG SUB IDS  :", subIDs)
 	fmt.Println("DEBUG PRICES  :", prices)
 	fmt.Println("DEBUG IMAGES  :", len(files))
 
-	// ============================
-	// Validasi jumlah array
-	// ============================
 	if len(subIDs) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "subPackageId wajib diisi"})
 		return
@@ -88,20 +75,14 @@ func CreatePackages(c *gin.Context) {
 		return
 	}
 
-	// ============================
-	// Ambil data existing dari DB
-	// ============================
 	var pkg models.Packages
 	findErr := config.DB.First(&pkg, "destinationId = ?", destID).Error
 
-	existingJSON := map[string]interface{}{}
+	existingJSON := map[string]subPackageDetail{}
 	if findErr == nil && pkg.SubPackageData != "" {
-		json.Unmarshal([]byte(pkg.SubPackageData), &existingJSON)
+		existingJSON = normalizeSubPackageData(pkg.SubPackageData)
 	}
 
-	// ============================
-	// LOOP SUBPACKAGES
-	// ============================
 	for i := range subIDs {
 
 		subID := subIDs[i]
@@ -122,7 +103,6 @@ func CreatePackages(c *gin.Context) {
 			return
 		}
 
-		// Cek subpackage ada
 		var subCheck models.SubPackage
 		if err := config.DB.First(&subCheck, "id_subpackage = ?", subIDInt).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -132,7 +112,6 @@ func CreatePackages(c *gin.Context) {
 			return
 		}
 
-		// Harga
 		priceVal, priceErr := strconv.ParseFloat(prices[i], 64)
 		if priceErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -142,7 +121,6 @@ func CreatePackages(c *gin.Context) {
 			return
 		}
 
-		// File image
 		file := files[i]
 		opened, openErr := file.Open()
 		if openErr != nil {
@@ -159,16 +137,29 @@ func CreatePackages(c *gin.Context) {
 
 		base64Img := base64.StdEncoding.EncodeToString(imgBytes)
 
-		// Simpan ke JSON MAP
-		existingJSON[subID] = map[string]interface{}{
-			"price": priceVal,
-			"image": base64Img,
+		detail, exist := existingJSON[subID]
+		if !exist {
+			detail = subPackageDetail{
+				Price:   priceVal,
+				Include: []subPackageInclude{},
+			}
+		} else {
+			detail.Price = priceVal
 		}
+
+		nameVal := subCheck.Packagetype
+		if len(includeNames) > i && includeNames[i] != "" {
+			nameVal = includeNames[i]
+		}
+
+		detail.Include = append(detail.Include, subPackageInclude{
+			Image: base64Img,
+			Name:  nameVal,
+		})
+
+		existingJSON[subID] = detail
 	}
 
-	// ============================
-	// SAVE KE DATABASE
-	// ============================
 	jsonBytes, _ := json.MarshalIndent(existingJSON, "", "  ")
 
 	if findErr != nil {
