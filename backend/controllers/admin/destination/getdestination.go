@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	"backend/models"
 	"backend/utils"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,9 +12,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllDestinations(c *gin.Context) {
-	var destinations []models.Destination
+type destinationImages struct {
+	Image string `json:"image"`
+}
 
+func GetAllDestinations(c *gin.Context) {
+
+	var destinations []models.Destination
 	if err := config.DB.Find(&destinations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil data destinasi",
@@ -24,7 +29,9 @@ func GetAllDestinations(c *gin.Context) {
 	var response []gin.H
 
 	for _, d := range destinations {
-		imageBase64 := utils.ToBase64(d.ImageURL, d.FileType)
+
+		var images []destinationImages
+		_ = json.Unmarshal([]byte(d.Imagedata), &images)
 
 		var subcategories []models.Subcategory
 		var subResp []gin.H
@@ -32,7 +39,6 @@ func GetAllDestinations(c *gin.Context) {
 		if d.SubcategoryID != "" {
 			rawSubs := strings.Split(d.SubcategoryID, ",")
 			intIDs := []int{}
-
 			for _, idStr := range rawSubs {
 				if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
 					intIDs = append(intIDs, n)
@@ -56,7 +62,6 @@ func GetAllDestinations(c *gin.Context) {
 		if d.FacilityID != "" {
 			rawIDs := strings.Split(d.FacilityID, ",")
 			intIDs := []int{}
-
 			for _, idStr := range rawIDs {
 				if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
 					intIDs = append(intIDs, n)
@@ -69,31 +74,27 @@ func GetAllDestinations(c *gin.Context) {
 				facilityResp = append(facilityResp, gin.H{
 					"id_facility":  f.IDFacility,
 					"namefacility": f.NameFacility,
-					"icon":         utils.ToBase64(f.Icon, f.FileType),
-					"file_type":    f.FileType,
+					"icon":         utils.ToBase64(f.Icon),
 				})
 			}
 		}
 
 		response = append(response, gin.H{
-			"destination": gin.H{
-				"id_destination":  d.ID,
-				"subcategoryId":   d.SubcategoryID, 
-				"subcategory":     subResp,         
-				"namedestination": d.Name,
-				"location":        d.Location,
-				"description":     d.Description,
-				"image_url":       imageBase64,
-				"file_type":       d.FileType,
-				"do":              d.Do,
-				"dont":            d.Dont,
-				"safety":          d.Safety,
-				"maps":            d.Maps,
-				"longitude":       d.Longitude,
-				"latitude":        d.Latitude,
-				"facilityId":      d.FacilityID,
-			},
-			"facilities": facilityResp,
+			"id_destination":  d.ID,
+			"subcategoryId":   d.SubcategoryID,
+			"subcategory":     subResp,
+			"namedestination": d.Name,
+			"location":        d.Location,
+			"description":     d.Description,
+			"images":          images,
+			"do":              d.Do,
+			"dont":            d.Dont,
+			"safety":          d.Safety,
+			"maps":            d.Maps,
+			"longitude":       d.Longitude,
+			"latitude":        d.Latitude,
+			"facilityId":      d.FacilityID,
+			"facilities":      facilityResp,
 		})
 	}
 
@@ -103,17 +104,20 @@ func GetAllDestinations(c *gin.Context) {
 	})
 }
 
+
 func GetDestinationByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination
-
 	if err := config.DB.First(&d, "id_destination = ?", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Destinasi tidak ditemukan"})
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Destinasi tidak ditemukan",
+		})
 		return
 	}
 
-	imageBase64 := utils.ToBase64(d.ImageURL, d.FileType)
+	var images []destinationImages
+	_ = json.Unmarshal([]byte(d.Imagedata), &images)
 
 	var subcategories []models.Subcategory
 	var subResp []gin.H
@@ -121,7 +125,6 @@ func GetDestinationByID(c *gin.Context) {
 	if d.SubcategoryID != "" {
 		rawSubs := strings.Split(d.SubcategoryID, ",")
 		intIDs := []int{}
-
 		for _, idStr := range rawSubs {
 			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
 				intIDs = append(intIDs, n)
@@ -145,7 +148,6 @@ func GetDestinationByID(c *gin.Context) {
 	if d.FacilityID != "" {
 		rawIDs := strings.Split(d.FacilityID, ",")
 		intIDs := []int{}
-
 		for _, idStr := range rawIDs {
 			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
 				intIDs = append(intIDs, n)
@@ -158,8 +160,7 @@ func GetDestinationByID(c *gin.Context) {
 			facilityResp = append(facilityResp, gin.H{
 				"id_facility":  f.IDFacility,
 				"namefacility": f.NameFacility,
-				"icon":         utils.ToBase64(f.Icon, f.FileType),
-				"file_type":    f.FileType,
+				"icon":         utils.ToBase64(f.Icon),
 			})
 		}
 	}
@@ -167,24 +168,21 @@ func GetDestinationByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil data destinasi",
 		"data": gin.H{
-			"destination": gin.H{
-				"id_destination":  d.ID,
-				"subcategoryId":   d.SubcategoryID,
-				"subcategory":     subResp,
-				"namedestination": d.Name,
-				"location":        d.Location,
-				"description":     d.Description,
-				"image_url":       imageBase64,
-				"file_type":       d.FileType,
-				"do":              d.Do,
-				"dont":            d.Dont,
-				"safety":          d.Safety,
-				"maps":            d.Maps,
-				"longitude":       d.Longitude,
-				"latitude":        d.Latitude,
-				"facilityId":      d.FacilityID,
-			},
-			"facilities": facilityResp,
+			"id_destination":  d.ID,
+			"subcategoryId":   d.SubcategoryID,
+			"subcategory":     subResp,
+			"namedestination": d.Name,
+			"location":        d.Location,
+			"description":     d.Description,
+			"images":          images,
+			"do":              d.Do,
+			"dont":            d.Dont,
+			"safety":          d.Safety,
+			"maps":            d.Maps,
+			"longitude":       d.Longitude,
+			"latitude":        d.Latitude,
+			"facilityId":      d.FacilityID,
+			"facilities":      facilityResp,
 		},
 	})
 }
