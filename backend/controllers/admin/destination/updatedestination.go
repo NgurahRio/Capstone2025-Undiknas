@@ -4,15 +4,19 @@ import (
 	"backend/config"
 	"backend/models"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
+
+type DestinationImage struct {
+	Image string `json:"image"`
+}
 
 func UpdateDestination(c *gin.Context) {
 	id := c.Param("id")
@@ -25,16 +29,16 @@ func UpdateDestination(c *gin.Context) {
 	}
 
 	changed := make(map[string]interface{})
+	imageChanged := false 
 
 	if v := c.PostForm("subcategoryId"); v != "" {
 
-		subcategoryIDs := strings.Split(v, ",")
-
-		for _, idStr := range subcategoryIDs {
+		rawIDs := strings.Split(v, ",")
+		for _, idStr := range rawIDs {
 			idInt, _ := strconv.Atoi(strings.TrimSpace(idStr))
 
 			var s models.Subcategory
-			if err := config.DB.First(&s, "id_subcategory = ?", idInt).Error; err != nil {
+			if err := config.DB.First(&s, "id_subcategories = ?", idInt).Error; err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"message": fmt.Sprintf("Subcategory ID %d tidak ditemukan", idInt),
 				})
@@ -46,40 +50,20 @@ func UpdateDestination(c *gin.Context) {
 		changed["subcategoryId"] = v
 	}
 
-	if v := c.PostForm("namedestination"); v != "" {
-		destination.Name = v
-		changed["namedestination"] = v
+	updateField := func(field *string, key string) {
+		if v := c.PostForm(key); v != "" {
+			*field = v
+			changed[key] = v
+		}
 	}
 
-	if v := c.PostForm("location"); v != "" {
-		destination.Location = v
-		changed["location"] = v
-	}
-
-	if v := c.PostForm("description"); v != "" {
-		destination.Description = v
-		changed["description"] = v
-	}
-
-	if v := c.PostForm("do"); v != "" {
-		destination.Do = v
-		changed["do"] = v
-	}
-
-	if v := c.PostForm("dont"); v != "" {
-		destination.Dont = v
-		changed["dont"] = v
-	}
-
-	if v := c.PostForm("safety"); v != "" {
-		destination.Safety = v
-		changed["safety"] = v
-	}
-
-	if v := c.PostForm("maps"); v != "" {
-		destination.Maps = v
-		changed["maps"] = v
-	}
+	updateField(&destination.Name, "namedestination")
+	updateField(&destination.Location, "location")
+	updateField(&destination.Description, "description")
+	updateField(&destination.Do, "do")
+	updateField(&destination.Dont, "dont")
+	updateField(&destination.Safety, "safety")
+	updateField(&destination.Maps, "maps")
 
 	if v := c.PostForm("sosId"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -104,9 +88,8 @@ func UpdateDestination(c *gin.Context) {
 
 	if v := c.PostForm("facilityId"); v != "" {
 
-		facilityIDs := strings.Split(v, ",")
-
-		for _, idStr := range facilityIDs {
+		rawIDs := strings.Split(v, ",")
+		for _, idStr := range rawIDs {
 			idInt, _ := strconv.Atoi(strings.TrimSpace(idStr))
 
 			var f models.Facility
@@ -122,18 +105,46 @@ func UpdateDestination(c *gin.Context) {
 		changed["facilityId"] = v
 	}
 
-	file, err := c.FormFile("image")
-	if err == nil {
-		opened, _ := file.Open()
-		defer opened.Close()
+	form, formErr := c.MultipartForm()
+	if formErr == nil {
 
-		rawBytes, _ := io.ReadAll(opened)
-		base64Str := base64.StdEncoding.EncodeToString(rawBytes)
+		var oldImages []DestinationImage
+		_ = json.Unmarshal([]byte(destination.Imagedata), &oldImages)
 
-		destination.ImageURL = []byte(base64Str)
-		destination.FileType = strings.TrimPrefix(strings.ToLower(filepath.Ext(file.Filename)), ".")
+		for key, files := range form.File {
 
-		changed["image"] = "updated"
+			if strings.HasPrefix(key, "image[") && strings.HasSuffix(key, "]") {
+
+				indexStr := key[6 : len(key)-1]
+				index, err := strconv.Atoi(indexStr)
+				if err != nil {
+					continue
+				}
+
+				if index < len(oldImages) {
+
+					file := files[0]
+					openFile, _ := file.Open()
+					rawBytes, _ := io.ReadAll(openFile)
+					openFile.Close()
+
+					newBase64 := base64.StdEncoding.EncodeToString(rawBytes)
+
+
+					if newBase64 != oldImages[index].Image {
+						oldImages[index].Image = newBase64
+						changed[key] = "replaced"
+						imageChanged = true
+					}
+				}
+			}
+		}
+
+		if imageChanged {
+			jsonBytes, _ := json.Marshal(oldImages)
+			destination.Imagedata = string(jsonBytes)
+			changed["images"] = "indexed image updated"
+		}
 	}
 
 	if err := config.DB.Save(&destination).Error; err != nil {
@@ -149,7 +160,7 @@ func UpdateDestination(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Berhasil diubah",
+		"message": "Berhasil diperbarui",
 		"changed": changed,
 	})
 }
