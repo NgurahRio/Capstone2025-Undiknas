@@ -6,8 +6,7 @@ type Destination struct {
 	Name          string  `gorm:"column:namedestination" json:"namedestination"`
 	Location      string  `gorm:"column:location" json:"location"`
 	Description   string  `gorm:"column:description" json:"description"`
-	ImageURL      []byte  `gorm:"column:image_url" json:"image_url"`
-	FileType      string  `gorm:"column:file_type" json:"file_type"`
+	Imagedata     string  `gorm:"column:imagedata" json:"imagedata"`
 	Do            string  `gorm:"column:do" json:"do"`
 	Dont          string  `gorm:"column:dont" json:"dont"`
 	Safety        string  `gorm:"column:safety" json:"safety"`
