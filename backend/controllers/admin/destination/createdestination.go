@@ -5,10 +5,10 @@ import (
 	"backend/models"
 	"backend/utils"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +16,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type destinationImage struct {
+	Image string `json:"image"`
+}
+
 func CreateDestination(c *gin.Context) {
+
 	rawSubcategory := c.PostForm("subcategoryId")
 	if rawSubcategory == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "subcategoryId wajib diisi (contoh: 1,4,7)"})
@@ -66,32 +71,59 @@ func CreateDestination(c *gin.Context) {
 		}
 	}
 
-	var imageBytes []byte
-	var fileType string
-
-	file, err := c.FormFile("image")
-	if err == nil {
-		opened, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Tidak bisa membuka file gambar"})
-			return
-		}
-		defer opened.Close()
-
-		rawBytes, _ := io.ReadAll(opened)
-		base64Str := base64.StdEncoding.EncodeToString(rawBytes)
-		imageBytes = []byte(base64Str)
-
-		fileType = strings.TrimPrefix(strings.ToLower(filepath.Ext(file.Filename)), ".")
+	form, formErr := c.MultipartForm()
+	if formErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Form-data tidak valid"})
+		return
 	}
+
+	var images []destinationImage
+
+	for key, files := range form.File {
+		if strings.HasPrefix(key, "image[") && strings.HasSuffix(key, "]") {
+
+			file := files[0]
+
+			openFile, err := file.Open()
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"message": "Gagal membuka file pada key: " + key,
+				})
+				return
+			}
+
+			rawBytes, readErr := io.ReadAll(openFile)
+			openFile.Close()
+			if readErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"message": "Gagal membaca file pada key: " + key,
+				})
+				return
+			}
+
+			base64Str := base64.StdEncoding.EncodeToString(rawBytes)
+
+			images = append(images, destinationImage{
+				Image: base64Str,
+			})
+		}
+	}
+
+	if len(images) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Minimal 1 image wajib diupload (gunakan image[0], image[1], ...)"})
+		return
+	}
+
+
+	jsonBytes, _ := json.Marshal(images)
+	nowStr := time.Now().Format("2006-01-02 15:04:05")
 
 	destination := models.Destination{
 		SubcategoryID: rawSubcategory,
 		Name:          name,
 		Location:      location,
 		Description:   description,
-		ImageURL:      imageBytes,
-		FileType:      fileType,
+		Imagedata:     string(jsonBytes),
 		Do:            do,
 		Dont:          dont,
 		Safety:        safety,
@@ -100,8 +132,8 @@ func CreateDestination(c *gin.Context) {
 		FacilityID:    rawFacility,
 		Longitude:     longitude,
 		Latitude:      latitude,
-		CreatedAt:     time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt:     time.Now().Format("2006-01-02 15:04:05"),
+		CreatedAt:     nowStr,
+		UpdatedAt:     nowStr,
 	}
 
 	if err := config.DB.Create(&destination).Error; err != nil {
@@ -115,16 +147,13 @@ func CreateDestination(c *gin.Context) {
 	var subcategories []models.Subcategory
 	var subResp []gin.H
 
-	rawSubs := strings.Split(destination.SubcategoryID, ",")
-	subIDs := []int{}
-
-	for _, idStr := range rawSubs {
-		if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
-			subIDs = append(subIDs, n)
-		}
+	var subIDsInt []int
+	for _, id := range subcategoryIDs {
+		n, _ := strconv.Atoi(strings.TrimSpace(id))
+		subIDsInt = append(subIDsInt, n)
 	}
 
-	config.DB.Where("id_subcategories IN ?", subIDs).Find(&subcategories)
+	config.DB.Where("id_subcategories IN ?", subIDsInt).Find(&subcategories)
 
 	for _, s := range subcategories {
 		subResp = append(subResp, gin.H{
@@ -137,30 +166,43 @@ func CreateDestination(c *gin.Context) {
 	var facilities []models.Facility
 	var facResp []gin.H
 
-	rawFac := strings.Split(destination.FacilityID, ",")
-	facIDs := []int{}
-
-	for _, idStr := range rawFac {
-		if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
-			facIDs = append(facIDs, n)
-		}
+	var facIDsInt []int
+	for _, id := range facilityIDs {
+		n, _ := strconv.Atoi(strings.TrimSpace(id))
+		facIDsInt = append(facIDsInt, n)
 	}
 
-	config.DB.Where("id_facility IN ?", facIDs).Find(&facilities)
+	config.DB.Where("id_facility IN ?", facIDsInt).Find(&facilities)
 
 	for _, f := range facilities {
 		facResp = append(facResp, gin.H{
 			"id_facility":  f.IDFacility,
 			"namefacility": f.NameFacility,
-			"icon":         utils.ToBase64(f.Icon, f.FileType),
-			"file_type":    f.FileType,
+			"icon":         utils.ToBase64(f.Icon),
 		})
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Destination berhasil ditambahkan",
 		"data": gin.H{
-			"destination": destination,
+			"destination": gin.H{
+				"id_destination":  destination.ID,
+				"namedestination": destination.Name,
+				"location":        destination.Location,
+				"description":     destination.Description,
+				"images":          images,
+				"do":              destination.Do,
+				"dont":            destination.Dont,
+				"safety":          destination.Safety,
+				"maps":            destination.Maps,
+				"sosId":           destination.SosID,
+				"facilityId":      destination.FacilityID,
+				"subcategoryId":   destination.SubcategoryID,
+				"longitude":       destination.Longitude,
+				"latitude":        destination.Latitude,
+				"created_at":      destination.CreatedAt,
+				"updated_at":      destination.UpdatedAt,
+			},
 			"subcategory": subResp,
 			"facilities":  facResp,
 		},
