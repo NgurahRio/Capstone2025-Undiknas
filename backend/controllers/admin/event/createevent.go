@@ -3,6 +3,8 @@ package event
 import (
 	"backend/config"
 	"backend/models"
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -11,6 +13,7 @@ import (
 )
 
 func CreateEvent(c *gin.Context) {
+	// Get form data
 	destinationIDStr := c.PostForm("destinationId")
 	nameEvent := c.PostForm("nameevent")
 	startDate := c.PostForm("start_date")
@@ -26,6 +29,7 @@ func CreateEvent(c *gin.Context) {
 	longitudeStr := c.PostForm("longitude")
 	latitudeStr := c.PostForm("latitude")
 
+	// Validate event name
 	if nameEvent == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "nameevent wajib diisi",
@@ -33,6 +37,7 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// Convert destination ID
 	var destIDPointer *uint = nil
 	if destinationIDStr != "" {
 		dID, convErr := strconv.Atoi(destinationIDStr)
@@ -47,6 +52,7 @@ func CreateEvent(c *gin.Context) {
 		destIDPointer = &tmp
 	}
 
+	// Convert price, longitude, latitude
 	var price float64 = 0
 	if priceStr != "" {
 		price, _ = strconv.ParseFloat(priceStr, 64)
@@ -62,24 +68,44 @@ func CreateEvent(c *gin.Context) {
 		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
 	}
 
-	file, err := c.FormFile("image")
-	var imageBytes []byte
+	// Handle multiple images
+	imagesBase64 := []string{}
 
-	if err == nil {
-		openedFile, openErr := file.Open()
-		if openErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file"})
-			return
-		}
-		defer openedFile.Close()
+	// Handle multiple images in the same "image" field.
+	if form, formErr := c.MultipartForm(); formErr == nil && form != nil {
+		if files, ok := form.File["image"]; ok {
+			for idx, file := range files {
+				openedFile, openErr := file.Open()
+				if openErr != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file ke-" + strconv.Itoa(idx+1)})
+					return
+				}
 
-		imageBytes, err = io.ReadAll(openedFile)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file"})
-			return
+				imageBytes, readErr := io.ReadAll(openedFile)
+				openedFile.Close()
+				if readErr != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file ke-" + strconv.Itoa(idx+1)})
+					return
+				}
+
+				imagesBase64 = append(imagesBase64, base64.StdEncoding.EncodeToString(imageBytes))
+			}
 		}
 	}
 
+
+	// Convert base64 image data to JSON string
+	var imageBase64 string
+	if len(imagesBase64) > 0 {
+		jsonBytes, marshalErr := json.Marshal(imagesBase64)
+		if marshalErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Gagal memproses image"})
+			return
+		}
+		imageBase64 = string(jsonBytes)
+	}
+
+	// Create event struct
 	event := models.Event{
 		Name:        nameEvent,
 		StartDate:   startDate,
@@ -94,13 +120,15 @@ func CreateEvent(c *gin.Context) {
 		Safety:      safety,
 		Longitude:   longitude,
 		Latitude:    latitude,
-		Image:       imageBytes,
+		ImageEvent:  imageBase64,
 	}
 
+	// If destination ID is provided, associate with event
 	if destIDPointer != nil {
 		event.DestinationID = destIDPointer
 	}
 
+	// Save event to the database
 	if err := config.DB.Create(&event).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal menambahkan event",
@@ -108,6 +136,7 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Event berhasil ditambahkan",
 		"data":    event,
