@@ -7,10 +7,12 @@ import 'package:provider/provider.dart';
 
 class HeaderCostum extends StatefulWidget {
   final TextEditingController controller;
+  final bool isSearch;
 
   const HeaderCostum({
     required this.controller,
     super.key,
+    this.isSearch = true,
   });
 
   @override
@@ -35,12 +37,22 @@ class _HeaderCostumState extends State<HeaderCostum> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if(isDesktop)
+<<<<<<< HEAD
                   const Text("Dashboard"),
         
                 SearchFieldCostum(
                   controller: widget.controller, 
                   hintText: "search"
                 )
+=======
+                  Text("Dashboard"),
+
+                if(widget.isSearch)
+                  SearchFieldCostum(
+                    controller: widget.controller, 
+                    hintText: "search"
+                  )
+>>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
               ],
             ),
         

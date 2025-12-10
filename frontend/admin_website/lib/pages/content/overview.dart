@@ -48,7 +48,7 @@ class _OverviewPageState extends State<OverviewPage> {
             child: Column(
               children: [
                 
-                HeaderCostum(controller: search),
+                HeaderCostum(controller: search, isSearch: false,),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 35),

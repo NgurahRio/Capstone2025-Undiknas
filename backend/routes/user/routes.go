@@ -41,7 +41,6 @@ func SetupUserRoutes(r *gin.Engine) {
 	// Reviews
 	user.POST("/review", review.AddReview)
 	user.GET("/review", review.GetReviews)
-	user.PUT("/review/:id", review.UpdateReview)
 	user.DELETE("/review/:id", review.DeleteReview)
 
 	// Events

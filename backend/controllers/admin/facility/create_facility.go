@@ -42,8 +42,8 @@ func CreateFacility(c *gin.Context) {
 		return
 	}
 
-	fileType := getFileExtension(file)
-	if !isValidImage(fileType) {
+	fileExt := getFileExtension(file)
+	if !isValidImage(fileExt) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Tipe file tidak valid (hanya png, jpg, jpeg, webp, svg)",
 		})
@@ -66,7 +66,6 @@ func CreateFacility(c *gin.Context) {
 	facility := models.Facility{
 		NameFacility: nameFacility,
 		Icon:         fileBytes,
-		FileType:     fileType,
 	}
 
 	if err := config.DB.Create(&facility).Error; err != nil {
@@ -76,6 +75,10 @@ func CreateFacility(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Fasilitas berhasil ditambahkan",
-		"data":    facility,
+		"data": gin.H{
+			"id_facility":  facility.IDFacility,
+			"namefacility": facility.NameFacility,
+			"icon":         "uploaded",
+		},
 	})
 }

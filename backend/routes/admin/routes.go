@@ -7,6 +7,7 @@ import (
 	"backend/controllers/admin/event"
 	"backend/controllers/admin/facility"
 	"backend/controllers/admin/group_package"
+	packagess "backend/controllers/admin/packages"
 	"backend/controllers/admin/review"
 	"backend/controllers/admin/sos"
 	"backend/controllers/admin/subcategory"
@@ -105,6 +106,12 @@ func SetupRouter() *gin.Engine {
 		admin.POST("/facility", facility.CreateFacility)
 		admin.GET("/facility", facility.GetAllFacility)
 		admin.GET("/facility/:id", facility.GetFacilityByID)
+
+		// Packages routes
+		admin.POST("/packages", packagess.CreatePackages)
+		admin.GET("/packages", packagess.GetAllPackages)
+		admin.GET("/packages/:destinationId", packagess.GetPackageByDestinationID)
+
 
 	}
 
