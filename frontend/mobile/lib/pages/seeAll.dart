@@ -12,7 +12,7 @@ class SeeAllPage extends StatefulWidget {
   final List<dynamic> appliedSubCategories;
   final void Function(List<dynamic> cats, List<dynamic> subs, List<dynamic> applied) onSaveStyle;
 
-  SeeAllPage({
+  const SeeAllPage({
     super.key,
     required this.selectedCategories,
     required this.selectedSubCategories,
@@ -120,9 +120,9 @@ class _SeeAllPageState extends State<SeeAllPage> {
     ).toList();
 
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(85), 
+        preferredSize: const Size.fromHeight(85), 
         child: Header()
       ),
       body: SafeArea(
@@ -136,19 +136,19 @@ class _SeeAllPageState extends State<SeeAllPage> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: EdgeInsets.all(1),
+                      padding: const EdgeInsets.all(1),
                       decoration: BoxDecoration(
                         color: Colors.transparent,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.black, width: 2)
                       ),
-                      child: Icon(Icons.arrow_back_rounded, size: 20,)
+                      child: const Icon(Icons.arrow_back_rounded, size: 20,)
                     ),
                   ),
         
-                  Expanded(
+                  const Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         "Recomended Your Style", 
                         style: TextStyle(

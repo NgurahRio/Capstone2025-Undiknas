@@ -19,7 +19,7 @@ class DetailPage extends StatefulWidget {
   final bool isInitialFavorite;
   final int? idFavorite;
 
-  DetailPage({
+  const DetailPage({
     super.key,
     this.destination,
     this.event,
@@ -52,7 +52,7 @@ class _DetailPageState extends State<DetailPage> {
   Package? selectedPackage;
 
   Future<void> _openMap(String query) async {
-    final Uri url = Uri.parse("$query");
+    final Uri url = Uri.parse(query);
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -691,10 +691,10 @@ class _DetailPageState extends State<DetailPage> {
                                                 spacing: 5,
                                                 crossAxisAlignment: WrapCrossAlignment.center,
                                                 children: [
-                                                  Icon(Icons.confirmation_num_rounded, color: const Color(0xFF8AC4FA)),
+                                                  const Icon(Icons.confirmation_num_rounded, color: Color(0xFF8AC4FA)),
                                                   Text(
                                                     currencyFormatter.format(event.price),
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight: FontWeight.w900,
                                                     ),
@@ -714,8 +714,8 @@ class _DetailPageState extends State<DetailPage> {
                                         decoration: BoxDecoration(
                                           color: Colors.grey[50],
                                           borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            const BoxShadow(
+                                          boxShadow: const [
+                                            BoxShadow(
                                               color: Color(0x17000000),
                                               blurRadius: 10,
                                               offset: Offset(0, 10),
@@ -857,7 +857,7 @@ class _DetailPageState extends State<DetailPage> {
                                               onVisibleChange: () =>
                                                   setState(() => _isDropdownSos = true),
                                               content: ConstrainedBox(
-                                                constraints: BoxConstraints(
+                                                constraints: const BoxConstraints(
                                                   maxWidth: 200,
                                                 ),
                                                 child: Column(

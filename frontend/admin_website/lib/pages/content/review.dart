@@ -72,7 +72,7 @@ class _ReviewPageState extends State<ReviewPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -91,7 +91,7 @@ class _ReviewPageState extends State<ReviewPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "User"),
@@ -149,7 +149,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

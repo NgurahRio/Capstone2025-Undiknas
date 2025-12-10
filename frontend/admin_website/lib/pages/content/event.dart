@@ -125,7 +125,7 @@ class _EventPageState extends State<EventPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Name", flex: 2,),
@@ -188,7 +188,7 @@ class _EventPageState extends State<EventPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travora</title>
+    
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GOOGLE FONTS (POPPINS) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- LEAFLET MAP -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        travora: {
+                            main: '#5E9BF5',
+                            light: '#82B1FF',
+                            dark: '#576D85',
+                            bg: '#F2F7FB',
+                            sos: '#EF685B',
+                            gold: '#EBC136',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .halaman { display: none; animation: fadeIn 0.4s ease-out; }
+        .halaman.aktif { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Kalender Simple CSS */
+        .kalender-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .hari-nama { color: #9CA3AF; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px; }
+        .tanggal { font-size: 0.875rem; padding: 8px; border-radius: 9999px; cursor: pointer; }
+        .tanggal.aktif { background-color: #82B1FF; color: white; font-weight: bold; }
+        .tanggal:hover:not(.aktif) { background-color: #F3F4F6; }
+    </style>
+</head>
+<body class="font-poppins text-gray-800 bg-white">
+
+    <!-- NAVIGATION BAR -->
+    <nav class="kotak-navbar fixed top-0 w-full bg-white z-50 shadow-sm h-[90px] flex items-center justify-between px-6 lg:px-20">
+        <!-- Logo -->
+        <div class="logo-area flex items-center cursor-pointer" onclick="pindahHalaman('home')">
+            <i class="fa-solid fa-location-dot text-travora-main text-2xl mr-2"></i>
+            <span class="text-2xl font-bold text-travora-main">Travora</span>
+        </div>
+
+        <!-- Menu Tabs -->
+        <div class="menu-tengah hidden lg:flex space-x-10">
+            <button onclick="pindahHalaman('home')" class="nav-item font-bold text-black hover:text-travora-main transition" id="nav-home">Home</button>
+            <button onclick="scrollKeEvent()" class="nav-item font-medium text-gray-500 hover:text-travora-main transition" id="nav-event">Event</button>
+            <button onclick="pindahHalaman('bookmark')" class="nav-item font-medium text-gray-500 hover:text-travora-main transition" id="nav-bookmark">Bookmark</button>
+            <button onclick="pindahHalaman('profile')" class="nav-item font-medium text-gray-500 hover:text-travora-main transition" id="nav-profile">Profile</button>
+        </div>
+
+        <!-- Tombol Kanan -->
+        <div class="tombol-kanan flex items-center space-x-4">
+            <button class="bg-travora-dark text-white px-5 py-3 rounded-lg flex items-center gap-2 hover:opacity-90 transition text-sm font-medium">
+                <i class="fa-regular fa-comment"></i> Chat
+            </button>
+            <button id="btn-login-nav" onclick="toggleLogin()" class="bg-travora-light text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md text-sm">
+                Log In
+            </button>
+        </div>
+    </nav>
+    <div class="h-[90px]"></div>
+
+    <!-- ========================= HALAMAN HOME ========================= -->
+    <div id="halaman-home" class="halaman aktif">
+        
+        <!-- 1. Hero Section -->
+        <div class="kotak-hero relative h-[600px] w-full overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80" class="w-full h-full object-cover brightness-75">
+            <div class="konten-hero absolute inset-0 flex flex-col justify-center px-10 lg:px-40 text-white">
+                <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-earth-americas text-gray-200"></i><span class="font-medium">Let's discover the beauty of Bali</span></div>
+                <h1 class="text-5xl lg:text-6xl font-bold leading-tight mb-2">Evening! <br> <span class="text-travora-light">Ready to explore?</span></h1>
+                <h2 class="text-3xl lg:text-4xl font-bold mb-10">The Best Ubud Experience</h2>
+                <div class="kotak-cari bg-white rounded-lg p-2 w-full max-w-xl flex items-center shadow-lg">
+                    <input type="text" placeholder="Where do you want to go?" class="flex-1 px-4 py-2 outline-none text-gray-700">
+                    <button class="bg-travora-dark text-white w-14 h-12 rounded-md"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Popular Places -->
+        <div class="kotak-populer py-16 px-10 lg:px-40 flex flex-col lg:flex-row gap-10">
+            <div class="lg:w-1/3"><h2 class="text-4xl font-bold leading-tight mb-4">Populer Place <br> Now</h2><p class="text-gray-500 text-lg">Discover the most popular travel spots in Bali right now.</p></div>
+            <div class="lg:w-2/3 flex items-center gap-4 overflow-hidden">
+                <button class="w-12 h-12 rounded-full border-2 border-travora-light text-travora-main flex-shrink-0 flex items-center justify-center hover:bg-blue-50"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="flex gap-5 overflow-x-auto hide-scrollbar pb-4 w-full">
+                    <!-- Card 1 -->
+                    <div class="kartu min-w-[220px] h-[320px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')">
+                        <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 text-white"><h3 class="font-bold">Monkey Forest</h3><p class="text-[10px] text-gray-300 mb-2">Protected forest area.</p><span class="bg-blue-500 text-[10px] px-2 py-1 rounded">Adventure</span></div>
+                        <div class="absolute top-4 left-4 bg-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-star text-orange-400"></i> 4.9</div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="kartu min-w-[220px] h-[320px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')">
+                        <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 text-white"><h3 class="font-bold">Ulun Danu</h3><p class="text-[10px] text-gray-300 mb-2">Iconic lake temple.</p><span class="bg-blue-500 text-[10px] px-2 py-1 rounded">Culture</span></div>
+                        <div class="absolute top-4 left-4 bg-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-star text-orange-400"></i> 4.9</div>
+                    </div>
+                     <!-- Card 3 -->
+                     <div class="kartu min-w-[220px] h-[320px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')">
+                        <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 text-white"><h3 class="font-bold">Campuhan Ridge</h3><p class="text-[10px] text-gray-300 mb-2">Scenic nature trek.</p><span class="bg-blue-500 text-[10px] px-2 py-1 rounded">Nature</span></div>
+                        <div class="absolute top-4 left-4 bg-white px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-star text-orange-400"></i> 4.8</div>
+                    </div>
+                </div>
+                <button class="w-12 h-12 rounded-full border-2 border-travora-light text-travora-main flex-shrink-0 flex items-center justify-center hover:bg-blue-50"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- 3. Explore Ubud -->
+        <div class="kotak-explore bg-travora-bg py-16 px-6 lg:px-40">
+            <h2 class="text-3xl font-bold text-center mb-10">Explore Ubud</h2>
+            <div class="grid-explore h-[400px] flex gap-4">
+                <div class="w-1/3 rounded-2xl overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>
+                <div class="w-1/3 flex flex-col gap-4">
+                    <div class="h-1/2 rounded-2xl overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1554481923-a6918bd997bc?q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>
+                    <div class="h-1/2 rounded-2xl overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>
+                </div>
+                <div class="w-1/3 rounded-2xl overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>
+            </div>
+        </div>
+
+        <!-- 4. Travel Style -->
+        <div class="kotak-travel-style py-16 px-6 lg:px-40">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3"><div class="w-1 h-8 bg-black"></div><h2 class="text-3xl font-bold">Travel Style</h2></div>
+                <button class="bg-travora-light text-white px-5 py-2 rounded-full font-bold text-sm">View More</button>
+            </div>
+            <div class="flex flex-wrap gap-4 mb-8">
+                <button class="bg-travora-light text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="fa-solid fa-masks-theater"></i> Culture</button>
+                <button class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200"><i class="fa-regular fa-compass"></i> Adventure</button>
+                <button class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200">Art</button>
+                <button class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200">Food</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <!-- Style Card -->
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4">
+                        <h4 class="font-bold text-sm">Monkey Forest</h4>
+                        <p class="text-xs text-gray-500 mt-1">Protected forest area.</p>
+                        <div class="flex justify-end mt-3"><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4">
+                        <h4 class="font-bold text-sm">Sacred Monkey</h4>
+                        <p class="text-xs text-gray-500 mt-1">Ancient temple complex.</p>
+                        <div class="flex justify-end mt-3"><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1598091383021-15ddea10925d?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4">
+                        <h4 class="font-bold text-sm">Ubud Yoga</h4>
+                        <p class="text-xs text-gray-500 mt-1">Find inner peace.</p>
+                        <div class="flex justify-end mt-3"><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4">
+                        <h4 class="font-bold text-sm">Local Culture</h4>
+                        <p class="text-xs text-gray-500 mt-1">Experience daily life.</p>
+                        <div class="flex justify-end mt-3"><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Top Rated -->
+        <div class="kotak-top-rated bg-travora-bg py-16 px-6 lg:px-40">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3"><div class="w-1 h-8 bg-black"></div><h2 class="text-3xl font-bold">Top-Rated</h2></div>
+                <div class="flex gap-6 font-bold text-lg"><span class="text-black border-b-2 border-black">All</span><span class="text-gray-400 cursor-pointer">Adventure</span><span class="text-gray-400 cursor-pointer">Culture</span></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <!-- Sama dengan travel style logic untuk card -->
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4"><h4 class="font-bold text-sm">Monkey Forest</h4><div class="flex justify-between mt-3 items-center"><span class="text-xs font-bold text-orange-400"><i class="fa-solid fa-star"></i> 4.9</span><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4"><h4 class="font-bold text-sm">Ulun Danu</h4><div class="flex justify-between mt-3 items-center"><span class="text-xs font-bold text-orange-400"><i class="fa-solid fa-star"></i> 4.9</span><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4"><h4 class="font-bold text-sm">Campuhan</h4><div class="flex justify-between mt-3 items-center"><span class="text-xs font-bold text-orange-400"><i class="fa-solid fa-star"></i> 4.8</span><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="pindahHalaman('destination')">
+                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=400" class="h-40 w-full object-cover">
+                    <div class="p-4"><h4 class="font-bold text-sm">Tanah Lot</h4><div class="flex justify-between mt-3 items-center"><span class="text-xs font-bold text-orange-400"><i class="fa-solid fa-star"></i> 4.7</span><span class="text-[10px] bg-travora-light text-white px-2 py-1 rounded">LEARN MORE</span></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Today's Event -->
+        <div id="section-event" class="kotak-event py-16 px-6 lg:px-40 bg-white">
+            <div class="flex items-center gap-3 mb-2"><div class="w-1 h-8 bg-black"></div><h2 class="text-3xl font-bold">Today's Event</h2></div>
+            <p class="text-lg text-gray-600 mb-10">Events available today, on the 27th.</p>
+            
+            <div class="flex flex-col lg:flex-row gap-10">
+                <!-- List Event -->
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5 h-auto">
+                    <div class="bg-white border rounded-2xl p-0 overflow-hidden shadow-sm">
+                        <img src="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?q=80&w=400" class="h-32 w-full object-cover">
+                        <div class="p-4">
+                            <h4 class="font-bold">Legong Dance</h4>
+                            <div class="flex items-center gap-1 text-xs text-travora-main my-1"><i class="fa-solid fa-location-dot"></i> Ubud Palace</div>
+                            <p class="text-xs text-gray-500 italic mb-3">Graceful traditional Balinese dance.</p>
+                            <div class="flex justify-end"><button class="bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded">FREE ACCESS</button></div>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-0 overflow-hidden shadow-sm">
+                        <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=400" class="h-32 w-full object-cover">
+                        <div class="p-4">
+                            <h4 class="font-bold">Kecak Fire Dance</h4>
+                            <div class="flex items-center gap-1 text-xs text-travora-main my-1"><i class="fa-solid fa-location-dot"></i> Pura Dalem</div>
+                            <p class="text-xs text-gray-500 italic mb-3">Dramatic performance involving fire.</p>
+                            <div class="flex justify-end"><button class="bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded">FREE ACCESS</button></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kalender Sederhana -->
+                <div class="lg:w-[350px] bg-white rounded-2xl shadow-lg border p-6 h-fit">
+                    <div class="flex justify-between items-center mb-6">
+                        <i class="fa-solid fa-chevron-left text-gray-400 cursor-pointer"></i>
+                        <h3 class="font-bold text-lg">May 2025</h3>
+                        <i class="fa-solid fa-chevron-right text-gray-800 cursor-pointer"></i>
+                    </div>
+                    <div class="kalender-grid">
+                        <div class="hari-nama">Sun</div><div class="hari-nama">Mon</div><div class="hari-nama">Tue</div><div class="hari-nama">Wed</div><div class="hari-nama">Thu</div><div class="hari-nama">Fri</div><div class="hari-nama">Sat</div>
+                        <!-- Dummy Dates -->
+                        <div class="tanggal text-gray-300">27</div><div class="tanggal text-gray-300">28</div><div class="tanggal text-gray-300">29</div><div class="tanggal text-gray-300">30</div><div class="tanggal">1</div><div class="tanggal">2</div><div class="tanggal">3</div>
+                        <div class="tanggal">4</div><div class="tanggal">5</div><div class="tanggal">6</div><div class="tanggal">7</div><div class="tanggal">8</div><div class="tanggal">9</div><div class="tanggal">10</div>
+                        <div class="tanggal">11</div><div class="tanggal">12</div><div class="tanggal">13</div><div class="tanggal">14</div><div class="tanggal">15</div><div class="tanggal">16</div><div class="tanggal">17</div>
+                        <div class="tanggal">18</div><div class="tanggal">19</div><div class="tanggal">20</div><div class="tanggal">21</div><div class="tanggal">22</div><div class="tanggal">23</div><div class="tanggal">24</div>
+                        <div class="tanggal">25</div><div class="tanggal">26</div><div class="tanggal aktif">27</div><div class="tanggal">28</div><div class="tanggal">29</div><div class="tanggal">30</div><div class="tanggal">31</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Travora Chat -->
+        <div class="kotak-chat bg-travora-bg py-20 px-6 lg:px-40 flex flex-col lg:flex-row gap-10">
+            <div class="lg:w-1/2">
+                <h2 class="text-4xl font-bold mb-4">Need quick answers?</h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">Meet Travora’s smart WhatsApp assistant — your travel buddy for instant answers and recommendations.</p>
+                <button class="bg-travora-dark text-white px-8 py-4 rounded-xl flex items-center gap-3 font-bold text-lg hover:opacity-90">
+                    <i class="fa-solid fa-comment"></i> Chat
+                </button>
+            </div>
+            <div class="lg:w-1/2 bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 flex flex-col h-[400px]">
+                <div class="bg-travora-dark p-4 flex items-center gap-3 text-white">
+                    <i class="fa-solid fa-comment text-xl"></i><span class="font-bold text-lg">Travora chat</span>
+                </div>
+                <div class="flex-1 p-6 overflow-y-auto space-y-4">
+                    <div class="bg-gray-100 p-3 rounded-r-xl rounded-bl-xl max-w-[80%] text-sm">Halo! Saya Asisten Chat. Mau cari apa hari ini?</div>
+                    <div class="bg-travora-light text-white p-3 rounded-l-xl rounded-br-xl max-w-[80%] text-sm ml-auto">Wisata yang terpopuler di ubud</div>
+                    <div class="bg-gray-100 p-3 rounded-r-xl rounded-bl-xl max-w-[80%] text-sm">Berikut 5 wisata yang terpopuler : Monkey Forest...</div>
+                </div>
+                <div class="p-4 border-t bg-gray-50 flex items-center gap-2">
+                    <input type="text" placeholder="ketik pertanyaanmu disini" class="flex-1 bg-transparent outline-none text-sm">
+                    <button class="text-travora-main font-bold text-sm">Kirim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= HALAMAN DESTINATION ========================= -->
+    <div id="halaman-destination" class="halaman">
+        <!-- Hero -->
+        <div class="h-[400px] relative w-full">
+            <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=1200" class="w-full h-full object-cover brightness-50">
+            <div class="absolute inset-0 flex items-center px-10 lg:px-40"><div class="w-1.5 h-12 bg-white mr-4"></div><h1 class="text-5xl font-bold text-white">Destination</h1></div>
+        </div>
+
+        <div class="px-10 lg:px-40 py-10">
+            <!-- Breadcrumbs -->
+            <div class="flex items-center gap-2 mb-4 text-lg font-medium"><span class="text-travora-light cursor-pointer" onclick="pindahHalaman('home')">Home</span><span class="text-gray-400">></span><span class="text-gray-600">Destination</span></div>
+            <div class="h-[1px] bg-gray-300 w-full mb-10"></div>
+
+            <!-- Slider -->
+            <div class="relative w-full h-[500px] rounded-2xl overflow-hidden mb-8"><img id="img-galeri-utama" src="" class="w-full h-full object-cover transition-opacity duration-500"></div>
+            <div class="flex justify-center items-center gap-10 mb-20">
+                <div class="flex items-center gap-4 cursor-pointer hover:opacity-70" onclick="gantiGambar(-1)"><div class="border-2 border-travora-light rounded-full p-2 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-arrow-left text-travora-light"></i></div><span class="text-lg font-medium">Back</span></div>
+                <div class="flex items-center gap-4 cursor-pointer hover:opacity-70" onclick="gantiGambar(1)"><span class="text-lg font-medium">Next</span><div class="border-2 border-travora-light rounded-full p-2 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-travora-light"></i></div></div>
+            </div>
+
+            <!-- Detail -->
+            <div class="flex flex-col lg:flex-row gap-16">
+                <div class="lg:w-2/3">
+                    <div class="flex justify-between items-start"><h1 class="text-4xl font-bold mb-2">Monkey Forest Ubud</h1><i class="fa-solid fa-bookmark text-travora-light text-4xl cursor-pointer"></i></div>
+                    <div class="flex items-center text-gray-600 mb-6"><i class="fa-solid fa-location-dot mr-2"></i><span>JL. Monkey Forest, Ubud, Gianyar, Bali</span></div>
+                    <p class="text-gray-700 text-lg leading-relaxed mb-6">Discover the sacred Monkey Forest in Ubud, where hundreds of playful monkeys live freely among ancient temples and lush jungle.</p>
+                    <div class="flex gap-3 mb-10"><span class="bg-travora-light text-white px-5 py-2 rounded-lg font-bold">Adventure</span><span class="bg-travora-light text-white px-5 py-2 rounded-lg font-bold">Spiritual</span></div>
+                    
+                    <h3 class="text-2xl font-bold mb-6">Facilities</h3>
+                    <div class="flex justify-between mb-10 text-center text-gray-700">
+                        <div><i class="fa-solid fa-camera text-3xl mb-2"></i><p class="text-xs">Photo area</p></div>
+                        <div><i class="fa-solid fa-square-parking text-3xl mb-2"></i><p class="text-xs">Parking</p></div>
+                        <div><i class="fa-solid fa-restroom text-3xl mb-2"></i><p class="text-xs">Toilet</p></div>
+                        <div><i class="fa-solid fa-person text-3xl mb-2"></i><p class="text-xs">Guide</p></div>
+                        <div><i class="fa-solid fa-store text-3xl mb-2"></i><p class="text-xs">Shop</p></div>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mb-6">Available Ticket</h3>
+                    <div class="flex gap-4 overflow-x-auto mb-6 pb-2">
+                        <button class="border-2 border-travora-light bg-white px-4 py-3 rounded-xl flex items-center gap-2 font-bold whitespace-nowrap"><i class="fa-solid fa-person text-travora-light"></i> Solo Trip</button>
+                        <button class="border border-gray-300 px-4 py-3 rounded-xl flex items-center gap-2 text-gray-500 whitespace-nowrap"><i class="fa-solid fa-heart"></i> Romantic</button>
+                        <button class="border border-gray-300 px-4 py-3 rounded-xl flex items-center gap-2 text-gray-500 whitespace-nowrap"><i class="fa-solid fa-users"></i> Group</button>
+                    </div>
+                    <div class="flex gap-3 mb-6">
+                        <button class="bg-travora-sos text-white px-6 py-3 rounded-2xl font-bold">SOS</button>
+                        <button class="bg-travora-light text-white flex-1 py-3 rounded-2xl font-bold">Do & Don't</button>
+                        <button class="bg-travora-light text-white flex-1 py-3 rounded-2xl font-bold">Safety</button>
+                    </div>
+                    <div class="border border-gray-200 rounded-2xl p-6 shadow-sm">
+                        <h4 class="text-xl font-bold mb-4">Solo Trip</h4>
+                        <p class="text-gray-500 font-semibold mb-2">Includes:</p>
+                        <ul class="space-y-2 mb-4 text-gray-600 text-sm">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-travora-light"></i> Entrance fee</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-travora-light"></i> Traditional attire</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-travora-light"></i> Free Parking</li>
+                        </ul>
+                        <div class="my-4 border-t border-gray-200"></div>
+                        <p class="text-2xl font-bold text-travora-gold">IDR. 80.000</p>
+                    </div>
+                </div>
+                <div class="lg:w-1/3 flex flex-col gap-10">
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+                        <div id="peta-leaflet" class="w-full h-[200px] rounded-xl z-0"></div>
+                        <button class="w-full bg-gray-200 text-black font-bold py-3 mt-3 rounded-lg hover:bg-gray-300">View on Google Maps</button>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <h3 class="text-2xl font-bold mb-1">Reviews</h3>
+                        <div class="text-5xl font-bold text-travora-gold mb-1">4.9</div>
+                        <div class="text-travora-gold space-x-1 mb-2"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-400 text-sm mb-6">Based on 5 reviews</p>
+                        <div class="border-t border-gray-200 mb-6"></div>
+                        <div class="text-left space-y-4 mb-6">
+                            <div class="text-xs"><div class="flex justify-between font-bold"><span>Riyo (you)</span><span class="text-gray-400 font-normal">1 hari lalu</span></div><p class="text-gray-700 mt-1">Sangat rekomendasi.</p></div>
+                            <div class="text-xs"><div class="flex justify-between font-bold"><span>Nielsun</span><span class="text-gray-400 font-normal">1 hari lalu</span></div><p class="text-gray-700 mt-1">Tempat indah.</p></div>
+                        </div>
+                        <div class="flex gap-2"><input type="text" placeholder="Review..." class="flex-1 bg-gray-100 text-xs px-3 py-2 rounded-lg outline-none"><button class="border border-travora-light text-travora-light text-xs px-4 py-2 rounded-lg font-bold">Kirim</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-20"></div>
+            <!-- All Destination -->
+            <div class="flex items-center gap-3 mb-10"><div class="w-1 h-8 bg-black"></div><h2 class="text-3xl font-bold">All Destination</h2></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="h-[250px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=800" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div><div class="absolute bottom-5 left-5 right-5 text-white"><h3 class="font-bold text-xl">Monkey Forest</h3><p class="text-xs italic text-gray-300">Protected forest.</p></div><span class="absolute bottom-5 right-5 bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded-full">Adventure</span></div>
+                <div class="h-[250px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=800" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div><div class="absolute bottom-5 left-5 right-5 text-white"><h3 class="font-bold text-xl">Jungle Trek</h3><p class="text-xs italic text-gray-300">Lush greenery.</p></div><span class="absolute bottom-5 right-5 bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded-full">Adventure</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= HALAMAN BOOKMARK ========================= -->
+    <div id="halaman-bookmark" class="halaman">
+        <div class="h-[400px] relative w-full">
+            <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=1200" class="w-full h-full object-cover brightness-50">
+            <div class="absolute inset-0 flex items-center px-10 lg:px-40"><div class="w-1.5 h-12 bg-white mr-4"></div><h1 class="text-5xl font-bold text-white">Bookmark</h1></div>
+        </div>
+        <div class="px-10 lg:px-40 py-16 min-h-[500px]">
+            <h2 class="text-travora-light text-lg font-medium mb-2">Bookmark</h2>
+            <div class="h-[1px] bg-gray-300 w-full mb-10"></div>
+
+            <!-- Tampilan GUEST -->
+            <div id="bookmark-guest" class="text-center py-20">
+                <h1 class="text-3xl font-medium mb-6">Please login first</h1>
+                <button onclick="toggleLogin()" class="bg-travora-light text-white px-10 py-3 rounded-full font-bold text-lg hover:opacity-90">Login / Sign up</button>
+            </div>
+
+            <!-- Tampilan LOGGED IN -->
+            <div id="bookmark-loggedin" class="hidden">
+                <div class="flex items-center gap-4 mb-10">
+                    <button class="bg-travora-light text-white font-bold px-6 py-3 rounded hover:opacity-90">Choose</button>
+                    <button class="bg-travora-sos text-white font-bold px-6 py-3 rounded flex items-center gap-2 hover:opacity-90">Delete All <i class="fa-solid fa-trash text-sm"></i></button>
+                    <div class="ml-auto"><button class="bg-travora-light text-white font-bold px-4 py-2 rounded flex items-center gap-2 text-sm">Show Destinations <i class="fa-solid fa-caret-down"></i></button></div>
+                </div>
+                <div class="flex items-center gap-3 mb-8"><div class="w-1 h-8 bg-black"></div><h2 class="text-2xl font-bold">All Destination</h2></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Duplicate Cards -->
+                    <div class="h-[250px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=800" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div><div class="absolute bottom-5 left-5 right-5 text-white"><h3 class="font-bold text-xl">Monkey Forest</h3></div><span class="absolute bottom-5 right-5 bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded-full">Adventure</span></div>
+                    <div class="h-[250px] rounded-2xl relative overflow-hidden cursor-pointer group" onclick="pindahHalaman('destination')"><img src="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?q=80&w=800" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div><div class="absolute bottom-5 left-5 right-5 text-white"><h3 class="font-bold text-xl">Sacred Monkey</h3></div><span class="absolute bottom-5 right-5 bg-travora-light text-white text-[10px] font-bold px-3 py-1 rounded-full">Adventure</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= HALAMAN PROFILE ========================= -->
+    <div id="halaman-profile" class="halaman">
+        <div class="h-[400px] relative w-full">
+            <img src="https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?q=80&w=1200" class="w-full h-full object-cover brightness-50">
+            <div class="absolute inset-0 flex items-center px-10 lg:px-40"><div class="w-1.5 h-12 bg-white mr-4"></div><h1 class="text-5xl font-bold text-white">Profile</h1></div>
+        </div>
+        <div class="px-10 lg:px-40 py-16 min-h-[500px]">
+            <h2 class="text-travora-light text-lg font-medium mb-2">Profile</h2>
+            <div class="h-[1px] bg-gray-300 w-full mb-10"></div>
+
+            <!-- Tampilan GUEST -->
+            <div id="profile-guest" class="text-center py-20">
+                <button onclick="toggleLogin()" class="bg-travora-light text-white px-20 py-3 rounded-full font-bold text-lg hover:opacity-90">Login / Sign up</button>
+            </div>
+
+            <!-- Tampilan LOGGED IN -->
+            <div id="profile-loggedin" class="hidden">
+                <h1 class="text-4xl font-bold text-black mb-1">Hallo,</h1>
+                <h1 class="text-4xl font-bold text-black mb-2">Riyo Sumedang</h1>
+                <p class="text-lg text-gray-600 mb-10">riyookkkkkk@gmail.com</p>
+                <div class="flex flex-col gap-5 max-w-sm">
+                    <button class="bg-white border-none shadow-md rounded-xl py-4 px-6 flex items-center text-left hover:shadow-lg transition"><i class="fa-regular fa-pen-to-square text-lg mr-4"></i><span class="font-bold text-lg">Edit name</span></button>
+                    <button class="bg-white border-none shadow-md rounded-xl py-4 px-6 flex items-center text-left hover:shadow-lg transition"><i class="fa-solid fa-lock text-lg mr-4"></i><span class="font-bold text-lg">Change password</span></button>
+                    <div class="h-5"></div>
+                    <button onclick="toggleLogin()" class="bg-travora-sos text-white rounded-full py-4 px-6 flex items-center justify-center hover:opacity-90 transition"><span class="font-bold text-lg mr-2">Log out</span><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white py-10 text-center border-t border-gray-200">
+        <div class="flex flex-col items-center">
+            <div class="flex items-center gap-2 mb-2"><i class="fa-solid fa-location-dot text-travora-main text-3xl"></i><span class="text-3xl font-bold text-travora-main">Travora</span></div>
+            <div class="w-full h-[1px] bg-gray-200 max-w-4xl my-6"></div>
+            <p class="text-gray-500 text-sm">Copyright © 2025 • Travora.</p>
+        </div>
+    </footer>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        let isLoggedIn = false; // Status Login Default
+
+        // Toggle Login State
+        function toggleLogin() {
+            isLoggedIn = !isLoggedIn;
+            updateLoginUI();
+            
+            // Jika sedang di halaman profile/bookmark, refresh tampilannya
+            const activePage = document.querySelector('.halaman.aktif').id;
+            if(activePage === 'halaman-profile' || activePage === 'halaman-bookmark') {
+                updateNavbar(activePage.replace('halaman-', ''));
+            }
+        }
+
+        function updateLoginUI() {
+            // Update Navbar Button
+            const btnNav = document.getElementById('btn-login-nav');
+            if(isLoggedIn) {
+                btnNav.innerText = 'Log Out';
+                btnNav.classList.replace('bg-travora-light', 'bg-travora-sos');
+            } else {
+                btnNav.innerText = 'Log In';
+                btnNav.classList.replace('bg-travora-sos', 'bg-travora-light');
+            }
+
+            // Update Page Content
+            // Bookmark
+            document.getElementById('bookmark-guest').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('bookmark-loggedin').style.display = isLoggedIn ? 'block' : 'none';
+            // Profile
+            document.getElementById('profile-guest').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('profile-loggedin').style.display = isLoggedIn ? 'block' : 'none';
+        }
+
+        // Navigasi Halaman
+        function pindahHalaman(idHalaman) {
+            document.querySelectorAll('.halaman').forEach(el => el.classList.remove('aktif'));
+            document.getElementById('halaman-' + idHalaman).classList.add('aktif');
+            window.scrollTo(0, 0);
+            updateNavbar(idHalaman);
+
+            // Update Title Document
+            let judul = 'Travora';
+            if (idHalaman === 'home') judul = 'Travora';
+            else if (idHalaman === 'destination') judul = 'Destination';
+            else if (idHalaman === 'bookmark') judul = 'Bookmark';
+            else if (idHalaman === 'profile') judul = 'Profile';
+            document.title = judul;
+            
+            // Fix Leaflet Map Layout
+            if(idHalaman === 'destination') {
+                setTimeout(() => { map.invalidateSize(); }, 100);
+            }
+        }
+
+        // Scroll to Event Section di Home
+        function scrollKeEvent() {
+            pindahHalaman('home');
+            setTimeout(() => {
+                document.getElementById('section-event').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        function updateNavbar(idHalaman) {
+            // Reset Styles
+            ['nav-home', 'nav-event', 'nav-bookmark', 'nav-profile'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'nav-item font-medium text-gray-500 hover:text-travora-main transition';
+            });
+
+            // Set Active
+            let aktifId = '';
+            if (idHalaman === 'home' || idHalaman === 'destination') aktifId = 'nav-home';
+            else if (idHalaman === 'bookmark') aktifId = 'nav-bookmark';
+            else if (idHalaman === 'profile') aktifId = 'nav-profile';
+
+            if(aktifId) {
+                document.getElementById(aktifId).className = 'nav-item font-bold text-black hover:text-travora-main transition';
+            }
+
+            // Sembunyikan tombol login di navbar KHUSUS jika di halaman bookmark/profile dan SUDAH login
+            const btnNav = document.getElementById('btn-login-nav');
+            if (isLoggedIn && (idHalaman === 'profile' || idHalaman === 'bookmark')) {
+                btnNav.style.display = 'none';
+            } else {
+                btnNav.style.display = 'block';
+            }
+        }
+
+        // Galeri Logic
+        const gambarGaleri = [
+            'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=1200',
+            'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?q=80&w=1200',
+            'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200'
+        ];
+        let indexGambar = 0;
+        const imgElement = document.getElementById('img-galeri-utama');
+
+        function gantiGambar(arah) {
+            indexGambar += arah;
+            if (indexGambar >= gambarGaleri.length) indexGambar = 0;
+            if (indexGambar < 0) indexGambar = gambarGaleri.length - 1;
+            imgElement.style.opacity = 0;
+            setTimeout(() => {
+                imgElement.src = gambarGaleri[indexGambar];
+                imgElement.style.opacity = 1;
+            }, 200);
+        }
+        gantiGambar(0); // Init
+
+        // Map Logic
+        const lat = -8.51914; const lng = 115.26319;
+        var map = L.map('peta-leaflet').setView([lat, lng], 15);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+        L.marker([lat, lng]).addTo(map);
+        map.removeControl(map.zoomControl);
+
+    </script>
+</body>
+</html>

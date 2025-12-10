@@ -119,7 +119,7 @@ class _StyleDropdownState extends State<StyleDropdown> {
                                   return SizedBox(
                                     width: 110,
                                     child: Card(
-                                      color: isSubSelected ? Color(0xFF8AC4FA) : Colors.white,
+                                      color: isSubSelected ? const Color(0xFF8AC4FA) : Colors.white,
                                       elevation: 3,
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -314,7 +314,7 @@ class _FilterApplyState extends State<FilterApply> {
               });
             },
           );
-        }).toList(),
+        }),
       ],
     );
   }

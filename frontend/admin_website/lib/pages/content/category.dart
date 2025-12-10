@@ -75,7 +75,7 @@ class _CategoryPageState extends State<CategoryPage> {
               child: IconButton(
                 iconSize: 15,
                 padding: EdgeInsets.zero,
-                icon: Icon(Icons.close, color: Colors.red),
+                icon: const Icon(Icons.close, color: Colors.red),
                 onPressed: onTap, 
               ),
             )
@@ -164,7 +164,7 @@ class _CategoryPageState extends State<CategoryPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
 
@@ -205,7 +205,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   padding: const EdgeInsets.only(bottom: 35),
                   child: CardCostum(
                     content: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                       child: Wrap(
                         spacing: 5,
                         children: [
@@ -215,7 +215,7 @@ class _CategoryPageState extends State<CategoryPage> {
                               title: cat.name, 
                               onTap: () => deleteCategory(cat.id_category),
                             );
-                          }).toList()
+                          })
                         ],
                       ),
                     )
@@ -233,7 +233,7 @@ class _CategoryPageState extends State<CategoryPage> {
                           children: [
                             Text(
                               "Sub tags ${cat.name}",
-                              style: TextStyle(fontSize: 20),
+                              style: const TextStyle(fontSize: 20),
                             ),
 
                             Wrap(
@@ -262,7 +262,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         padding: const EdgeInsets.only(bottom: 20),
                         child: CardCostum(
                           content: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                             child: Wrap(
                               spacing: 5,
                               children: [
@@ -272,7 +272,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                     title: subs.name, 
                                     onTap: () => deleteSubCategory(subs.id_subCategory),
                                   );
-                                }).toList()
+                                })
                               ],
                             ),
                           )

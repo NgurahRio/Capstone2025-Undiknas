@@ -46,7 +46,7 @@ class CardItems1 extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(5)
@@ -54,8 +54,8 @@ class CardItems1 extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.star, color: Colors.yellow, size: 12),
-                        Text("${rating!.toStringAsFixed(1)}", style: TextStyle(fontSize: 11))
+                        const Icon(Icons.star, color: Colors.yellow, size: 12),
+                        Text(rating!.toStringAsFixed(1), style: const TextStyle(fontSize: 11))
                       ],
                     ),
                   ),
@@ -72,7 +72,7 @@ class CardItems1 extends StatelessWidget {
                         fontSize: isBookmark == true ? 20 : 15, 
                         fontWeight: FontWeight.w500, 
                         color: Colors.white,
-                        shadows: [
+                        shadows: const [
                           Shadow(
                             offset: Offset(0, 1.5),
                             blurRadius: 6,
@@ -94,7 +94,7 @@ class CardItems1 extends StatelessWidget {
                               fontSize: isBookmark == true ? 14 : 12,
                               fontStyle: FontStyle.italic,
                               color: Colors.white,
-                              shadows: [
+                              shadows: const [
                                 Shadow(
                                   offset: Offset(0, 1.5),
                                   blurRadius: 6,
@@ -201,7 +201,7 @@ class CardItems2 extends StatelessWidget {
               ),
           
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 13, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -214,8 +214,8 @@ class CardItems2 extends StatelessWidget {
                           if(rating != null)
                             Row(
                               children: [
-                                Icon(Icons.star, color: Colors.yellow, size: 15),
-                                Text(rating!.toStringAsFixed(1), style: TextStyle(fontSize: 12))
+                                const Icon(Icons.star, color: Colors.yellow, size: 15),
+                                Text(rating!.toStringAsFixed(1), style: const TextStyle(fontSize: 12))
                               ],
                             ),
                       
@@ -242,7 +242,7 @@ class CardItems2 extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
       
                     if(location != null)
@@ -250,11 +250,11 @@ class CardItems2 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.location_on_outlined,  color: Color(0xff8ac4fa), size: 14),
+                            const Icon(Icons.location_on_outlined,  color: Color(0xff8ac4fa), size: 14),
                         
                             Text(
                               location!,
-                              style: TextStyle(color: const Color(0xFF868686), fontSize: 11),
+                              style: const TextStyle(color: Color(0xFF868686), fontSize: 11),
                             )
                           ],
                         ),
@@ -264,7 +264,7 @@ class CardItems2 extends StatelessWidget {
                       subTitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: const Color(0xFF6F6F6F), fontSize: 11, fontStyle: FontStyle.italic),
+                      style: const TextStyle(color: Color(0xFF6F6F6F), fontSize: 11, fontStyle: FontStyle.italic),
                     )
                   ],
                 ),
@@ -276,7 +276,7 @@ class CardItems2 extends StatelessWidget {
                   height: 45,
                   width: 110,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Color(0xff8ac4fa),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(12),
@@ -287,7 +287,7 @@ class CardItems2 extends StatelessWidget {
                     (price == null || price == 0)
                         ? isDestination == true ? "LEARN MORE" : "FREE ACCESS"
                         : currencyFormatter.format(price),
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),
               )

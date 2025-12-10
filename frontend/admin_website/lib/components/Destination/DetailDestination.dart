@@ -48,9 +48,9 @@ class _DetailDestinationState extends State<DetailDestination> {
     required String text,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFF8AC4FA),
+        color: const Color(0xFF8AC4FA),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -95,7 +95,7 @@ class _DetailDestinationState extends State<DetailDestination> {
     return Padding(
       padding: widget.isSmall 
         ? EdgeInsets.zero
-        : EdgeInsets.only(top: 10),
+        : const EdgeInsets.only(top: 10),
       child: Card(
         color: Colors.white,
         shape: ContinuousRectangleBorder(
@@ -203,14 +203,14 @@ class _DetailDestinationState extends State<DetailDestination> {
 
                     Padding(
                       padding: widget.isSmall 
-                      ? EdgeInsets.only(top: 12, bottom: 7)
-                      : EdgeInsets.only(top: 20, bottom: 15),
+                      ? const EdgeInsets.only(top: 12, bottom: 7)
+                      : const EdgeInsets.only(top: 20, bottom: 15),
                       child: Text(
                         dest.description,
                         textAlign: TextAlign.justify,
                         style: TextStyle(
                           fontSize: widget.isSmall ? 11: 16, 
-                          color: Color(0xFF7C7C7C), 
+                          color: const Color(0xFF7C7C7C), 
                           fontWeight: FontWeight.w300
                         ),
                       ),
@@ -384,7 +384,7 @@ class _DetailDestinationState extends State<DetailDestination> {
                                           spacing: 5,
                                           crossAxisAlignment: WrapCrossAlignment.center,
                                           children: [
-                                            Icon(Icons.phone, color: Color(0xFF8AC4FA), size: widget.isSmall ? 15 : 18),
+                                            Icon(Icons.phone, color: const Color(0xFF8AC4FA), size: widget.isSmall ? 15 : 18),
                                             Text(
                                               sos.phone,
                                               style: TextStyle(
@@ -431,7 +431,7 @@ class _DetailDestinationState extends State<DetailDestination> {
                                 children: [
                                   if(dest.dos!.isNotEmpty) ...[
                                     Padding(
-                                      padding: EdgeInsets.only(bottom: 3),
+                                      padding: const EdgeInsets.only(bottom: 3),
                                       child: Row(
                                         children: [
                                           Icon(
@@ -459,12 +459,12 @@ class _DetailDestinationState extends State<DetailDestination> {
                             
                                   if(dest.donts!.isNotEmpty) ...[
                                     Padding(
-                                      padding: EdgeInsets.only(bottom: 3),
+                                      padding: const EdgeInsets.only(bottom: 3),
                                       child: Row(
                                         children: [
                                           Icon(
                                             Icons.close, 
-                                            color: Color(0xFFFF8484),
+                                            color: const Color(0xFFFF8484),
                                             size: widget.isSmall ? 16 :  23,
                                           ),
                                           Text(
@@ -504,7 +504,7 @@ class _DetailDestinationState extends State<DetailDestination> {
               right: 10,
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: CircleAvatar(
+                child: const CircleAvatar(
                   radius: 18,
                   backgroundColor: Colors.black54,
                   child: Icon(Icons.close, color: Colors.white),

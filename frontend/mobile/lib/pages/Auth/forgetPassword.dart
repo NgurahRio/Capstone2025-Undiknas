@@ -33,9 +33,9 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: const Color(0xFF8AC4FA), size: 100,),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5, bottom: 30),
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF8AC4FA), size: 100,),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 5, bottom: 30),
                     child: Text(
                       "Succesful",
                       style: TextStyle(
@@ -45,7 +45,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                     ),
                   ),
               
-                  Text(
+                  const Text(
                     textAlign: TextAlign.center,
                     "We've sent a reset link to your email.\nCheck your inbox to create\na new password",
                     style: TextStyle(
@@ -61,7 +61,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                       onPressed: () {
                         Navigator.pushAndRemoveUntil(
                           context, 
-                          MaterialPageRoute(builder: (context) => LoginPage()), 
+                          MaterialPageRoute(builder: (context) => const LoginPage()), 
                           (route) => false,
                         );
                       }
@@ -83,7 +83,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       body: SafeArea(
         child: Stack(
           children: [
@@ -96,10 +96,10 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
         
                     Image.asset('assets/l&n.png', height: 70,),
         
-                    Align(
+                    const Align(
                       alignment: Alignment.centerLeft,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 40, bottom: 25),
+                        padding: EdgeInsets.only(top: 40, bottom: 25),
                         child: Text(
                           "Forget Password",
                           style: TextStyle(
@@ -110,12 +110,12 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                       ),
                     ),
         
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5),
                       child: Text(
                         "Enter your registered email address below. We'll send you a link to reset your password",
                         style: TextStyle(
-                          color: const Color(0xFF666666),
+                          color: Color(0xFF666666),
                         ),
                       ),
                     ),
@@ -142,7 +142,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
               left: 15,
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: Icon(Icons.arrow_back_ios),
+                child: const Icon(Icons.arrow_back_ios),
               )
             )
           ],

@@ -32,7 +32,7 @@ class _CalenderStyleState extends State<CalenderStyle> {
                 shape: BoxShape.circle,
                 color: Colors.transparent,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.close,
                 size: 20,
                 color: Colors.red,
@@ -54,7 +54,7 @@ class _CalenderStyleState extends State<CalenderStyle> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _headerShowDialog(title: "Choose Month"),
-            Divider(thickness: 2,),
+            const Divider(thickness: 2,),
           ],
         ),
         content: SizedBox(
@@ -221,7 +221,7 @@ class _CalenderStyleState extends State<CalenderStyle> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
               decoration: BoxDecoration(
-                color: Color(0xffff8484),
+                color: const Color(0xffff8484),
                 borderRadius: BorderRadius.circular(7),
               ),
               child: GestureDetector(

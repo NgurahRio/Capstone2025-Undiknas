@@ -59,7 +59,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                     _isSelect == false
                       ? "Are you sure want to delete all these items?"
                       : "Delete this item?",
-                    style: TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ),
                 Center(
@@ -68,14 +68,14 @@ class _BookmarkPageState extends State<BookmarkPage> {
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     decoration: BoxDecoration(
-                      color: Color(0xFF547899),
+                      color: const Color(0xFF547899),
                       borderRadius: BorderRadius.circular(7),
                     ),
                     child: GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
                       },
-                      child: Text(
+                      child: const Text(
                         "Cancel",
                         style: TextStyle(
                           color: Colors.white, 
@@ -90,11 +90,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 Center(
                   child: Container(
                     width: 170,
-                    margin: EdgeInsets.only(top: 7),
+                    margin: const EdgeInsets.only(top: 7),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     decoration: BoxDecoration(
-                      color: Color(0xffff8484),
+                      color: const Color(0xffff8484),
                       borderRadius: BorderRadius.circular(7),
                     ),
                     child: GestureDetector(
@@ -107,7 +107,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                   
                         Navigator.pop(context);
                       },
-                      child: Text(
+                      child: const Text(
                         "Delete", 
                         style: TextStyle(
                           color: Colors.white, 
@@ -154,7 +154,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
         child: CompositedTransformFollower(
           link: _dropdownLink,
           showWhenUnlinked: false,
-          offset: Offset(0, 34),
+          offset: const Offset(0, 34),
           child: Material(
             color: Colors.white,
             elevation: 4,
@@ -175,7 +175,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                         },
                         child: Container(
                           alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.symmetric(vertical: 7),
+                          padding: const EdgeInsets.symmetric(vertical: 7),
                           child: Text(
                             item,
                             style: const TextStyle(
@@ -186,7 +186,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                         ),
                       ),
                   
-                      Divider(height: 0, thickness: 1,)
+                      const Divider(height: 0, thickness: 1,)
                     ],
                   ),
                 );
@@ -212,9 +212,9 @@ class _BookmarkPageState extends State<BookmarkPage> {
     }).toList();
     
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(85), 
+        preferredSize: const Size.fromHeight(85), 
         child: Header(title: "Bookmark")
       ),
       body: SafeArea(
@@ -231,9 +231,9 @@ class _BookmarkPageState extends State<BookmarkPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: const Text(
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: Text(
                               "You are not logged in.",
                               style: TextStyle(
                                 fontSize: 18,
@@ -266,10 +266,10 @@ class _BookmarkPageState extends State<BookmarkPage> {
                             Row(
                               children: [
                                 Container(
-                                  margin: EdgeInsets.only(right: 8),
+                                  margin: const EdgeInsets.only(right: 8),
                                   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: _isSelect == false ? Color(0xFF8ac4fa) : Colors.black45,
+                                    color: _isSelect == false ? const Color(0xFF8ac4fa) : Colors.black45,
                                     borderRadius: BorderRadius.circular(7),
                                   ),
                                   child: GestureDetector(
@@ -280,7 +280,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                     },
                                     child:  Text(
                                       _isSelect == false ? 'Choose' : "Cancel",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white, 
                                         fontSize: 13, 
                                         fontWeight: FontWeight.w500
@@ -291,7 +291,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: Color(0xffff8484),
+                                    color: const Color(0xffff8484),
                                     borderRadius: BorderRadius.circular(7),
                                   ),
                                   child: GestureDetector(
@@ -302,14 +302,14 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                           padding: const EdgeInsets.only(right: 10),
                                           child: Text(
                                             _isSelect == false ? 'Delete All' : "Delete", 
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.white, 
                                               fontSize: 13, 
                                               fontWeight: FontWeight.w500
                                             )
                                           ),
                                         ),
-                                        Icon(Icons.delete, color: Colors.white, size: 16,)
+                                        const Icon(Icons.delete, color: Colors.white, size: 16,)
                                       ],
                                     ),
                                   ),
@@ -320,6 +320,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                             CompositedTransformTarget(
                               link: _dropdownLink,
                               child: GestureDetector(
+                                onTap: _toggleDropdown,
                                 child: Container(
                                   height: 30,
                                   width: 130,
@@ -341,8 +342,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                       Icon(Icons.arrow_drop_down, color: Colors.white),
                                     ],
                                   ),
-                                ),
-                                onTap: _toggleDropdown
+                                )
                               ),
                             ),
                   
@@ -353,8 +353,8 @@ class _BookmarkPageState extends State<BookmarkPage> {
                         constraints: BoxConstraints(
                           minHeight: MediaQuery.of(context).size.height * 0.71,
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                          decoration: BoxDecoration(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
                             boxShadow: [
@@ -372,11 +372,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                               child:Row(
                                 children: [
-                                  Text("| ", style: TextStyle(color: Color(0xFF6189af), fontSize: 21)),
+                                  const Text("| ", style: TextStyle(color: Color(0xFF6189af), fontSize: 21)),
                                   
                                   Text(
                                     selectedType == "ALL" ? "All Bookmark" : "Bookmark $selectedType", 
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w900,
                                     )
@@ -386,11 +386,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
                             ),
 
                             filteredItems.isEmpty
-                            ? Row(
+                            ? const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 50),
+                                    padding: EdgeInsets.symmetric(vertical: 50),
                                     child: Text(
                                       textAlign: TextAlign.center,
                                       "Destinations and events\nhave not beenbookmarked yet",
@@ -403,7 +403,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               )
                             : ListView.builder(
                                 shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
+                                physics: const NeverScrollableScrollPhysics(),
                                 itemCount: filteredItems.length,
                                 itemBuilder:(context, index) {
                                   final bookM = filteredItems[index];
@@ -424,13 +424,13 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                               width: 20,
                                               height: 20,
                                               decoration: BoxDecoration(
-                                                border: Border.all(color: Color(0xFF547899)),
+                                                border: Border.all(color: const Color(0xFF547899)),
                                                 borderRadius: BorderRadius.circular(3)
                                               ),
                                               child: Checkbox(
                                                 fillColor: const WidgetStatePropertyAll(Colors.white),
                                                 side: const BorderSide(color: Colors.white),
-                                                activeColor: Color(0xFF547899),
+                                                activeColor: const Color(0xFF547899),
                                                 checkColor: const Color(0xFF547899),
                                                 value: selected.contains(bookM.id_bookmark),
                                                 onChanged: (bool? value) {

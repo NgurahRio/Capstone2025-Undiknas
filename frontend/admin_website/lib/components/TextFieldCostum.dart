@@ -163,7 +163,7 @@ class SearchFieldCostum extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
 
-  SearchFieldCostum({
+  const SearchFieldCostum({
     super.key,
     required this.controller,
     required this.hintText,

@@ -35,7 +35,7 @@ class _HeaderCostumState extends State<HeaderCostum> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if(isDesktop)
-                  Text("Dashboard"),
+                  const Text("Dashboard"),
         
                 SearchFieldCostum(
                   controller: widget.controller, 
@@ -62,7 +62,7 @@ class _HeaderCostumState extends State<HeaderCostum> {
                     width: 1
                   )
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person_outline, 
                   color: Colors.black54,
                   size: 30,

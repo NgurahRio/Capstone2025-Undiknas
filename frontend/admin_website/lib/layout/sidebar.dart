@@ -191,7 +191,7 @@ class _SidebarState extends State<Sidebar> {
               bottom: 0,
               left: 0,
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 250),
                 width: 200,
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -199,7 +199,7 @@ class _SidebarState extends State<Sidebar> {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.3),
                       blurRadius: 10,
-                      offset: Offset(3, 0),
+                      offset: const Offset(3, 0),
                     )
                   ],
                 ),
@@ -219,11 +219,11 @@ class _SidebarState extends State<Sidebar> {
                   });
                 },
                 child: Container(
-                  padding: EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(5),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black38,
                         offset: Offset(2, 2),
@@ -231,7 +231,7 @@ class _SidebarState extends State<Sidebar> {
                       )
                     ]
                   ),
-                  child: Icon(Icons.menu, color: Colors.black,),
+                  child: const Icon(Icons.menu, color: Colors.black,),
                 ),
               )
             )

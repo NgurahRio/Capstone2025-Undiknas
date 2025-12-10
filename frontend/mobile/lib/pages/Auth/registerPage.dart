@@ -18,7 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -29,10 +29,10 @@ class _RegisterPageState extends State<RegisterPage> {
           
                 Image.asset('assets/l&n.png', height: 70,),
           
-                Align(
+                const Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 40, bottom: 15),
+                    padding: EdgeInsets.only(top: 40, bottom: 15),
                     child: Text(
                       "Sign Up",
                       style: TextStyle(
@@ -78,15 +78,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Already have a UBX account? "),
+                    const Text("Already have a UBX account? "),
                     InkWell(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
                         );
                       },
-                      child: Text(
+                      child: const Text(
                         "Login",
                         style: TextStyle(
                           color: Color(0xFF8AC4FA),

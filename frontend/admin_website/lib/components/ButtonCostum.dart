@@ -41,7 +41,7 @@ class _ButtonCostumState extends State<ButtonCostum> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           if(widget.isIcon)
-            Icon(Icons.add_circle_outline_outlined),
+            const Icon(Icons.add_circle_outline_outlined),
           Text(
             widget.text,
             style: const TextStyle(
@@ -77,7 +77,7 @@ class _ButtonCostum2State extends State<ButtonCostum2> {
       onPressed: widget.onPressed,
       onHover: (value) => setState(() => hover = value),
       style: TextButton.styleFrom(
-        minimumSize: Size(double.infinity, 43),
+        minimumSize: const Size(double.infinity, 43),
         backgroundColor: hover
             ? const Color(0xFF6BB5F7)
             : const Color(0xFF8AC4FA),

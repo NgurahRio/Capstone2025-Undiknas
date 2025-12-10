@@ -175,7 +175,7 @@ class _SosPageState extends State<SosPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

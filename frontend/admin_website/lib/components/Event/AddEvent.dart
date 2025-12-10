@@ -382,8 +382,8 @@ class _AddEventState extends State<AddEvent> {
                     ),
                   ),
 
-                  Padding(
-                    padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 30, left: 20, right: 20),
                     child: Text(
                       "_"
                     ),

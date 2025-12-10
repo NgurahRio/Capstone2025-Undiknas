@@ -23,7 +23,7 @@ class _CalenderStyleState extends State<CalenderStyle> {
         Center(
           child: Text(
             title, 
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold
             ),
@@ -41,10 +41,10 @@ class _CalenderStyleState extends State<CalenderStyle> {
                 shape: BoxShape.circle,
                 color: Colors.transparent,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.close,
                 size: 17,
-                color: const Color(0xFFFF8484),
+                color: Color(0xFFFF8484),
               ),
             ),
           ),
@@ -58,12 +58,12 @@ class _CalenderStyleState extends State<CalenderStyle> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
-        contentPadding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
+        contentPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _headerShowDialog(dialogContext, title: "Choose Month"),
-            Divider(thickness: 2, color: Colors.black,),
+            const Divider(thickness: 2, color: Colors.black,),
           ],
         ),
         content: SizedBox(
