@@ -3,8 +3,11 @@ package facility
 import (
 	"backend/config"
 	"backend/models"
-	"io/ioutil"
+	"errors"
+	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,18 +22,19 @@ func UpdateFacility(c *gin.Context) {
 	}
 
 	nameFacility := c.PostForm("namefacility")
-	fileType := c.PostForm("file_type")
 
 	if nameFacility != "" {
-		facility.NameFacility = nameFacility
-	}
-
-	if fileType != "" {
-		facility.FileType = fileType
+		facility.NameFacility = strings.TrimSpace(nameFacility)
 	}
 
 	file, err := c.FormFile("icon")
 	if err == nil {
+		ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(file.Filename), "."))
+		if !isValidImage(ext) {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Tipe file tidak valid (hanya png, jpg, jpeg, webp, svg)"})
+			return
+		}
+
 		openedFile, err := file.Open()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file"})
@@ -38,13 +42,16 @@ func UpdateFacility(c *gin.Context) {
 		}
 		defer openedFile.Close()
 
-		data, err := ioutil.ReadAll(openedFile)
+		data, err := io.ReadAll(openedFile)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file"})
 			return
 		}
 
 		facility.Icon = data
+	} else if !errors.Is(err, http.ErrMissingFile) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal mengambil file icon"})
+		return
 	}
 
 	if err := config.DB.Save(&facility).Error; err != nil {
@@ -54,6 +61,10 @@ func UpdateFacility(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Fasilitas berhasil diperbarui",
-		"data":    facility,
+		"data": gin.H{
+			"id_facility":  facility.IDFacility,
+			"namefacility": facility.NameFacility,
+			"hasIcon":      len(facility.Icon) > 0,
+		},
 	})
 }
