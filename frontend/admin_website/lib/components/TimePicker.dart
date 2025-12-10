@@ -13,17 +13,15 @@ Future<TimeOfDay?> showAnalogPicker(
     builder: (context, child) {
       return Theme(
         data: Theme.of(context).copyWith(
-          dialogBackgroundColor: Colors.transparent,
-
           timePickerTheme: TimePickerThemeData(
             backgroundColor: Colors.white,
             hourMinuteColor: Colors.white,
             hourMinuteTextColor: Colors.black,
             dialBackgroundColor: Colors.grey[200],
-            dialHandColor: Color(0xFF8AC4FA),
+            dialHandColor: const Color(0xFF8AC4FA),
             dialTextColor: Colors.black,
             entryModeIconColor: Colors.black,
-            dialTextStyle: TextStyle(
+            dialTextStyle: const TextStyle(
               fontSize: 12
             )
           ),
@@ -32,7 +30,7 @@ Future<TimeOfDay?> showAnalogPicker(
             brightness: Brightness.light,
             primary: Colors.blue,
             onSurface: Colors.black,
-          ),
+          ), dialogTheme: DialogThemeData(backgroundColor: Colors.transparent),
         ),
 
         child: MediaQuery(
@@ -53,7 +51,7 @@ Future<TimeOfDay?> showAnalogPicker(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           isClose ? "Close Time" : "Open Time",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                           ),

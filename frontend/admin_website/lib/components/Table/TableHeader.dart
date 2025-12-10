@@ -5,7 +5,7 @@ class TableHeader extends StatelessWidget {
   final String title;
   final int? flex;
 
-  TableHeader({
+  const TableHeader({
     super.key,
     required this.title,
     this.flex,

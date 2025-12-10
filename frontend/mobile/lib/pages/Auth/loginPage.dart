@@ -170,11 +170,11 @@ class _LoginPageState extends State<LoginPage>
                       opacity: _fadeOut.value,
                       child: Column(
                         children: [
-                          Align(
+                          const Align(
                             alignment: Alignment.centerLeft,
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 40, bottom: 15),
-                              child: const Text(
+                              padding: EdgeInsets.only(top: 40, bottom: 15),
+                              child: Text(
                                 "Log in",
                                 style: TextStyle(
                                   fontSize: 35,
@@ -209,7 +209,7 @@ class _LoginPageState extends State<LoginPage>
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                       builder: (context) => ForgetPasswordPage(),
+                                       builder: (context) => const ForgetPasswordPage(),
                                     ),
                                   );
                                 },
@@ -229,7 +229,7 @@ class _LoginPageState extends State<LoginPage>
                               await _controller.forward();
                               Navigator.pushAndRemoveUntil(
                                 context, 
-                                MaterialPageRoute(builder: (context) => BottonNavigation()), 
+                                MaterialPageRoute(builder: (context) => const BottonNavigation()), 
                                 (route) => false
                               );
                             },
@@ -252,7 +252,7 @@ class _LoginPageState extends State<LoginPage>
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => RegisterPage(),
+                                        builder: (context) => const RegisterPage(),
                                       ),
                                     );
                                   },

@@ -16,7 +16,7 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 
 
 void main() {
-  setUrlStrategy(PathUrlStrategy());
+  setUrlStrategy(const PathUrlStrategy());
   runApp(
     ChangeNotifierProvider(
       create: (_) => AuthService(),

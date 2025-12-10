@@ -22,8 +22,8 @@ class Package {
   }
 }
 
-List<SubPackage>getSubPackage(List<int> id_subp) {
-  return subPackages.where((subp) => id_subp.contains(subp.id_subPackage)).toList();
+List<SubPackage>getSubPackage(List<int> idSubp) {
+  return subPackages.where((subp) => idSubp.contains(subp.id_subPackage)).toList();
 }
 
 final List<Package> packages = [

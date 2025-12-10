@@ -8,14 +8,14 @@ Widget boxType ({
   required String text,
 }) {
   return Container(
-    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
     decoration: BoxDecoration(
-      color: Color(0xFF8AC4FA),
+      color: const Color(0xFF8AC4FA),
       borderRadius: BorderRadius.circular(5),
     ),
     child: Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 11,
         color: Colors.white,
         fontWeight: FontWeight.w500,
@@ -32,7 +32,7 @@ Widget labelContent ({
     padding: EdgeInsets.only(bottom: 10, top: paddingTop ?? 20),
     child: Text(
       text, 
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 16, 
         fontWeight: FontWeight.w600, 
         color: Colors.black
@@ -131,7 +131,7 @@ void showDetailEvent(
                       ),
               
                       Padding(
-                        padding: EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(15),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -139,7 +139,7 @@ void showDetailEvent(
                               padding: const EdgeInsets.only(bottom: 5),
                               child: Text(
                                 evt.name,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -148,8 +148,8 @@ void showDetailEvent(
 
                             Row(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 5),
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 5),
                                   child: Icon(
                                     Icons.location_on,
                                     color: Colors.red, size: 18
@@ -158,7 +158,7 @@ void showDetailEvent(
                                 Expanded(
                                   child: Text(
                                     evt.location,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.black87,
                                     ),
                                   ),
@@ -267,7 +267,7 @@ void showDetailEvent(
                                                 padding: const EdgeInsets.only(bottom: 5),
                                                 child: Text(
                                                   dos,
-                                                  style: TextStyle(fontSize: 12),
+                                                  style: const TextStyle(fontSize: 12),
                                                 ),
                                               ),
                                             )
@@ -288,7 +288,7 @@ void showDetailEvent(
                                                 padding: const EdgeInsets.only(bottom: 5),
                                                 child: Text(
                                                   dont,
-                                                  style: TextStyle(fontSize: 12),
+                                                  style: const TextStyle(fontSize: 12),
                                                 ),
                                               ),
                                             )
@@ -309,7 +309,7 @@ void showDetailEvent(
                                               padding: const EdgeInsets.only(bottom: 5),
                                               child: Text(
                                                 safety,
-                                                style: TextStyle(fontSize: 12),
+                                                style: const TextStyle(fontSize: 12),
                                               ),
                                             ),
                                           )
@@ -331,7 +331,7 @@ void showDetailEvent(
                     right: 10,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: CircleAvatar(
+                      child: const CircleAvatar(
                         radius: 18,
                         backgroundColor: Colors.black54,
                         child: Icon(Icons.close, color: Colors.white),

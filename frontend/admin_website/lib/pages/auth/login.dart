@@ -52,8 +52,8 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Image.asset("assets/iconWeb.png", height: 75,),
           
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20, bottom: 10),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 20, bottom: 10),
                     child: Text(
                       "ADMIN LOGIN",
                       style: TextStyle(
@@ -97,15 +97,15 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextButton.styleFrom(
                         backgroundColor: const Color(0xFF8AC4FA),
                         foregroundColor: Colors.white,
-                        minimumSize: Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50),
                         ),
                       ),
                       onPressed: _handleLogin,
-                      child: Text(
+                      child: const Text(
                         "Login",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),

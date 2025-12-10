@@ -17,8 +17,8 @@ class BottonNavigation extends StatefulWidget {
 class _BottonNavigationState extends State<BottonNavigation> {
   int _selectedIndex = 0;
   List<Widget> get screens => [
-    Dashboard(),
-    EventPage(),
+    const Dashboard(),
+    const EventPage(),
     BookmarkPage(currentUser: widget.currentUser),
     ProfilePage(currentUser: widget.currentUser),
   ];
@@ -31,11 +31,11 @@ class _BottonNavigationState extends State<BottonNavigation> {
 
   Widget itemsNavigation({required IconData icon, required int selectedIndex}) {
     return  Container(
-      padding: EdgeInsets.all(5),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: _selectedIndex == selectedIndex ? [Color(0xff8AC4FA), Color(0xFF6189af)] : [const Color.fromARGB(255, 232, 231, 231), const Color.fromARGB(255, 232, 231, 231)],
+          colors: _selectedIndex == selectedIndex ? [const Color(0xff8AC4FA), const Color(0xFF6189af)] : [const Color.fromARGB(255, 232, 231, 231), const Color.fromARGB(255, 232, 231, 231)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -68,15 +68,15 @@ class _BottonNavigationState extends State<BottonNavigation> {
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
                     blurRadius: 4,
-                    offset: Offset(0, -3),
+                    offset: const Offset(0, -3),
                   ),
                 ],
               ),

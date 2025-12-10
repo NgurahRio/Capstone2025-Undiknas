@@ -129,7 +129,7 @@ class _PackagePageState extends State<PackagePage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Name",),
@@ -155,7 +155,7 @@ class _PackagePageState extends State<PackagePage> {
                             child: Row(
                               children: [
                                 TableContent(title: pac.destinationId.name),
-                                TableContent(title: "Destination"),
+                                const TableContent(title: "Destination"),
                                 TableContent(
                                   title: pac.subPackage.map((s) => s.name).join(", "), 
                                   flex: 3,
@@ -191,7 +191,7 @@ class _PackagePageState extends State<PackagePage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

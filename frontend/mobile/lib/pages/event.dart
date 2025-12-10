@@ -32,9 +32,9 @@ class _EventPageState extends State<EventPage> {
     final filteredEvent = _filteredData;
 
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(100),
+        preferredSize: const Size.fromHeight(100),
         child: Header(title: "Event",)
       ),
       body: Container(
@@ -53,13 +53,13 @@ class _EventPageState extends State<EventPage> {
                 ),
             
                 filteredEvent.isEmpty 
-                  ? Text("Tidak ada event pada tanggal ini")
+                  ? const Text("Tidak ada event pada tanggal ini")
                   : Container(
                       constraints: BoxConstraints(
                         minHeight: MediaQuery.of(context).size.height * 0.345,
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                      decoration: BoxDecoration(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
                         boxShadow: [
@@ -73,8 +73,8 @@ class _EventPageState extends State<EventPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             child:Row(
                               children: [
                                 Text("| ", style: TextStyle(color: Color(0xFF6189af), fontSize: 21)),
@@ -92,8 +92,8 @@ class _EventPageState extends State<EventPage> {
                   
                           GridView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               mainAxisSpacing: 8,
                             ), 

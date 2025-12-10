@@ -38,16 +38,16 @@ class Destination {
   });
 }
 
-List<SubCategory> getSubCategories(List<int> id_subc) {
-  return subCategories.where((subc) => id_subc.contains(subc.id_subCategory)).toList();
+List<SubCategory> getSubCategories(List<int> idSubc) {
+  return subCategories.where((subc) => idSubc.contains(subc.id_subCategory)).toList();
 }
 
-List<Facility> getFacilities(List<int> id_f) {
-  return facilities.where((f) => id_f.contains(f.id_facility)).toList();
+List<Facility> getFacilities(List<int> idF) {
+  return facilities.where((f) => idF.contains(f.id_facility)).toList();
 }
 
-List<SOS> getSOS(List<int> id_s) {
-  return sos.where((s) => id_s.contains(s.id_sos)).toList();
+List<SOS> getSOS(List<int> idS) {
+  return sos.where((s) => idS.contains(s.id_sos)).toList();
 }
 
 final List<Destination> destinations = [

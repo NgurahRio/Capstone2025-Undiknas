@@ -128,7 +128,7 @@ class _DestinationPageState extends State<DestinationPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Name"),
@@ -193,7 +193,7 @@ class _DestinationPageState extends State<DestinationPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

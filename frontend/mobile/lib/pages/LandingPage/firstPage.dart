@@ -8,7 +8,7 @@ class FirstPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       body: SafeArea(
         child: Center(
           child: Column(
@@ -22,7 +22,7 @@ class FirstPage extends StatelessWidget {
 
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.only(top: 30, left: 40, right: 40,),
+                  padding: const EdgeInsets.only(top: 30, left: 40, right: 40,),
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -32,15 +32,15 @@ class FirstPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text(
+                      const Text(
                         "Easy Tour Booking", 
                         style: TextStyle(fontSize: 35,fontWeight: FontWeight.bold)
                       ),
 
-                      Text("Enjoy a smooth journey with simple and secure online reservations.", 
+                      const Text("Enjoy a smooth journey with simple and secure online reservations.", 
                         style: TextStyle(
                           fontSize: 15,
-                          color: const Color.fromARGB(255, 125, 125, 125),
+                          color: Color.fromARGB(255, 125, 125, 125),
                         )
                       ),
 
@@ -49,7 +49,7 @@ class FirstPage extends StatelessWidget {
                         onPressed: (){
                           Navigator.pushAndRemoveUntil(
                             context, 
-                            MaterialPageRoute(builder: (context) => LoginPage()), 
+                            MaterialPageRoute(builder: (context) => const LoginPage()), 
                             (route) => false
                           );
                         }, 

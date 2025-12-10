@@ -4,7 +4,7 @@ class Header extends StatelessWidget {
   final VoidCallback? onTapBack;
   final String? title;
 
-  Header({
+  const Header({
     super.key,
     this.onTapBack,
     this.title,
@@ -21,7 +21,7 @@ class Header extends StatelessWidget {
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
                 blurRadius: 6,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -35,14 +35,14 @@ class Header extends StatelessWidget {
                   onTapBack != null 
                     ? GestureDetector(
                         onTap: onTapBack,
-                        child: Icon(Icons.arrow_back_ios),
+                        child: const Icon(Icons.arrow_back_ios),
                       )
                     : Image.asset('assets/l&n.png', height: 30,),
                   if(title != null && title!.isNotEmpty)
                     Center(
                       child: Text(
                         title!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 20,
                           letterSpacing: 1,
@@ -58,15 +58,15 @@ class Header extends StatelessWidget {
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5),
-                              color: Color(0xFF6189af)
+                              color: const Color(0xFF6189af)
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
                               child: Row(
                                 children: [
                                   Image.asset('assets/icons/chatbot.png', scale: 0.9,),
-                                  SizedBox(width: 5,),
-                                  Text('Chat', style: TextStyle(color: Colors.white, fontSize: 18),),
+                                  const SizedBox(width: 5,),
+                                  const Text('Chat', style: TextStyle(color: Colors.white, fontSize: 18),),
                                 ]
                               ),
                             ),

@@ -86,14 +86,14 @@ void showDetailPackage(
           width: 500,
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.all(15),
+              padding: const EdgeInsets.all(15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         "Detail Package",
                         style: TextStyle(
                           fontSize: 24,
@@ -103,7 +103,7 @@ void showDetailPackage(
                   
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: CircleAvatar(
+                        child: const CircleAvatar(
                           radius: 18,
                           backgroundColor: Colors.black54,
                           child: Icon(Icons.close, color: Colors.white),
@@ -135,7 +135,7 @@ void showDetailPackage(
                                       Container(
                                         width: 80,
                                         height: 80,
-                                        margin: EdgeInsets.only(right: 10),
+                                        margin: const EdgeInsets.only(right: 10),
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                             fit: BoxFit.cover,
@@ -153,7 +153,7 @@ void showDetailPackage(
                                               padding: const EdgeInsets.only(bottom: 3),
                                               child: Text(
                                                 pac.destinationId.name,
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 16
                                                 ),
@@ -162,8 +162,8 @@ void showDetailPackage(
                                         
                                             Row(
                                               children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.only(right: 5),
+                                                const Padding(
+                                                  padding: EdgeInsets.only(right: 5),
                                                   child: Icon(
                                                     Icons.location_on,
                                                     color: Colors.red, size: 12
@@ -172,7 +172,7 @@ void showDetailPackage(
                                                 Expanded(
                                                   child: Text(
                                                     pac.destinationId.location,
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       color: Colors.black87,
                                                       fontSize: 11
                                                     ),
@@ -191,7 +191,7 @@ void showDetailPackage(
                           ),
                         ),
                     
-                        Positioned(
+                        const Positioned(
                           top: 3,
                           right: 3,
                           child: Icon(Icons.ads_click, color: Color(0xFF8AC4Fa),)
@@ -201,7 +201,7 @@ void showDetailPackage(
                   ),
 
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
                         TableHeader(title: "Package dest"),

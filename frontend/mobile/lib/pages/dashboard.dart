@@ -150,11 +150,11 @@ class _DashboardState extends State<Dashboard> {
 
           Row(
             children: [
-              Text("| ", style: TextStyle(color: Color(0xFF6189af), fontSize: 17)),
+              const Text("| ", style: TextStyle(color: Color(0xFF6189af), fontSize: 17)),
               
               Text(
                 title, 
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                 )
@@ -165,7 +165,7 @@ class _DashboardState extends State<Dashboard> {
           if(onTap != null)
             InkWell(
               onTap: onTap,
-              child: Text(
+              child: const Text(
                 "See All",
                 style: TextStyle(color: Color(0xFF8AC4FA), fontSize: 14),
               ),
@@ -258,9 +258,9 @@ class _DashboardState extends State<Dashboard> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: Color(0xfff3f9ff),
+      backgroundColor: const Color(0xfff3f9ff),
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(85), 
+        preferredSize: const Size.fromHeight(85), 
         child: Header()
       ),
 
@@ -282,11 +282,11 @@ class _DashboardState extends State<Dashboard> {
                   Container(
                     height: 180,
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
                         bottomRight: Radius.circular(30),
                       ),
-                      image: const DecorationImage(
+                      image: DecorationImage(
                         image: AssetImage("assets/gambar1.png"),
                         fit: BoxFit.cover,
                       ),
@@ -303,20 +303,20 @@ class _DashboardState extends State<Dashboard> {
                             children: [
                               Text(
                                 "${getGreeting()} Ready to explore?",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight:FontWeight.w900,
                                   fontSize: 26,
                                   shadows: [
                                     Shadow(
-                                      color: const Color.fromARGB(255, 56, 56, 56),
+                                      color: Color.fromARGB(255, 56, 56, 56),
                                       offset: Offset(0, 3),
                                       blurRadius: 6,
                                     )
                                   ]
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 "The Best Ubud Experience",
                                 style: TextStyle(
                                   color: Colors.white,
@@ -324,7 +324,7 @@ class _DashboardState extends State<Dashboard> {
                                   fontSize: 18,
                                   shadows: [
                                     Shadow(
-                                      color: const Color.fromARGB(255, 56, 56, 56),
+                                      color: Color.fromARGB(255, 56, 56, 56),
                                       offset: Offset(0, 3),
                                       blurRadius: 6,
                                     )
@@ -340,7 +340,7 @@ class _DashboardState extends State<Dashboard> {
                             child: Container(
                               height: 45,
                               width: double.infinity,
-                              padding: EdgeInsets.only(left: 15),
+                              padding: const EdgeInsets.only(left: 15),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(15)
@@ -370,11 +370,11 @@ class _DashboardState extends State<Dashboard> {
                                   suffixIcon: Container(
                                     width: 45,
                                     height: 45,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF8AC4FA),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF8AC4FA),
                                       borderRadius: BorderRadius.horizontal(right: Radius.circular(15))
                                     ),
-                                    child: Icon(Icons.search, color: Colors.white,),
+                                    child: const Icon(Icons.search, color: Colors.white,),
                                   )
                                 ),
                               ),
@@ -402,7 +402,7 @@ class _DashboardState extends State<Dashboard> {
                                 children: [
                                   Text(
                                     _searchController.text,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
                                       color: Colors.black,
@@ -413,13 +413,13 @@ class _DashboardState extends State<Dashboard> {
                                     children: [
                                       Text(
                                         "${searchedDestinations.length} ",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w900,
                                           color: Colors.black,
                                         ),
                                       ),
-                                      Text(
+                                      const Text(
                                         "Results Found",
                                         style: TextStyle(
                                           fontSize: 14,
@@ -552,8 +552,8 @@ class _DashboardState extends State<Dashboard> {
                         },
                       ),
               
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 15, bottom: 5),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 20, top: 15, bottom: 5),
                         child: Text(
                           "#SpecialForYou", 
                           style: TextStyle(

@@ -174,15 +174,15 @@ class _BoxImageContentState extends State<BoxImageContent> {
     return Expanded(
       child: Container(
         padding: widget.images.isEmpty 
-          ? EdgeInsets.symmetric(horizontal: 15, vertical: 7)
-          : EdgeInsets.all(5),
+          ? const EdgeInsets.symmetric(horizontal: 15, vertical: 7)
+          : const EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(5),
           border: Border.all(color: Colors.black54, width: 0.5)
         ),
         child: widget.images.isEmpty
-          ? Text(
+          ? const Text(
               "Choose File",
               style: TextStyle(color: Colors.grey),
             )

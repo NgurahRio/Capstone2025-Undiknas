@@ -37,6 +37,14 @@ class _HeaderCostumState extends State<HeaderCostum> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if(isDesktop)
+<<<<<<< HEAD
+                  const Text("Dashboard"),
+        
+                SearchFieldCostum(
+                  controller: widget.controller, 
+                  hintText: "search"
+                )
+=======
                   Text("Dashboard"),
 
                 if(widget.isSearch)
@@ -44,6 +52,7 @@ class _HeaderCostumState extends State<HeaderCostum> {
                     controller: widget.controller, 
                     hintText: "search"
                   )
+>>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
               ],
             ),
         
@@ -65,7 +74,7 @@ class _HeaderCostumState extends State<HeaderCostum> {
                     width: 1
                   )
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person_outline, 
                   color: Colors.black54,
                   size: 30,

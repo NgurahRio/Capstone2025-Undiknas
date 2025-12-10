@@ -461,7 +461,7 @@ class _AddDestinationState extends State<AddDestination> {
                       }).toList()
                     ),
                   );
-                }).toList(),
+                }),
 
               fieldLabel(text: "Destination Name"),
 
@@ -485,7 +485,7 @@ class _AddDestinationState extends State<AddDestination> {
                 children: facilities.map((fac) {
                   return IntrinsicWidth(
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: Colors.black54, width: 0.5),

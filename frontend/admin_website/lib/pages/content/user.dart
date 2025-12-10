@@ -90,7 +90,7 @@ class _UserPageState extends State<UserPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Name"),
@@ -117,11 +117,15 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email),
                                 TableContent(title: user.roleid.role_name),
+<<<<<<< HEAD
+                                const TableContent(title: "Active", isStatus: true,),
+=======
+>>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
                               ],
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 ),
@@ -138,7 +142,7 @@ class _UserPageState extends State<UserPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Name"),
@@ -166,6 +170,10 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email, flex: 2,),
                                 TableContent(title: user.roleid.role_name),
+<<<<<<< HEAD
+                                const TableContent(title: "Active", isStatus: true,),
+=======
+>>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
 
                                 Expanded(
                                   flex: 1,
@@ -184,7 +192,7 @@ class _UserPageState extends State<UserPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )

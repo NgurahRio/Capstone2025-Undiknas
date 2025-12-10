@@ -22,8 +22,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController confNewPasswordController = TextEditingController();
 
   bool _obscureOldPass = true;
-  bool _obscureNewPass = true;
-  bool _obscureConfirmPass = true;
+  final bool _obscureNewPass = true;
+  final bool _obscureConfirmPass = true;
 
   Widget _passwordField({
     required TextEditingController controller,
@@ -218,9 +218,9 @@ class _ProfilePageState extends State<ProfilePage> {
             child: user == null
                 ? Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: const Text(
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: Text(
                           "You are not logged in.",
                           style: TextStyle(
                             fontSize: 18,
@@ -361,7 +361,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     isChangePassword = false;
                   });
                 },
-                child: Icon(Icons.arrow_back_ios),
+                child: const Icon(Icons.arrow_back_ios),
               )
             )
 

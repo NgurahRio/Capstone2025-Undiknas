@@ -34,26 +34,26 @@ class _FieldTextCustomState extends State<FieldTextCustom> {
         obscureText: widget.isPassword ? widget.obscurePass || widget.obscureConfPass : false,
         decoration: InputDecoration(
           labelText: widget.labelText,
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w500
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
+            borderSide: const BorderSide(
               color: Color.fromARGB(255, 230, 230, 230),
               width: 1.5,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
+            borderSide: const BorderSide(
               color: Colors.black,
               width: 1.5,
             ),

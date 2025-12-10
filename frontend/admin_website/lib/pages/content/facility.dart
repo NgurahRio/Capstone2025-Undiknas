@@ -67,7 +67,7 @@ class _FacilityPageState extends State<FacilityPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 
@@ -121,7 +121,7 @@ class _FacilityPageState extends State<FacilityPage> {
                   content: Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
                             TableHeader(title: "Icon"),
@@ -177,7 +177,7 @@ class _FacilityPageState extends State<FacilityPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   )
                 )
