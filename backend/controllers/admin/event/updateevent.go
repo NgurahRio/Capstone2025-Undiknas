@@ -3,6 +3,8 @@ package event
 import (
 	"backend/config"
 	"backend/models"
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -72,15 +74,63 @@ func UpdateEvent(c *gin.Context) {
 		}
 	}
 
-	file, err := c.FormFile("image")
-	if err == nil {
-		f, _ := file.Open()
-		defer f.Close()
+	imagesBase64 := []string{}
 
-		imgBytes, _ := io.ReadAll(f)
-		event.Image = imgBytes
+	// Collect multiple images if provided under the same "image" field.
+	if form, formErr := c.MultipartForm(); formErr == nil && form != nil {
+		if files, ok := form.File["image"]; ok {
+			for idx, file := range files {
+				f, openErr := file.Open()
+				if openErr != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file ke-" + strconv.Itoa(idx+1)})
+					return
+				}
 
-		updated["image"] = "uploaded"
+				imgBytes, readErr := io.ReadAll(f)
+				f.Close()
+				if readErr != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file ke-" + strconv.Itoa(idx+1)})
+					return
+				}
+
+				imagesBase64 = append(imagesBase64, base64.StdEncoding.EncodeToString(imgBytes))
+			}
+		}
+	}
+
+	// Fallback to single image upload if multipart slice not used.
+	if len(imagesBase64) == 0 {
+		file, err := c.FormFile("image")
+		if err == nil {
+			f, openErr := file.Open()
+			if openErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membuka file"})
+				return
+			}
+			defer f.Close()
+
+			imgBytes, readErr := io.ReadAll(f)
+			if readErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal membaca file"})
+				return
+			}
+
+			imagesBase64 = append(imagesBase64, base64.StdEncoding.EncodeToString(imgBytes))
+		} else if err != http.ErrMissingFile {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Gagal mengambil file image"})
+			return
+		}
+	}
+
+	if len(imagesBase64) > 0 {
+		jsonBytes, marshalErr := json.Marshal(imagesBase64)
+		if marshalErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Gagal memproses image"})
+			return
+		}
+
+		event.ImageEvent = string(jsonBytes)
+		updated["image_event"] = "uploaded"
 	}
 
 	if len(updated) == 0 {
