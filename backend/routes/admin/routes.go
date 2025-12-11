@@ -111,6 +111,8 @@ func SetupRouter() *gin.Engine {
 		admin.POST("/packages", packagess.CreatePackages)
 		admin.GET("/packages", packagess.GetAllPackages)
 		admin.GET("/packages/:destinationId", packagess.GetPackageByDestinationID)
+		admin.PUT("/packages/:destinationId", packagess.UpdatePackages)
+		admin.DELETE("/packages/:destinationId", packagess.DeletePackages)
 
 
 	}
