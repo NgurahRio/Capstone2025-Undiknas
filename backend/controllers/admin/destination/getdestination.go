@@ -12,8 +12,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type destinationImages struct {
-	Image string `json:"image"`
+func normalizeImages(data string) []string {
+	if data == "" {
+		return []string{}
+	}
+
+	var images []string
+
+	if err := json.Unmarshal([]byte(data), &images); err == nil {
+		return images
+	}
+
+	raw := strings.Split(data, ",")
+	for _, item := range raw {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			images = append(images, item)
+		}
+	}
+
+	return images
 }
 
 func GetAllDestinations(c *gin.Context) {
@@ -29,9 +47,7 @@ func GetAllDestinations(c *gin.Context) {
 	var response []gin.H
 
 	for _, d := range destinations {
-
-		var images []destinationImages
-		_ = json.Unmarshal([]byte(d.Imagedata), &images)
+		images := normalizeImages(d.Imagedata)
 
 		var subcategories []models.Subcategory
 		var subResp []gin.H
@@ -86,7 +102,7 @@ func GetAllDestinations(c *gin.Context) {
 			"namedestination": d.Name,
 			"location":        d.Location,
 			"description":     d.Description,
-			"images":          images,
+			"images":          images, 
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
@@ -104,7 +120,6 @@ func GetAllDestinations(c *gin.Context) {
 	})
 }
 
-
 func GetDestinationByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -116,8 +131,7 @@ func GetDestinationByID(c *gin.Context) {
 		return
 	}
 
-	var images []destinationImages
-	_ = json.Unmarshal([]byte(d.Imagedata), &images)
+	images := normalizeImages(d.Imagedata)
 
 	var subcategories []models.Subcategory
 	var subResp []gin.H
