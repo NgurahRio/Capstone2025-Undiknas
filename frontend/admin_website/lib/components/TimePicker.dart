@@ -30,7 +30,8 @@ Future<TimeOfDay?> showAnalogPicker(
             brightness: Brightness.light,
             primary: Colors.blue,
             onSurface: Colors.black,
-          ), dialogTheme: DialogThemeData(backgroundColor: Colors.transparent),
+          ), 
+            dialogTheme: DialogTheme(backgroundColor: Colors.transparent),
         ),
 
         child: MediaQuery(

@@ -22,14 +22,14 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  bool login(String userName, String password) {
+  bool login(String email, String password) {
     User? foundUser = users.where(
-      (u) => u.userName == userName && u.password == password
+      (u) => u.email == email && u.password == password
     ).firstOrNull;
 
     if (foundUser == null) return false;
 
-    if (foundUser.roleid.id_role != 1) return false;
+    if (foundUser.roleId.id_role != 1) return false;
 
     _isLoggedIn = true;
     _loggedUser = foundUser;

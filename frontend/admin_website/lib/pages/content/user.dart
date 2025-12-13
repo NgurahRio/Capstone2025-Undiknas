@@ -102,7 +102,7 @@ class _UserPageState extends State<UserPage> {
 
                       const Divider(height: 1,),
 
-                      ...userSearch.where((u) => u.roleid.id_role == 1).toList().asMap().entries.map((entry) {
+                      ...userSearch.where((u) => u.roleId.id_role == 1).toList().asMap().entries.map((entry) {
                         final index = entry.key;
                         final user = entry.value;
 
@@ -116,11 +116,8 @@ class _UserPageState extends State<UserPage> {
                               children: [
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email),
-                                TableContent(title: user.roleid.role_name),
-<<<<<<< HEAD
+                                TableContent(title: user.roleId.role_name),
                                 const TableContent(title: "Active", isStatus: true,),
-=======
->>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
                               ],
                             ),
                           ),
@@ -155,7 +152,7 @@ class _UserPageState extends State<UserPage> {
 
                       const Divider(height: 1,),
 
-                      ...userSearch.where((u) => u.roleid.id_role == 2).toList().asMap().entries.map((entry) {
+                      ...userSearch.where((u) => u.roleId.id_role == 2).toList().asMap().entries.map((entry) {
                         final index = entry.key;
                         final user = entry.value;
 
@@ -169,12 +166,8 @@ class _UserPageState extends State<UserPage> {
                               children: [
                                 TableContent(title: user.userName),
                                 TableContent(title: user.email, flex: 2,),
-                                TableContent(title: user.roleid.role_name),
-<<<<<<< HEAD
+                                TableContent(title: user.roleId.role_name),
                                 const TableContent(title: "Active", isStatus: true,),
-=======
->>>>>>> 53d6f830a651b49d094182aa3688b06a0a71c75c
-
                                 Expanded(
                                   flex: 1,
                                   child: Row(
