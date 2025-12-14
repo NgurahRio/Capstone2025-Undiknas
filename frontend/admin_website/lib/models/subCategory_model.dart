@@ -1,4 +1,9 @@
 import 'package:admin_website/models/category_model.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'package:admin_website/api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SubCategory {
   final int id_subCategory;
@@ -10,6 +15,89 @@ class SubCategory {
     required this.name,
     required this.categoryId,
   });
+
+  factory SubCategory.fromJson(
+    Map<String, dynamic> json,
+    List<Category> categories,
+  ) {
+    return SubCategory(
+      id_subCategory: json['id_subcategories'],
+      name: json['namesubcategories'],
+      categoryId: categories.firstWhere(
+        (c) => c.id_category == json['categoriesId'],
+        orElse: () => Category(
+          id_category: json['categoriesId'],
+          name: 'Unknown',
+        ),
+      ),
+    );
+  }
+}
+
+Future<List<SubCategory>> getSubCategories(
+  List<Category> categories,
+) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/subcategory'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final json = jsonDecode(response.body);
+    final List list = json['data'];
+
+    return list
+      .map((e) => SubCategory.fromJson(e, categories))
+      .toList();
+  } else {
+    throw Exception('Gagal mengambil subcategory');
+  }
+}
+
+Future<SubCategory?> createSubCategory({
+  required String name,
+  required int categoryId,
+  required List<Category> categories,
+}) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/admin/subcategory'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      'namesubcategories': name,
+      'categoriesId': categoryId,
+    }),
+  );
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    final json = jsonDecode(response.body);
+    return SubCategory.fromJson(json['data'], categories);
+  }
+
+  return null;
+}
+
+Future<void> deleteSubCategory(int id) async {
+  final token = html.window.localStorage['token'];
+
+  final res = await http.delete(
+    Uri.parse('$baseUrl/admin/subcategory/$id'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (res.statusCode != 200) {
+    throw Exception('Gagal hapus subcategory');
+  }
 }
 
 final List<SubCategory> subCategories = [

@@ -149,7 +149,8 @@ class _FacilityPageState extends State<FacilityPage> {
                   ),
 
                 if(isLoading)
-                  const Center(child: CircularProgressIndicator(),
+                  const Center(
+                    child: CircularProgressIndicator()
                   )
                 else
                   CardCostum(
