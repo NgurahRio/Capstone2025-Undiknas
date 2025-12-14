@@ -12,7 +12,7 @@ func CreateSOS(c *gin.Context) {
 	var input struct {
 		Name    string `json:"name_sos" binding:"required"`
 		Alamat  string `json:"alamat_sos" binding:"required"`
-		Telepon int    `json:"telepon" binding:"required"`
+		Telepon string `json:"telepon" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {

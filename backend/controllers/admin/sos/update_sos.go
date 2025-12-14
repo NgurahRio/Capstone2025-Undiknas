@@ -20,7 +20,7 @@ func UpdateSOS(c *gin.Context) {
 	var input struct {
 		Name    string `json:"name_sos"`
 		Alamat  string `json:"alamat_sos"`
-		Telepon int    `json:"telepon"`
+		Telepon string `json:"telepon"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
