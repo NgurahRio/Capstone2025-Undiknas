@@ -22,7 +22,23 @@ class _FacilityPageState extends State<FacilityPage> {
   bool openAddFasility = false;
 
   Facility? editingFacility;
+  List<Facility> facilities = [];
   List<Facility> facilitySearch = [];
+  bool isLoading = true;
+
+  Future<void> loadFacilities() async {
+    try {
+      final data = await getFacilities();
+      setState(() {
+        facilities = data;
+        facilitySearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchFacility.text.toLowerCase();
@@ -32,7 +48,7 @@ class _FacilityPageState extends State<FacilityPage> {
         facilitySearch = facilities;
       } else {
         facilitySearch = facilities.where(
-          (dest) => dest.name.toLowerCase().contains(query)
+          (f) => f.name.toLowerCase().contains(query)
         ).toList();
       }
     });
@@ -41,21 +57,36 @@ class _FacilityPageState extends State<FacilityPage> {
   @override
   void initState() {
     super.initState();
-
-    facilitySearch = facilities;
+    loadFacilities();
     searchFacility.addListener(_searchFunction);
   }
 
-  void deleteFacility(int id) {
+  void removeFacility(int id) {
     showPopUpDelete(
       context: context, 
       text: "Facility", 
-      onDelete: () {
-        setState(() {
-          facilities.removeWhere((item) => item.id_facility == id);
+      onDelete: () async{
+        try {
+          await deleteFacility(id);
+          setState(() {
+            facilities.removeWhere((item) => item.id_facility == id);
+            facilitySearch.removeWhere((item) => item.id_facility == id);
+            searchFacility.clear();
+          });
 
-          searchFacility.clear();
-        });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Facility berhasil dihapus"),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     );
   }
@@ -117,70 +148,74 @@ class _FacilityPageState extends State<FacilityPage> {
                     },
                   ),
 
-                CardCostum(
-                  content: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                          children: [
-                            TableHeader(title: "Icon"),
-                            TableHeader(title: "Name", flex: 2,),
-                            TableHeader(title: "Actions", flex: 5,),             
-                          ],
-                        ),
-                      ),
-
-                      const Divider(height: 1,),
-
-                      ...facilitySearch.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final fac = entry.value;
-
-                        final bool isEven = index % 2 == 0;
-
-                        return Container(
-                          color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Row(
-                              children: [
-                                TableContent(
-                                  isIcon: true, 
-                                  title: fac.icon,
-                                ),
-                                TableContent(title: fac.name, flex: 2,),
-
-                                Expanded(
-                                  flex: 5,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Actionbutton(
-                                        label: "Edit",
-                                        onTap: () {
-                                          setState(() {
-                                            openAddFasility = true;
-                                            editingFacility =  fac;
-                                          });
-                                        },
-                                      ),
-                                      Actionbutton(
-                                        isDelete: true,
-                                        label: "Delete", 
-                                        onTap: () => deleteFacility(fac.id_facility), 
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
+                if(isLoading)
+                  const Center(child: CircularProgressIndicator(),
                   )
-                )
+                else
+                  CardCostum(
+                    content: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Row(
+                            children: [
+                              TableHeader(title: "Icon"),
+                              TableHeader(title: "Name", flex: 2,),
+                              TableHeader(title: "Actions", flex: 5,),             
+                            ],
+                          ),
+                        ),
+
+                        const Divider(height: 1,),
+
+                        ...facilitySearch.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final fac = entry.value;
+
+                          final bool isEven = index % 2 == 0;
+
+                          return Container(
+                            color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Row(
+                                children: [
+                                  TableContent(
+                                    isIcon: true, 
+                                    title: fac.icon,
+                                  ),
+                                  TableContent(title: fac.name, flex: 2,),
+
+                                  Expanded(
+                                    flex: 5,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Actionbutton(
+                                          label: "Edit",
+                                          onTap: () {
+                                            setState(() {
+                                              openAddFasility = true;
+                                              editingFacility =  fac;
+                                            });
+                                          },
+                                        ),
+                                        Actionbutton(
+                                          isDelete: true,
+                                          label: "Delete", 
+                                          onTap: () => removeFacility(fac.id_facility), 
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    )
+                  )
               ],
             ),
           ),

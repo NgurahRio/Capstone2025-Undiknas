@@ -27,6 +27,7 @@ class _AddFacilityState extends State<AddFacility> {
   TextEditingController facilityName = TextEditingController();
 
   Uint8List? previewIcon;
+
   bool isBase64(String data) {
     return data.length > 100;
   }
@@ -76,17 +77,47 @@ class _AddFacilityState extends State<AddFacility> {
     previewIcon = null;
   }
 
-  void saveFacility() {
-    final data = Facility(
-      id_facility: widget.existingFacility?.id_facility ??
-          DateTime.now().millisecondsSinceEpoch,
-      name: facilityName.text,
-      icon: previewIcon != null ? base64Encode(previewIcon!) : "",
-    );
+  Future<void> saveFacility() async {
+    try {
+      if (widget.existingFacility == null) {
+        await createFacility(
+          nameFacility: facilityName.text,
+          iconBytes: previewIcon!,
+        );
+      } else {
+        await updateFacility(
+          idFacility: widget.existingFacility!.id_facility,
+          nameFacility: facilityName.text,
+          iconBytes: previewIcon,
+        );
+      }
 
-    widget.onSave(data);
-    clearForm();
-    widget.onClose();
+      widget.onSave(
+        Facility(
+          id_facility: widget.existingFacility?.id_facility ??
+              DateTime.now().millisecondsSinceEpoch,
+          name: facilityName.text,
+          icon: previewIcon != null ? base64Encode(previewIcon!) : "",
+        ),
+      );
+
+      clearForm();
+      widget.onClose();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.existingFacility == null
+              ? "Facility berhasil ditambahkan"
+              : "Facility berhasil diperbarui",
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
   
   @override
