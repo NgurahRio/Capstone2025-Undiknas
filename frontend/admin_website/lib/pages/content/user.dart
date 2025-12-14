@@ -27,7 +27,7 @@ class _UserPageState extends State<UserPage> {
         userSearch = users;
       } else {
         userSearch = users.where((user) {
-          return user.userName.toLowerCase().contains(query) ||
+          return user.username.toLowerCase().contains(query) ||
                 user.email.toLowerCase().contains(query);
         }).toList();
       }
@@ -114,7 +114,7 @@ class _UserPageState extends State<UserPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
                               children: [
-                                TableContent(title: user.userName),
+                                TableContent(title: user.username),
                                 TableContent(title: user.email),
                                 TableContent(title: user.roleId.role_name),
                                 const TableContent(title: "Active", isStatus: true,),
@@ -164,7 +164,7 @@ class _UserPageState extends State<UserPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
                               children: [
-                                TableContent(title: user.userName),
+                                TableContent(title: user.username),
                                 TableContent(title: user.email, flex: 2,),
                                 TableContent(title: user.roleId.role_name),
                                 const TableContent(title: "Active", isStatus: true,),

@@ -12,25 +12,29 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController username = TextEditingController();
+  TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final authService = Provider.of<AuthService>(context, listen: false);
-    authService.login(username.text.trim(), password.text.trim());
 
-    Future.microtask(() {
-      if (authService.isLoggedIn) {
-        context.go('/');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Username atau password salah!"),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    });
+    final success = await authService.login(
+      email.text.trim(),
+      password.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      context.go('/');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email atau password salah!"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -64,8 +68,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
           
                   TextFieldLogin(
-                    controller: username, 
-                    labelText: "Username",
+                    controller: email, 
+                    labelText: "Email",
                   ),
           
                   TextFieldLogin(

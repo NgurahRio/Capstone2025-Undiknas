@@ -11,10 +11,10 @@ class Role  {
 final List<Role> roles = [
   Role(
     id_role: 1, 
-    role_name: "admin"
+    role_name: "user"
   ),
   Role(
     id_role: 2, 
-    role_name: "user"
+    role_name: "admin"
   ),
 ];

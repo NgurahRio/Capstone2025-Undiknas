@@ -27,7 +27,7 @@ class _ReviewPageState extends State<ReviewPage> {
         reviewSearch = reviews;
       } else {
         reviewSearch = reviews.where((rev) {
-          final user = rev.userId.userName.toLowerCase();
+          final user = rev.userId.username.toLowerCase();
           final destination = rev.destinationId?.name.toLowerCase() ?? "";
           final event = rev.eventId?.name.toLowerCase() ?? "";
           final type = rev.destinationId != null ? "destination" : "event";
@@ -126,7 +126,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
                               children: [
-                                TableContent(title: rev.userId.userName),
+                                TableContent(title: rev.userId.username),
                                 TableContent(title: type),
                                 TableContent(title: target, flex: 2,),
                                 TableContent(title: "${rev.rating}"),

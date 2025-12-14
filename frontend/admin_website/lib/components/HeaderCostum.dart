@@ -51,8 +51,8 @@ class _HeaderCostumState extends State<HeaderCostum> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(isDesktop
-                  ? "${auth.loggedUser?.userName} | Travora Manager"
-                  : "${auth.loggedUser?.userName}"
+                  ? "${auth.loggedUser?.username} | Travora Manager"
+                  : "${auth.loggedUser?.username}"
                 ),
         
               Container(

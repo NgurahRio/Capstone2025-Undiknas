@@ -8,7 +8,7 @@
       "name": "admin_website (Travora)",
       "request": "launch",
       "type": "dart",
-      "args": ["-d", "chrome", "--web-port=8080"]
+      "args": ["-d", "chrome", "--web-port=8000"]
     },
     {
       "name": "admin_website (profile mode)",
