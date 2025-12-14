@@ -80,26 +80,39 @@ class _AddFacilityState extends State<AddFacility> {
   Future<void> saveFacility() async {
     try {
       if (widget.existingFacility == null) {
-        await createFacility(
-          nameFacility: facilityName.text,
+        final newFacility = await createFacility(
+          nameFacility: facilityName.text.trim(),
           iconBytes: previewIcon!,
         );
+
+        if (newFacility == null) return;
+
+        widget.onSave(
+          Facility(
+            id_facility: newFacility.id_facility, // 🔥 ID backend
+            name: newFacility.name,
+            icon: base64Encode(previewIcon!), // preview sementara
+          ),
+        );
       } else {
-        await updateFacility(
+        final success = await updateFacility(
           idFacility: widget.existingFacility!.id_facility,
-          nameFacility: facilityName.text,
+          nameFacility: facilityName.text.trim(),
           iconBytes: previewIcon,
         );
-      }
 
-      widget.onSave(
-        Facility(
-          id_facility: widget.existingFacility?.id_facility ??
-              DateTime.now().millisecondsSinceEpoch,
-          name: facilityName.text,
-          icon: previewIcon != null ? base64Encode(previewIcon!) : "",
-        ),
-      );
+        if (!success) return;
+
+        widget.onSave(
+          Facility(
+            id_facility: widget.existingFacility!.id_facility,
+            name: facilityName.text,
+            icon: previewIcon != null
+                ? base64Encode(previewIcon!)
+                : widget.existingFacility!.icon,
+          ),
+        );
+      }
 
       clearForm();
       widget.onClose();
@@ -108,8 +121,8 @@ class _AddFacilityState extends State<AddFacility> {
         SnackBar(
           content: Text(
             widget.existingFacility == null
-              ? "Facility berhasil ditambahkan"
-              : "Facility berhasil diperbarui",
+                ? 'Facility berhasil ditambahkan'
+                : 'Facility berhasil diperbarui',
           ),
         ),
       );
