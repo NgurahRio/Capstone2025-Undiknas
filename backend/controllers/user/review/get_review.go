@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // GetReviews mengambil review, bisa difilter berdasarkan destinationId atau eventId.
@@ -51,7 +52,11 @@ func GetReviews(c *gin.Context) {
 	}
 
 	var reviews []models.Review
-	if err := db.Find(&reviews).Error; err != nil {
+	if err := db.
+		Preload("User", func(db *gorm.DB) *gorm.DB { return db.Unscoped() }).
+		Preload("Destination").
+		Preload("Event").
+		Find(&reviews).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data review"})
 		return
 	}
