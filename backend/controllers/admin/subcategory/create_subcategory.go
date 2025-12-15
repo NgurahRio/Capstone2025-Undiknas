@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ✅ CREATE subcategory
 func CreateSubcategory(c *gin.Context) {
 	var input struct {
 		CategoriesID      uint   `json:"categoriesId" binding:"required"`
@@ -27,6 +26,11 @@ func CreateSubcategory(c *gin.Context) {
 
 	if err := config.DB.Create(&subcategory).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan subcategory"})
+		return
+	}
+
+	if err := config.DB.Preload("Category").First(&subcategory, subcategory.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat data relasi kategori"})
 		return
 	}
 
