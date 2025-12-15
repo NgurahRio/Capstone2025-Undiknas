@@ -21,6 +21,10 @@ func GetAllReview(c *gin.Context) {
 		return
 	}
 
+	for i := range reviews {
+		reviews[i].User.Password = ""
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil semua review",
 		"data":    reviews,
@@ -39,6 +43,8 @@ func GetReviewByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Review tidak ditemukan"})
 		return
 	}
+
+	review.User.Password = ""
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil data review",
