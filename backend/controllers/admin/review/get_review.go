@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetAllReview(c *gin.Context) {
 	var reviews []models.Review
 
 	if err := config.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB { return db.Unscoped() }).
 		Preload("Destination").
 		Preload("Event").
 		Find(&reviews).Error; err != nil {
@@ -31,7 +32,7 @@ func GetReviewByID(c *gin.Context) {
 	var review models.Review
 
 	if err := config.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB { return db.Unscoped() }).
 		Preload("Destination").
 		Preload("Event").
 		First(&review, id).Error; err != nil {
