@@ -9,6 +9,8 @@ type User struct {
 	RoleID    uint           `gorm:"column:roleId" json:"roleId"`
 	Email     string         `gorm:"column:email;not null" json:"email"`
 	Image     []byte         `gorm:"column:image;" json:"image"`
+
+	Role      role           `gorm:"foreignKey:RoleID;references:ID"`
 	DeletedAt gorm.DeletedAt `gorm:"column:delete_at;index" json:"delete_at"`
 }
 
