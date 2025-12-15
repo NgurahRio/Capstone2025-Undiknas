@@ -64,6 +64,7 @@ func UpdateDestination(c *gin.Context) {
 	updateField(&destination.Dont, "dont")
 	updateField(&destination.Safety, "safety")
 	updateField(&destination.Maps, "maps")
+	updateField(&destination.Operational, "operational")
 
 	if v := c.PostForm("sosId"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
