@@ -44,6 +44,7 @@ func UpdateEvent(c *gin.Context) {
 		"do":          &event.Do,
 		"dont":        &event.Dont,
 		"safety":      &event.Safety,
+		"location":    &event.Location,
 	}
 
 	for key, field := range stringFields {
@@ -98,7 +99,6 @@ func UpdateEvent(c *gin.Context) {
 		}
 	}
 
-	// Fallback to single image upload if multipart slice not used.
 	if len(imagesBase64) == 0 {
 		file, err := c.FormFile("image")
 		if err == nil {

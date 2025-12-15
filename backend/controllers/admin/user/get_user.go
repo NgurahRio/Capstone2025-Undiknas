@@ -13,11 +13,12 @@ type UserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	RoleID   uint   `json:"roleId"`
+	RoleName string `json:"roleName"`
 }
 
 func GetAllUsers(c *gin.Context) {
 	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
+	if err := config.DB.Preload("Role").Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data pengguna"})
 		return
 	}
@@ -29,6 +30,7 @@ func GetAllUsers(c *gin.Context) {
 			Username: u.Username,
 			Email:    u.Email,
 			RoleID:   u.RoleID,
+			RoleName: u.Role.Name,
 		})
 	}
 
@@ -38,11 +40,12 @@ func GetAllUsers(c *gin.Context) {
 	})
 }
 
+
 func GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	var user models.User
 
-	if err := config.DB.First(&user, id).Error; err != nil {
+	if err := config.DB.Preload("Role").First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Pengguna tidak ditemukan"})
 		return
 	}
@@ -52,6 +55,7 @@ func GetUserByID(c *gin.Context) {
 		Username: user.Username,
 		Email:    user.Email,
 		RoleID:   user.RoleID,
+		RoleName: user.Role.Name,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -59,3 +63,4 @@ func GetUserByID(c *gin.Context) {
 		"data":    response,
 	})
 }
+
