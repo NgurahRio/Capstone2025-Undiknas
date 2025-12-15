@@ -36,14 +36,11 @@ func normalizeImages(data string) []string {
 func GetAllDestinations(c *gin.Context) {
 
 	var destinations []models.Destination
-<<<<<<< HEAD
 	if err := config.DB.
+		Preload("SOS").
 		Preload("Subcategories").
 		Preload("Facilities").
 		Find(&destinations).Error; err != nil {
-=======
-	if err := config.DB.Preload("SOS").Find(&destinations).Error; err != nil {
->>>>>>> b4e98ee73673f3dc88a6e41815b9f82c5115984e
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil data destinasi",
 		})
@@ -109,14 +106,11 @@ func GetDestinationByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination
-<<<<<<< HEAD
 	if err := config.DB.
+		Preload("SOS").
 		Preload("Subcategories").
 		Preload("Facilities").
 		First(&d, "id_destination = ?", id).Error; err != nil {
-=======
-	if err := config.DB.Preload("SOS").First(&d, "id_destination = ?", id).Error; err != nil {
->>>>>>> b4e98ee73673f3dc88a6e41815b9f82c5115984e
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Destinasi tidak ditemukan",
 		})
