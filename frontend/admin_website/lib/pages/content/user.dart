@@ -146,7 +146,6 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.username),
                                 TableContent(title: user.email),
                                 TableContent(title: user.roleId.role_name),
-                                const TableContent(title: "Active", isStatus: true,),
                               ],
                             ),
                           ),
@@ -196,7 +195,6 @@ class _UserPageState extends State<UserPage> {
                                 TableContent(title: user.username),
                                 TableContent(title: user.email, flex: 2,),
                                 TableContent(title: user.roleId.role_name),
-                                const TableContent(title: "Active", isStatus: true,),
                                 Expanded(
                                   flex: 1,
                                   child: Row(

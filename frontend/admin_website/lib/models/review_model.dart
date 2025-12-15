@@ -1,6 +1,11 @@
 import 'package:admin_website/models/destination_model.dart';
 import 'package:admin_website/models/event_model.dart';
+import 'package:admin_website/models/role_model.dart';
 import 'package:admin_website/models/user_model.dart';
+import 'dart:html' as html;
+import 'package:admin_website/api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Review {
   final int id_review;
@@ -20,10 +25,72 @@ class Review {
     required this.comment,
     required this.createdAt,
   });
+
+  factory Review.fromJson(Map<String, dynamic> json) {
+    return Review(
+      id_review: json['id_review'],
+      userId: json['user'] != null
+          ? User.fromJson(json['user'])
+          : User(
+              id_user: 0,
+              username: 'Unknown',
+              email: '',
+              roleId: Role(id_role: 0, role_name: 'unknown'),
+            ),
+      destinationId: json['destination'] != null
+          ? Destination.fromJson(json['destination'])
+          : null,
+      eventId: json['event'] != null
+          ? Event.fromJson(json['event'])
+          : null,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      comment: json['comment'] ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+    );
+  }
+}
+
+Future<List<Review>> getReviews() async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/review'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal ambil review');
+  }
+
+  final jsonData = jsonDecode(response.body);
+  final List list = jsonData['data'];
+
+  return list.map((e) => Review.fromJson(e)).toList();
+}
+
+Future<void> deleteReview (int idReview) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/admin/review/$idReview'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal menghapus review');
+  }
 }
 
 List<Review> reviews = [
-  // Monkey Forest Ubud
   Review(
     id_review: 1,
     userId: users.firstWhere((u) => u.id_user == 3),
