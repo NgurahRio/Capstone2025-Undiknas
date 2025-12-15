@@ -18,6 +18,22 @@ class _UserPageState extends State<UserPage> {
   TextEditingController searchUser = TextEditingController();
 
   List<User> userSearch = [];
+  List<User> users = [];
+  bool isLoading = true;
+
+  Future<void> loadUsers() async {
+    try {
+      final data = await getUsers();
+      setState(() {
+        users = data;
+        userSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchUser.text.toLowerCase();
@@ -37,8 +53,7 @@ class _UserPageState extends State<UserPage> {
   @override
   void initState() {
     super.initState();
-
-    userSearch = users;
+    loadUsers();
     searchUser.addListener(_searchFunction);
   }
 
@@ -46,12 +61,26 @@ class _UserPageState extends State<UserPage> {
     showPopUpDelete(
       context: context, 
       text: "User", 
-      onDelete: () {
-        setState(() {
-          users.removeWhere((item) => item.id_user == id);
+      onDelete: () async{
+        try {
+          await deleteUser(id);
+          setState(() {
+            users.removeWhere((item) => item.id_user == id);
+            searchUser.clear();
+          });
 
-          searchUser.clear();
-        });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("User berhasil dihapus"),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Gagal menghapus user: ${e.toString()}"),
+            ),
+          );
+        }
       }
     );
   }
@@ -102,7 +131,7 @@ class _UserPageState extends State<UserPage> {
 
                       const Divider(height: 1,),
 
-                      ...userSearch.where((u) => u.roleId.id_role == 1).toList().asMap().entries.map((entry) {
+                      ...userSearch.where((u) => u.roleId.id_role == 2).toList().asMap().entries.map((entry) {
                         final index = entry.key;
                         final user = entry.value;
 
@@ -152,7 +181,7 @@ class _UserPageState extends State<UserPage> {
 
                       const Divider(height: 1,),
 
-                      ...userSearch.where((u) => u.roleId.id_role == 2).toList().asMap().entries.map((entry) {
+                      ...userSearch.where((u) => u.roleId.id_role == 1).toList().asMap().entries.map((entry) {
                         final index = entry.key;
                         final user = entry.value;
 
