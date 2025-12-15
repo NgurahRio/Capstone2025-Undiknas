@@ -61,13 +61,17 @@ func GetAllDestinations(c *gin.Context) {
 				}
 			}
 
-			config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+			config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 			for _, s := range subcategories {
 				subResp = append(subResp, gin.H{
 					"id_subcategories":  s.ID,
 					"namesubcategories": s.Name,
 					"categoriesId":      s.CategoryID,
+					"category": gin.H{
+						"id_categories": s.Category.ID,
+						"name":          s.Category.Name,
+					},
 				})
 			}
 		}
@@ -106,6 +110,7 @@ func GetAllDestinations(c *gin.Context) {
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
@@ -152,13 +157,17 @@ func GetDestinationByID(c *gin.Context) {
 			}
 		}
 
-		config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+		config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 		for _, s := range subcategories {
 			subResp = append(subResp, gin.H{
 				"id_subcategories":  s.ID,
 				"namesubcategories": s.Name,
 				"categoriesId":      s.CategoryID,
+				"category": gin.H{
+					"id_categories": s.Category.ID,
+					"name":          s.Category.Name,
+				},
 			})
 		}
 	}
@@ -199,6 +208,7 @@ func GetDestinationByID(c *gin.Context) {
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
