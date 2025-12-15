@@ -5,7 +5,6 @@ import 'package:admin_website/components/TextFieldCostum.dart';
 import 'package:admin_website/models/category_model.dart';
 import 'package:admin_website/models/subCategory_model.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -19,7 +18,31 @@ class _CategoryPageState extends State<CategoryPage> {
   TextEditingController category = TextEditingController();
   Map<int, TextEditingController> subControllers = {};
 
+  List<Category> categories = [];
+  List<SubCategory> subCategories = [];
   List<Category> categorySearch = [];
+  bool isLoading = true;
+
+  Future<void> loadData() async {
+    try {
+      final cats = await getCategories();
+      final subs = await getSubCategories(cats);
+
+      for (var cat in cats) {
+        subControllers[cat.id_category] ??= TextEditingController();
+      }
+
+      setState(() {
+        categories = cats;
+        categorySearch = cats;
+        subCategories = subs;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchCategory.text.toLowerCase();
@@ -29,7 +52,7 @@ class _CategoryPageState extends State<CategoryPage> {
         categorySearch = categories;
       } else {
         categorySearch = categories.where(
-          (dest) =>  dest.name.toLowerCase().contains(query)
+          (cat) =>  cat.name.toLowerCase().contains(query)
         ).toList();
       }
     });
@@ -38,11 +61,7 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   void initState() {
     super.initState();
-    for (var cat in categories) {
-      subControllers[cat.id_category] = TextEditingController();
-    }
-
-    categorySearch = categories;
+    loadData();
     searchCategory.addListener(_searchFunction);
   }
 
@@ -95,66 +114,89 @@ class _CategoryPageState extends State<CategoryPage> {
     super.dispose();
   }
 
-  void addCategory() {
+  Future<void> addCategory() async {
     String name = category.text.trim();
     if (name.isEmpty) return;
 
-    setState(() {
-      final maxId = categories.isEmpty ? 0 : categories.map((c) => c.id_category).reduce(max);
-      final newId = maxId + 1;
+    final success = await createCategory(name);
 
-      final newCat = Category(id_category: newId, name: name);
-      categories.add(newCat);
+    if (success) {
+      await loadData();
+      category.clear();
 
-      subControllers[newId] = TextEditingController();
-    });
-
-    category.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category berhasil ditambahkan')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menambahkan category')),
+      );
+    }
   }
 
-  void addSubCategory(Category cat) {
+  Future<void> addSubCategory(Category cat) async {
     final controller = subControllers[cat.id_category];
-    if (controller == null) {
+    if (controller == null) return;
+
+    final name = controller.text.trim();
+    if (name.isEmpty) return;
+
+    final newSub = await createSubCategory(
+      name: name,
+      categoryId: cat.id_category,
+      categories: categories,
+    );
+
+    if (newSub != null) {
+      await loadData();
+      controller.clear();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Internal error: controller tidak ditemukan')),
+        const SnackBar(content: Text('Subcategory berhasil ditambahkan')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menambahkan subcategory')),
+      );
+    }
+  }
+
+  void removeCategory (int categoryId) async {
+    try {
+      await deleteCategory(categoryId);
+      setState(() {
+        categories.removeWhere((c) => c.id_category == categoryId);
+        subCategories.removeWhere((sub) => sub.categoryId == categoryId);
+        final ctl = subControllers.remove(categoryId);
+        ctl?.dispose();
+        searchCategory.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category berhasil dihapus')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus category: ${e.toString()}')),
+      );
+    }
+  }
+
+  void removeSubCategory (int subCategoryId) async{
+    try {
+      await deleteSubCategory(subCategoryId);
+      setState(() {
+        subCategories.removeWhere((s) => s.id_subCategory == subCategoryId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Subcategory berhasil dihapus')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus subcategory: ${e.toString()}')),
       );
       return;
     }
-
-    String name = controller.text.trim();
-    if (name.isEmpty) return;
-
-    setState(() {
-      final maxId = subCategories.isEmpty ? 0 : subCategories.map((s) => s.id_subCategory).reduce(max);
-      final newId = maxId + 1;
-
-      subCategories.add(SubCategory(
-        id_subCategory: newId,
-        name: name,
-        categoryId: cat,
-      ));
-    });
-
-    controller.clear();
-  }
-
-  void deleteCategory(int categoryId) {
-    setState(() {
-      categories.removeWhere((c) => c.id_category == categoryId);
-
-      subCategories.removeWhere((sub) => sub.categoryId == categoryId);
-
-      final ctl = subControllers.remove(categoryId);
-      ctl?.dispose();
-
-      searchCategory.clear();
-    });
-  }
-
-  void deleteSubCategory(int subCategoryId) {
-    setState(() {
-      subCategories.removeWhere((s) => s.id_subCategory == subCategoryId);
-    });
   }
 
   @override
@@ -201,26 +243,31 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 35),
-                  child: CardCostum(
-                    content: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-                      child: Wrap(
-                        spacing: 5,
-                        children: [
-                  
-                          ...categories.map((cat) {
-                            return valueBox(
-                              title: cat.name, 
-                              onTap: () => deleteCategory(cat.id_category),
-                            );
-                          })
-                        ],
-                      ),
-                    )
+                if (isLoading)
+                  Center(
+                    child: const CircularProgressIndicator()
+                  )
+                else 
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 35),
+                    child: CardCostum(
+                      content: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                        child: Wrap(
+                          spacing: 5,
+                          children: [
+                    
+                            ...categories.map((cat) {
+                              return valueBox(
+                                title: cat.name, 
+                                onTap: () => removeCategory(cat.id_category),
+                              );
+                            })
+                          ],
+                        ),
+                      )
+                    ),
                   ),
-                ),
 
                 ...categorySearch.map((cat) {
                   return Column(
@@ -270,7 +317,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                 ...subCategories.where((sub) => sub.categoryId.id_category == cat.id_category).map((subs) {
                                   return valueBox(
                                     title: subs.name, 
-                                    onTap: () => deleteSubCategory(subs.id_subCategory),
+                                    onTap: () => removeSubCategory(subs.id_subCategory),
                                   );
                                 })
                               ],

@@ -58,19 +58,69 @@ class _AddSosState extends State<AddSos> {
     sosNumber.clear();
   }
 
-  void saveSOS() {
-    final sosData = SOS(
-      id_sos: widget.existingSos?.id_sos ?? DateTime.now().millisecondsSinceEpoch,
-      name: sosName.text,
-      address: sosLocation.text,
-      phone: sosNumber.text,
-    );
+  Future<void> saveSOS() async {
+    if (sosName.text.isEmpty ||
+        sosLocation.text.isEmpty ||
+        sosNumber.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua field wajib diisi')),
+      );
+      return;
+    }
 
-    widget.onSave(sosData);
+    if (widget.existingSos == null) {
+      final newSOS = await createSOS(
+        name: sosName.text.trim(),
+        alamat: sosLocation.text.trim(),
+        telepon: sosNumber.text.trim(),
+      );
+
+      if (newSOS == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal menyimpan SOS')),
+        );
+        return;
+      }
+
+      widget.onSave(newSOS);
+
+    } else {
+      final success = await updateSOS(
+        id: widget.existingSos!.id_sos,
+        name: sosName.text.trim(),
+        alamat: sosLocation.text.trim(),
+        telepon: sosNumber.text.trim(),
+      );
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal memperbarui SOS')),
+        );
+        return;
+      }
+
+      widget.onSave(
+        SOS(
+          id_sos: widget.existingSos!.id_sos,
+          name: sosName.text,
+          address: sosLocation.text,
+          phone: sosNumber.text,
+        ),
+      );
+    }
 
     clearForm();
-
     widget.onClose();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.existingSos == null
+              ? 'SOS berhasil ditambahkan'
+              : 'SOS berhasil diperbarui',
+        ),
+      ),
+    );
   }
   
   @override
