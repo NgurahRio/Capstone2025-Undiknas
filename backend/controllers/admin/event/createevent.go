@@ -13,7 +13,6 @@ import (
 )
 
 func CreateEvent(c *gin.Context) {
-	// Get form data
 	destinationIDStr := c.PostForm("destinationId")
 	nameEvent := c.PostForm("nameevent")
 	startDate := c.PostForm("start_date")
@@ -26,6 +25,7 @@ func CreateEvent(c *gin.Context) {
 	doField := c.PostForm("do")
 	dontField := c.PostForm("dont")
 	safety := c.PostForm("safety")
+	location := c.PostForm("location")
 	longitudeStr := c.PostForm("longitude")
 	latitudeStr := c.PostForm("latitude")
 
@@ -37,7 +37,6 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
-	// Convert destination ID
 	var destIDPointer *uint = nil
 	if destinationIDStr != "" {
 		dID, convErr := strconv.Atoi(destinationIDStr)
@@ -52,7 +51,6 @@ func CreateEvent(c *gin.Context) {
 		destIDPointer = &tmp
 	}
 
-	// Convert price, longitude, latitude
 	var price float64 = 0
 	if priceStr != "" {
 		price, _ = strconv.ParseFloat(priceStr, 64)
@@ -68,10 +66,8 @@ func CreateEvent(c *gin.Context) {
 		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
 	}
 
-	// Handle multiple images
 	imagesBase64 := []string{}
 
-	// Handle multiple images in the same "image" field.
 	if form, formErr := c.MultipartForm(); formErr == nil && form != nil {
 		if files, ok := form.File["image"]; ok {
 			for idx, file := range files {
@@ -94,7 +90,6 @@ func CreateEvent(c *gin.Context) {
 	}
 
 
-	// Convert base64 image data to JSON string
 	var imageBase64 string
 	if len(imagesBase64) > 0 {
 		jsonBytes, marshalErr := json.Marshal(imagesBase64)
@@ -105,7 +100,6 @@ func CreateEvent(c *gin.Context) {
 		imageBase64 = string(jsonBytes)
 	}
 
-	// Create event struct
 	event := models.Event{
 		Name:        nameEvent,
 		StartDate:   startDate,
@@ -118,17 +112,16 @@ func CreateEvent(c *gin.Context) {
 		Do:          doField,
 		Dont:        dontField,
 		Safety:      safety,
+		Location:    location,
 		Longitude:   longitude,
 		Latitude:    latitude,
 		ImageEvent:  imageBase64,
 	}
 
-	// If destination ID is provided, associate with event
 	if destIDPointer != nil {
 		event.DestinationID = destIDPointer
 	}
 
-	// Save event to the database
 	if err := config.DB.Create(&event).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal menambahkan event",
@@ -136,7 +129,6 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Event berhasil ditambahkan",
 		"data":    event,
