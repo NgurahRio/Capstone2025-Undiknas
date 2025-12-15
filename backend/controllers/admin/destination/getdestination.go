@@ -65,9 +65,9 @@ func GetAllDestinations(c *gin.Context) {
 
 			for _, s := range subcategories {
 				subResp = append(subResp, gin.H{
-					"id_subcategory":   s.ID,
-					"name_subcategory": s.Name,
-					"category_id":      s.CategoryID,
+					"id_subcategories":  s.ID,
+					"namesubcategories": s.Name,
+					"categoriesId":      s.CategoryID,
 				})
 			}
 		}
@@ -102,7 +102,7 @@ func GetAllDestinations(c *gin.Context) {
 			"namedestination": d.Name,
 			"location":        d.Location,
 			"description":     d.Description,
-			"images":          images, 
+			"images":          images,
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
@@ -156,9 +156,9 @@ func GetDestinationByID(c *gin.Context) {
 
 		for _, s := range subcategories {
 			subResp = append(subResp, gin.H{
-				"id_subcategory":   s.ID,
-				"name_subcategory": s.Name,
-				"category_id":      s.CategoryID,
+				"id_subcategories":  s.ID,
+				"namesubcategories": s.Name,
+				"categoriesId":      s.CategoryID,
 			})
 		}
 	}
