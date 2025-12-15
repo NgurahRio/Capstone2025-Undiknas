@@ -36,6 +36,38 @@ class Destination {
     this.facilities = const [],
     this.sos = const [],
   });
+
+  factory Destination.fromJson(Map<String, dynamic> json) {
+    return Destination(
+      id_destination: json['id_destination'],
+      name: json['namedestination'] ?? '',
+      imageUrl: json['images'] != null
+          ? List<String>.from(json['images'])
+          : [],
+      location: json['location'] ?? '',
+      description: json['description'] ?? '',
+      operational: json['operational'] ?? '',
+      maps: json['maps'] ?? '',
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      subCategoryId: json['subcategory'] != null
+          ? List<SubCategory>.from(
+              json['subcategory'].map((x) => SubCategory.fromJson(x)))
+          : [],
+      dos: json['do'] != null ? List<String>.from(json['dos']) : [],
+      donts: json['dont'] != null ? List<String>.from(json['donts']) : [],
+      safetyGuidelines: json['safety'] != null
+          ? List<String>.from(json['safety'])
+          : [],
+      facilities: json['facilities'] != null
+          ? List<Facility>.from(
+              json['facilities'].map((x) => Facility.fromJson(x)))
+          : [],
+      sos: json['sos'] != null
+          ? List<SOS>.from(json['sos'].map((x) => SOS.fromJson(x)))
+          : [],
+    );
+  }
 }
 
 List<SubCategory> getSubCategories(List<int> idSubc) {

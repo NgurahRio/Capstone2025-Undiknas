@@ -1,10 +1,9 @@
-import 'package:intl/intl.dart';
-
 class Event {
   final int id_event;
   final String name;
   final String description;
-  final DateTime date;
+  final String startDate;
+  final String? endDate;
   final String startTime;
   final String endTime;
   final String location;
@@ -21,7 +20,8 @@ class Event {
     required this.id_event,
     required this.name,
     required this.description,
-    required this.date,
+    required this.startDate,
+    this.endDate,
     required this.startTime,
     required this.endTime,
     required this.location,
@@ -35,7 +35,30 @@ class Event {
     this.safetyGuidelines,
   });
 
-  String get formattedDate => DateFormat('dd MMMM yyyy', "en_US").format(date);
+  factory Event.fromJson(Map<String, dynamic> json) {
+    return Event(
+      id_event: json['id_event'],
+      name: json['nameevent'] ?? '',
+      description: json['description'] ?? '',
+      startDate: json['start_date'],
+      endDate: json['end_date'],
+      startTime: json['start_time'] ?? '',
+      endTime: json['end_time'] ?? '',
+      location: json['location'] ?? '',
+      imageUrl: json['image_event'] != null
+          ? List<String>.from(json['image_event'])
+          : [],
+      price: json['price'],
+      maps: json['maps'] ?? '',
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      dos: json['do'] != null ? List<String>.from(json['dos']) : null,
+      donts: json['dont'] != null ? List<String>.from(json['donts']) : null,
+      safetyGuidelines: json['safety'] != null
+          ? List<String>.from(json['safety'])
+          : null,
+    );
+  }
 }
 
 final List<Event> events = [
@@ -44,7 +67,8 @@ final List<Event> events = [
     name: "Ubud Food Festival",
     description:
         "A celebration of culinary arts in Ubud featuring local chefs, authentic Balinese dishes, and international collaborations.",
-    date: DateTime(2025, 9, 27),
+    startDate: "2025-09-25",
+    endDate: "2025-09-27",
     startTime: "10:00",
     endTime: "16:00",
     location: "Jl. Raya Ubud, Gianyar, Bali",
@@ -76,7 +100,7 @@ final List<Event> events = [
     name: "Ubud Writers & Readers Festival",
     description:
         "An international literary event where writers, thinkers, and readers gather to celebrate stories and ideas.",
-    date: DateTime(2025, 10, 5),
+    startDate: "2025-10-10",
     startTime: "09:00",
     endTime: "21:00",
     location: "Taman Baca Ubud, Gianyar, Bali",
@@ -108,7 +132,8 @@ final List<Event> events = [
     name: "Ubud Village Jazz Festival",
     description:
         "A lively open-air music festival showcasing international and Indonesian jazz artists in the heart of Ubud.",
-    date: DateTime(2025, 8, 16),
+    startDate: "2025-08-15",
+    endDate: "2025-08-16",
     startTime: "05:00",
     endTime: "11:00",
     location: "Arma Museum & Resort, Ubud, Bali",
@@ -140,7 +165,7 @@ final List<Event> events = [
     name: "Ubud Royal Palace Cultural Show",
     description:
         "A traditional Balinese dance and music performance held in the historic Ubud Royal Palace.",
-    date: DateTime(2025, 7, 20),
+    startDate: "2025-07-20",
     startTime: "07:30",
     endTime: "18:00",
     location: "Ubud Palace, Jl. Raya Ubud No.8, Gianyar, Bali",
@@ -170,7 +195,8 @@ final List<Event> events = [
     name: "Ubud Yoga & Wellness Festival",
     description:
         "A week-long celebration of yoga, meditation, and holistic wellness with workshops and retreats across Ubud.",
-    date: DateTime(2025, 6, 10),
+    startDate: "2025-11-05",
+    endDate: "2025-11-12",
     startTime: "06:00",
     endTime: "18:00",
     location: "The Yoga Barn, Ubud, Bali",

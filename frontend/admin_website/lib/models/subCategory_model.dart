@@ -16,22 +16,19 @@ class SubCategory {
     required this.categoryId,
   });
 
-  factory SubCategory.fromJson(
-    Map<String, dynamic> json,
-    List<Category> categories,
-  ) {
-    return SubCategory(
-      id_subCategory: json['id_subcategories'],
-      name: json['namesubcategories'],
-      categoryId: categories.firstWhere(
-        (c) => c.id_category == json['categoriesId'],
-        orElse: () => Category(
-          id_category: json['categoriesId'],
-          name: 'Unknown',
-        ),
-      ),
-    );
-  }
+  factory SubCategory.fromJson(Map<String, dynamic> json) {
+  return SubCategory(
+    id_subCategory: json['id_subcategories'],
+    name: json['namesubcategories'],
+    categoryId: json['category'] != null
+        ? Category.fromJson(json['category'])
+        : Category(
+            id_category: json['categoriesId'],
+            name: 'Unknown',
+          ),
+  );
+}
+
 }
 
 Future<List<SubCategory>> getSubCategories(
@@ -51,7 +48,7 @@ Future<List<SubCategory>> getSubCategories(
     final List list = json['data'];
 
     return list
-      .map((e) => SubCategory.fromJson(e, categories))
+      .map((e) => SubCategory.fromJson(e))
       .toList();
   } else {
     throw Exception('Gagal mengambil subcategory');
@@ -79,7 +76,7 @@ Future<SubCategory?> createSubCategory({
 
   if (response.statusCode == 200 || response.statusCode == 201) {
     final json = jsonDecode(response.body);
-    return SubCategory.fromJson(json['data'], categories);
+    return SubCategory.fromJson(json['data']);
   }
 
   return null;

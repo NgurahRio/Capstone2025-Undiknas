@@ -4,9 +4,16 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 class CalenderStyle extends StatefulWidget {
-  final Function(DateTime?) onDateSelected;
+  final Function(DateTime start, DateTime? end) onDateSelected;
+    final DateTime? initialStart;
+    final DateTime? initialEnd;
 
-  const CalenderStyle({super.key, required this.onDateSelected});
+    const CalenderStyle({
+      super.key,
+      required this.onDateSelected,
+      this.initialStart,
+      this.initialEnd,
+    });
 
   @override
   State<CalenderStyle> createState() => _CalenderStyleState();
@@ -14,7 +21,8 @@ class CalenderStyle extends StatefulWidget {
 
 class _CalenderStyleState extends State<CalenderStyle> {
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
 
   Widget _headerShowDialog(BuildContext dialogContext, {required title}) {
     return Stack(
@@ -106,7 +114,6 @@ class _CalenderStyleState extends State<CalenderStyle> {
     }
   }
 
-
   Future<void> _pickYear() async {
     final picked = await showDialog<int>(
       context: context,
@@ -143,6 +150,23 @@ class _CalenderStyleState extends State<CalenderStyle> {
     }
   }
 
+  bool _isInRange(DateTime day) {
+    if (_rangeStart == null || _rangeEnd == null) return false;
+    return day.isAfter(_rangeStart!) && day.isBefore(_rangeEnd!);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _rangeStart = widget.initialStart;
+    _rangeEnd = widget.initialEnd;
+
+    if (_rangeStart != null) {
+      _focusedDay = _rangeStart!;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -162,13 +186,27 @@ class _CalenderStyleState extends State<CalenderStyle> {
               rowHeight: 35,
               firstDay: DateTime(2020, 1, 1),
               lastDay: DateTime(2030, 12, 31),
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              onDaySelected: (selected, focused) {
-                setState(() {
-                  _selectedDay = selected;
-                  _focusedDay = focused;
-                });
+              selectedDayPredicate: (day) {
+                return isSameDay(day, _rangeStart) || isSameDay(day, _rangeEnd);
               },
+              onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                if (_rangeStart == null || (_rangeStart != null && _rangeEnd != null)) {
+                  _rangeStart = selectedDay;
+                  _rangeEnd = null;
+                }
+                else if (_rangeEnd == null) {
+                  if (selectedDay.isBefore(_rangeStart!)) {
+                    _rangeEnd = _rangeStart;
+                    _rangeStart = selectedDay;
+                  } else {
+                    _rangeEnd = selectedDay;
+                  }
+                }
+
+                _focusedDay = focusedDay;
+              });
+            },
               onPageChanged: (focused) => setState(() => _focusedDay = focused),
               calendarStyle: const CalendarStyle(
                 cellPadding: EdgeInsets.all(5),
@@ -262,6 +300,50 @@ class _CalenderStyleState extends State<CalenderStyle> {
                     ),
                   );
                 },
+                defaultBuilder: (context, day, focusedDay) {
+                  if (_isInRange(day)) {
+                    return Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8AC4FA).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${day.day}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    );
+                  }
+                  return null;
+                },
+
+                selectedBuilder: (context, day, focusedDay) {
+                  final isStart = isSameDay(day, _rangeStart);
+                  final isEnd = isSameDay(day, _rangeEnd);
+
+                  if (isStart || isEnd) {
+                    return Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8AC4FA),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${day.day}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return null;
+                },
                 dowBuilder: (context, day) {
                   final locale = Localizations.localeOf(context).toString();
                   final text = DateFormat.E(locale).format(day);
@@ -286,10 +368,10 @@ class _CalenderStyleState extends State<CalenderStyle> {
           child: ButtonCostum2(
             text: "Save date", 
             onPressed: () {
-              if (_selectedDay != null) {
-                widget.onDateSelected(_selectedDay);
+              if (_rangeStart != null) {
+                widget.onDateSelected(_rangeStart!, _rangeEnd);
               }
-            }
+            },
           ),
         )
       ],

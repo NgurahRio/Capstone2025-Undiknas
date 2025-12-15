@@ -10,6 +10,7 @@ import 'package:admin_website/components/Table/TabelContent.dart';
 import 'package:admin_website/components/Table/TableHeader.dart';
 import 'package:admin_website/models/event_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class EventPage extends StatefulWidget {
   const EventPage({super.key});
@@ -26,6 +27,11 @@ class _EventPageState extends State<EventPage> {
   Event? editingEvent;
   List<Event> eventSearch = [];
 
+  String formatDateDisplay(String isoDate) {
+    final dt = DateTime.parse(isoDate);
+    return DateFormat("dd MMMM yyyy").format(dt);
+  }
+
   void _searchFunction() {
     String query = searchEvent.text.toLowerCase();
 
@@ -35,7 +41,7 @@ class _EventPageState extends State<EventPage> {
       } else {
         eventSearch = events.where((evt) {
           return evt.name.toLowerCase().contains(query) ||
-                evt.formattedDate.toLowerCase().contains(query);
+                evt.startDate.toLowerCase().contains(query);
         }).toList();
       }
     });
@@ -129,8 +135,8 @@ class _EventPageState extends State<EventPage> {
                         child: Row(
                           children: [
                             TableHeader(title: "Name", flex: 2,),
-                            TableHeader(title: "Date"),
-                            TableHeader(title: "Location", flex: 3,),
+                            TableHeader(title: "Date", flex: 2,),
+                            TableHeader(title: "Location", flex: 2,),
                             TableHeader(title: "Price"),
                             TableHeader(title: "Actions", flex: 2,),
                           ],
@@ -152,8 +158,13 @@ class _EventPageState extends State<EventPage> {
                             child: Row(
                               children: [
                                 TableContent(title: evt.name, flex: 2,),
-                                TableContent(title: evt.formattedDate),
-                                TableContent(title: evt.location, flex: 3,),
+                                TableContent(
+                                  title: evt.endDate != null && evt.endDate!.isNotEmpty
+                                      ? "${formatDateDisplay(evt.startDate)} - ${formatDateDisplay(evt.endDate!)}"
+                                      : formatDateDisplay(evt.startDate),
+                                  flex: 2,
+                                ),
+                                TableContent(title: evt.location, flex: 2,),
                                 TableContent(
                                   title: evt.price != 0 ? formatRupiah(evt.price ?? 0) : "Free Entry"
                                 ),

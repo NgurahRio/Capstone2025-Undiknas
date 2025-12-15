@@ -41,7 +41,9 @@ class _AddEventState extends State<AddEvent> {
   TextEditingController donts  = TextEditingController();
   TextEditingController safetyGuideline = TextEditingController();
   TextEditingController price = TextEditingController();
-  TextEditingController date = TextEditingController();
+  TextEditingController startDate = TextEditingController();
+  TextEditingController endDate = TextEditingController();
+  TextEditingController dateDisplay = TextEditingController();
 
   List<Uint8List> previewImages = [];
   List<String> dosItems = [];
@@ -70,7 +72,12 @@ class _AddEventState extends State<AddEvent> {
       description.text = e.description;
       mapLink.text = e.maps;
       location.text = e.location;
-      date.text = DateFormat("dd MMMM yyyy").format(e.date);
+      dateDisplay.text = e.endDate != null
+        ? "${DateFormat("dd MMMM yyyy").format(DateTime.parse(e.startDate))} - "
+          "${DateFormat("dd MMMM yyyy").format(DateTime.parse(e.endDate!))}"
+        : DateFormat("dd MMMM yyyy").format(DateTime.parse(e.startDate));
+
+
       if (e.startTime.isNotEmpty) {
         openTime = parseTime(e.startTime);
         startTime.text = e.startTime;
@@ -81,7 +88,10 @@ class _AddEventState extends State<AddEvent> {
       }
       latitude.text = e.latitude.toString();
       longitude.text = e.longitude.toString();
-
+      startDate.text = e.startDate;
+      if (e.endDate != null) {
+        endDate.text = e.endDate!;
+      }
       dosItems = [...e.dos ?? []];
       dontsItems = [...e.donts ?? []];
       safetyGuidelinesItems = [...e.safetyGuidelines ?? []];
@@ -156,10 +166,16 @@ class _AddEventState extends State<AddEvent> {
     );
   }
 
-  void onDateSelected(DateTime? selected) {
-    if (selected != null) {
-      date.text = DateFormat("dd MMMM yyyy").format(selected);
-    }
+  void onDateSelected(DateTime start, DateTime? end) {
+    startDate.text = DateFormat("yyyy-MM-dd").format(start);
+    endDate.text = end != null
+        ? DateFormat("yyyy-MM-dd").format(end)
+        : "";
+
+    dateDisplay.text = end == null
+        ? DateFormat("dd MMMM yyyy").format(start)
+        : "${DateFormat("dd MMMM yyyy").format(start)} - "
+          "${DateFormat("dd MMMM yyyy").format(end)}";
   }
 
   void removeImageSelected(int index) {
@@ -215,9 +231,7 @@ class _AddEventState extends State<AddEvent> {
 
   void saveEvent() {
     if (eventName.text.isEmpty) return;
-    if (date.text.isEmpty) return;
-
-    final selectedDate = DateFormat("dd MMMM yyyy").parse(date.text);
+    if (startDate.text.isEmpty) return;
 
     final base64Images = previewImages.map((img) => base64Encode(img)).toList();
 
@@ -232,6 +246,10 @@ class _AddEventState extends State<AddEvent> {
       description: description.text.trim(),
 
       imageUrl: base64Images,
+      startDate: startDate.text,
+      endDate: endDate.text.isNotEmpty
+          ? endDate.text
+          : null,
 
       startTime: startTime.text.trim(),
       endTime: endTime.text.trim(),
@@ -241,8 +259,6 @@ class _AddEventState extends State<AddEvent> {
 
       latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
       longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
-
-      date: selectedDate,
 
       dos: [...dosItems],
       donts: [...dontsItems],
@@ -323,14 +339,20 @@ class _AddEventState extends State<AddEvent> {
                     child: SizedBox(
                       width: 320,
                       child: CalenderStyle(
-                        onDateSelected: onDateSelected
+                        onDateSelected: onDateSelected,
+                        initialStart: startDate.text.isNotEmpty
+                            ? DateTime.parse(startDate.text)
+                            : null,
+                        initialEnd: endDate.text.isNotEmpty
+                            ? DateTime.parse(endDate.text)
+                            : null,
                       ),
                     ),
                   ),
 
                   Expanded(
                     child: TextFieldCostum(
-                      controller: date, 
+                      controller: dateDisplay, 
                       text: "write date event"
                     ),
                   )
