@@ -18,7 +18,7 @@ type Destination struct {
 	Longitude     float64 `gorm:"column:longitude" json:"longitude"`
 	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
 
-	SOS           SOS           `gorm:"foreignKey:SosID;references:ID" json:"sos,omitempty"`
+	Sos           SOS           `gorm:"foreignKey:SosID;references:ID" json:"sos,omitempty"`
 	Subcategories []Subcategory `gorm:"many2many:destination_subcategories;joinForeignKey:ID;joinReferences:ID" json:"subcategories,omitempty"`
 	Facilities    []Facility    `gorm:"many2many:destination_facilities;joinForeignKey:ID;joinReferences:IDFacility" json:"facilities,omitempty"`
 }
