@@ -7,7 +7,6 @@ import 'dart:convert';
 
 String detectExt(Uint8List bytes) {
   if (bytes.length >= 12) {
-    // PNG
     if (bytes[0] == 0x89 &&
         bytes[1] == 0x50 &&
         bytes[2] == 0x4E &&
@@ -15,12 +14,9 @@ String detectExt(Uint8List bytes) {
       return 'png';
     }
 
-    // JPG / JPEG
     if (bytes[0] == 0xFF && bytes[1] == 0xD8) {
       return 'jpg';
     }
-
-    // WEBP (RIFF....WEBP)
     if (bytes[0] == 0x52 &&
         bytes[1] == 0x49 &&
         bytes[2] == 0x46 &&
@@ -33,7 +29,6 @@ String detectExt(Uint8List bytes) {
     }
   }
 
-  // fallback paling aman
   return 'jpg';
 }
 
@@ -147,7 +142,7 @@ Future<bool> updateFacility({
   return response.statusCode == 200;
 }
 
-Future<void> deleteFacility(int idFacility) async {
+Future<void> deleteFacility (int idFacility) async {
   final token = html.window.localStorage['token'];
 
   final response = await http.delete(
