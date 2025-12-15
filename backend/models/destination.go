@@ -17,6 +17,7 @@ type Destination struct {
 	FacilityID    string  `gorm:"column:facilityId;type:longtext" json:"facilityId"`
 	Longitude     float64 `gorm:"column:longitude" json:"longitude"`
 	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
+	SOS           SOS     `gorm:"foreignKey:SosID;references:ID" json:"sos"`
 }
 
 func (Destination) TableName() string {
