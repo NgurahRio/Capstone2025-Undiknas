@@ -39,7 +39,6 @@ func CreateDestination(c *gin.Context) {
 		return
 	}
 
-	var facilitiesToAttach []models.Facility
 	facilityIDs := strings.Split(rawFacility, ",")
 	for _, idStr := range facilityIDs {
 		idInt, _ := strconv.Atoi(strings.TrimSpace(idStr))
@@ -51,10 +50,8 @@ func CreateDestination(c *gin.Context) {
 			})
 			return
 		}
-		facilitiesToAttach = append(facilitiesToAttach, f)
 	}
 
-	var subcategoriesToAttach []models.Subcategory
 	subcategoryIDs := strings.Split(rawSubcategory, ",")
 	for _, idStr := range subcategoryIDs {
 		idInt, _ := strconv.Atoi(strings.TrimSpace(idStr))
@@ -66,7 +63,6 @@ func CreateDestination(c *gin.Context) {
 			})
 			return
 		}
-		subcategoriesToAttach = append(subcategoriesToAttach, s)
 	}
 
 	imagesBase64 := []string{}
@@ -125,31 +121,11 @@ func CreateDestination(c *gin.Context) {
 		UpdatedAt:     time.Now().Format("2006-01-02 15:04:05"),
 	}
 
-	tx := config.DB.Begin()
-	if err := tx.Create(&destination).Error; err != nil {
-		tx.Rollback()
+	if err := config.DB.Create(&destination).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal menambahkan destinasi",
 			"error":   err.Error(),
 		})
-		return
-	}
-
-	if err := tx.Model(&destination).Association("Facilities").Replace(facilitiesToAttach); err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Gagal menautkan fasilitas", "error": err.Error()})
-		return
-	}
-
-	if err := tx.Model(&destination).Association("Subcategories").Replace(subcategoriesToAttach); err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Gagal menautkan subcategory", "error": err.Error()})
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Gagal menyimpan destinasi", "error": err.Error()})
 		return
 	}
 

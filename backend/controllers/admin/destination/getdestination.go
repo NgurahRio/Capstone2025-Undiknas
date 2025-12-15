@@ -6,6 +6,7 @@ import (
 	"backend/utils"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -36,11 +37,7 @@ func normalizeImages(data string) []string {
 func GetAllDestinations(c *gin.Context) {
 
 	var destinations []models.Destination
-	if err := config.DB.
-		Preload("SOS").
-		Preload("Subcategories").
-		Preload("Facilities").
-		Find(&destinations).Error; err != nil {
+	if err := config.DB.Preload("Sos").Find(&destinations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil data destinasi",
 		})
@@ -52,22 +49,50 @@ func GetAllDestinations(c *gin.Context) {
 	for _, d := range destinations {
 		images := normalizeImages(d.Imagedata)
 
-		var facilityResp []gin.H
-		for _, f := range d.Facilities {
-			facilityResp = append(facilityResp, gin.H{
-				"id_facility":  f.IDFacility,
-				"namefacility": f.NameFacility,
-				"icon":         utils.ToBase64(f.Icon),
-			})
+		var subcategories []models.Subcategory
+		var subResp []gin.H
+
+		if d.SubcategoryID != "" {
+			rawSubs := strings.Split(d.SubcategoryID, ",")
+			intIDs := []int{}
+			for _, idStr := range rawSubs {
+				if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+					intIDs = append(intIDs, n)
+				}
+			}
+
+			config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+
+			for _, s := range subcategories {
+				subResp = append(subResp, gin.H{
+					"id_subcategory":   s.ID,
+					"name_subcategory": s.Name,
+					"category_id":      s.CategoryID,
+				})
+			}
 		}
 
-		var subResp []gin.H
-		for _, s := range d.Subcategories {
-			subResp = append(subResp, gin.H{
-				"id_subcategory":   s.ID,
-				"name_subcategory": s.Name,
-				"category_id":      s.CategoryID,
-			})
+		var facilities []models.Facility
+		var facilityResp []gin.H
+
+		if d.FacilityID != "" {
+			rawIDs := strings.Split(d.FacilityID, ",")
+			intIDs := []int{}
+			for _, idStr := range rawIDs {
+				if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+					intIDs = append(intIDs, n)
+				}
+			}
+
+			config.DB.Where("id_facility IN ?", intIDs).Find(&facilities)
+
+			for _, f := range facilities {
+				facilityResp = append(facilityResp, gin.H{
+					"id_facility":  f.IDFacility,
+					"namefacility": f.NameFacility,
+					"icon":         utils.ToBase64(f.Icon),
+				})
+			}
 		}
 
 		response = append(response, gin.H{
@@ -88,10 +113,10 @@ func GetAllDestinations(c *gin.Context) {
 			"facilities":      facilityResp,
 			"sosId":           d.SosID,
 			"sos": gin.H{
-				"id_sos":     d.SOS.ID,
-				"name_sos":   d.SOS.Name,
-				"alamat_sos": d.SOS.Alamat,
-				"telepon":    d.SOS.Telepon,
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
 			},
 		})
 	}
@@ -106,11 +131,7 @@ func GetDestinationByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination
-	if err := config.DB.
-		Preload("SOS").
-		Preload("Subcategories").
-		Preload("Facilities").
-		First(&d, "id_destination = ?", id).Error; err != nil {
+	if err := config.DB.Preload("Sos").First(&d, "id_destination = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Destinasi tidak ditemukan",
 		})
@@ -119,22 +140,50 @@ func GetDestinationByID(c *gin.Context) {
 
 	images := normalizeImages(d.Imagedata)
 
-	var facilityResp []gin.H
-	for _, f := range d.Facilities {
-		facilityResp = append(facilityResp, gin.H{
-			"id_facility":  f.IDFacility,
-			"namefacility": f.NameFacility,
-			"icon":         utils.ToBase64(f.Icon),
-		})
+	var subcategories []models.Subcategory
+	var subResp []gin.H
+
+	if d.SubcategoryID != "" {
+		rawSubs := strings.Split(d.SubcategoryID, ",")
+		intIDs := []int{}
+		for _, idStr := range rawSubs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+
+		for _, s := range subcategories {
+			subResp = append(subResp, gin.H{
+				"id_subcategory":   s.ID,
+				"name_subcategory": s.Name,
+				"category_id":      s.CategoryID,
+			})
+		}
 	}
 
-	var subResp []gin.H
-	for _, s := range d.Subcategories {
-		subResp = append(subResp, gin.H{
-			"id_subcategory":   s.ID,
-			"name_subcategory": s.Name,
-			"category_id":      s.CategoryID,
-		})
+	var facilities []models.Facility
+	var facilityResp []gin.H
+
+	if d.FacilityID != "" {
+		rawIDs := strings.Split(d.FacilityID, ",")
+		intIDs := []int{}
+		for _, idStr := range rawIDs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		config.DB.Where("id_facility IN ?", intIDs).Find(&facilities)
+
+		for _, f := range facilities {
+			facilityResp = append(facilityResp, gin.H{
+				"id_facility":  f.IDFacility,
+				"namefacility": f.NameFacility,
+				"icon":         utils.ToBase64(f.Icon),
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -157,10 +206,10 @@ func GetDestinationByID(c *gin.Context) {
 			"facilities":      facilityResp,
 			"sosId":           d.SosID,
 			"sos": gin.H{
-				"id_sos":     d.SOS.ID,
-				"name_sos":   d.SOS.Name,
-				"alamat_sos": d.SOS.Alamat,
-				"telepon":    d.SOS.Telepon,
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
 			},
 		},
 	})
