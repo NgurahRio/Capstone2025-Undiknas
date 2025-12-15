@@ -97,10 +97,10 @@ func GetAllDestinationsUser(c *gin.Context) {
 			"facilities":      facilityResp,
 			"sosId":           d.SosID,
 			"sos": gin.H{
-				"id_sos":     d.SOS.ID,
-				"name_sos":   d.SOS.Name,
-				"alamat_sos": d.SOS.Alamat,
-				"telepon":    d.SOS.Telepon,
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
 			},
 		})
 	}
@@ -191,10 +191,10 @@ func GetDestinationByIDUser(c *gin.Context) {
 			"facilities":      facilityResp,
 			"sosId":           d.SosID,
 			"sos": gin.H{
-				"id_sos":     d.SOS.ID,
-				"name_sos":   d.SOS.Name,
-				"alamat_sos": d.SOS.Alamat,
-				"telepon":    d.SOS.Telepon,
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
 			},
 		},
 	})
