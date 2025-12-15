@@ -45,7 +45,7 @@ class Event {
       startTime: json['start_time'] ?? '',
       endTime: json['end_time'] ?? '',
       location: json['location'] ?? '',
-      imageUrl: json['image_event'] != null
+      imageUrl: json['image_event'] is List
           ? List<String>.from(json['image_event'])
           : [],
       price: json['price'],

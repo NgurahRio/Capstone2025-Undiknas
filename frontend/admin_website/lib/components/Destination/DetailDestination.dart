@@ -44,6 +44,29 @@ class DetailDestination extends StatefulWidget {
 }
 
 class _DetailDestinationState extends State<DetailDestination> {
+  Destination? destination;
+  bool isLoading = true;
+
+  Future<void> loadDestination() async {
+    try {
+      final data = await getDestinationById(widget.id);
+
+      setState(() {
+        destination = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadDestination();
+  }
+
   Widget boxType ({
     required String text,
   }) {
@@ -133,10 +156,21 @@ class _DetailDestinationState extends State<DetailDestination> {
   }
   @override
   Widget build(BuildContext context) {
-    final dest = destinations.firstWhere(
-      (d) => d.id_destination == widget.id,
-      orElse: () => throw Exception("Destination not found"),
-    );
+    if (isLoading) {
+      return const SizedBox(
+        height: 300,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (destination == null) {
+      return const SizedBox(
+        height: 300,
+        child: Center(child: Text("Destination not found")),
+      );
+    }
+
+    final dest = destination!;
 
     bool isBase64(String data) {
       return data.length > 200 || data.startsWith("iVBOR") || data.contains("data:image");
@@ -340,62 +374,62 @@ class _DetailDestinationState extends State<DetailDestination> {
                           child: Column(
                             children: [
                           
-                            if (dest.sos != null && dest.sos!.isNotEmpty)
+                            if (dest.sos != null)
                               cardContent(
                                 title: "SOS",
-                                content: Column(
-                                  children: dest.sos!.map((sos) {
-                                    return ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      minVerticalPadding: 0,
-                                      title: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                content: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  minVerticalPadding: 0,
+                                  title: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.add_box_outlined, 
-                                                color: const Color(0xFFFF8484),
-                                                size: widget.isSmall ? 18 :  23,
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  sos.name,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontSize: widget.isSmall ? 12 : 16
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                          Icon(
+                                            Icons.add_box_outlined,
+                                            color: const Color(0xFFFF8484),
+                                            size: widget.isSmall ? 18 : 23,
                                           ),
-                                          Text(
-                                            sos.address,
-                                            style: TextStyle(
-                                              fontSize: widget.isSmall ? 9 : 12
+                                          Expanded(
+                                            child: Text(
+                                              dest.sos!.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: widget.isSmall ? 12 : 16,
+                                              ),
                                             ),
-                                          )
+                                          ),
                                         ],
                                       ),
-                                      subtitle: Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Wrap(
-                                          spacing: 5,
-                                          crossAxisAlignment: WrapCrossAlignment.center,
-                                          children: [
-                                            Icon(Icons.phone, color: const Color(0xFF8AC4FA), size: widget.isSmall ? 15 : 18),
-                                            Text(
-                                              sos.phone,
-                                              style: TextStyle(
-                                                fontSize: widget.isSmall ? 11 :  13,
-                                              ),
-                                            ),
-                                          ],
+                                      Text(
+                                        dest.sos!.address,
+                                        style: TextStyle(
+                                          fontSize: widget.isSmall ? 9 : 12,
                                         ),
                                       ),
-                                    );
-                                  }).toList(),
+                                    ],
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 5),
+                                    child: Wrap(
+                                      spacing: 5,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.phone,
+                                          color: const Color(0xFF8AC4FA),
+                                          size: widget.isSmall ? 15 : 18,
+                                        ),
+                                        Text(
+                                          dest.sos!.phone,
+                                          style: TextStyle(
+                                            fontSize: widget.isSmall ? 11 : 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                               if (dest.safetyGuidelines != null && dest.safetyGuidelines!.isNotEmpty)

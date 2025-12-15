@@ -17,18 +17,12 @@ class SubCategory {
   });
 
   factory SubCategory.fromJson(Map<String, dynamic> json) {
-  return SubCategory(
-    id_subCategory: json['id_subcategories'],
-    name: json['namesubcategories'],
-    categoryId: json['category'] != null
-        ? Category.fromJson(json['category'])
-        : Category(
-            id_category: json['categoriesId'],
-            name: 'Unknown',
-          ),
-  );
-}
-
+    return SubCategory(
+      id_subCategory: json['id_subcategories'],
+      name: json['namesubcategories'],
+      categoryId: Category.fromJson(json['category'])
+    );
+  }
 }
 
 Future<List<SubCategory>> getSubCategories(

@@ -50,6 +50,31 @@ class _AddDestinationState extends State<AddDestination> {
   List<String> dontsItems = [];
   List<String> safetyGuidelinesItems =  [];
 
+  List<Category> categories = [];
+  List<SubCategory> subCategories = [];
+  List<Facility> facilities = [];
+  List<SOS> sos = [];
+
+  late List<Uint8List> originalImages;
+
+  Future<void> loadInitialData() async {
+    try {
+      final cats = await getCategories();
+      final subs = await getSubCategories(cats);
+      final facs = await getFacilities();
+      final sos = await getSOS();
+
+      setState(() {
+        categories = cats;
+        subCategories = subs;
+        facilities = facs;
+        this.sos = sos;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   TimeOfDay? openTime;
   TimeOfDay? closeTime;
 
@@ -76,6 +101,7 @@ class _AddDestinationState extends State<AddDestination> {
   @override
   void initState() {
     super.initState();
+    loadInitialData();
 
     final d = widget.existingDestination;
 
@@ -87,7 +113,6 @@ class _AddDestinationState extends State<AddDestination> {
       operational.text = d.operational;
       if (d.operational.isNotEmpty) {
         final parts = d.operational.split(" - ");
-
         if (parts.length == 2) {
           openTime = parseTime(parts[0]);
           closeTime = parseTime(parts[1]);
@@ -95,18 +120,13 @@ class _AddDestinationState extends State<AddDestination> {
       }
       latitude.text = d.latitude.toString();
       longitude.text = d.longitude.toString();
-
       dosItems = [...d.dos ?? []];
       dontsItems = [...d.donts ?? []];
       safetyGuidelinesItems = [...d.safetyGuidelines ?? []];
-
       selectedFasility = d.facilities?.map((f) => f.id_facility).toList() ?? [];
-
       selectedCategories = d.subCategoryId.map((cat) => cat.categoryId.id_category).toSet().toList();
       selectedSubCategories = d.subCategoryId.map((subc) => subc.id_subCategory).toList();
-
-      selectedSOS = d.sos?.isNotEmpty == true ? d.sos!.first : null;
-
+      selectedSOS = d.sos;
       previewImages = d.imageUrl
           .where((img) => img.length > 100) 
           .map((img) => base64Decode(img))
@@ -263,41 +283,65 @@ class _AddDestinationState extends State<AddDestination> {
     });
   }
 
-  void saveDestination() {
+  Future<void> saveDestination() async {
     if (destinationName.text.isEmpty) return;
 
-    final newDest = Destination(
-      id_destination: widget.existingDestination?.id_destination ??
-          DateTime.now().millisecondsSinceEpoch,
+    try {
+      Destination result;
 
-      name: destinationName.text.trim(),
-      description: description.text.trim(),
-      location: location.text.trim(),
-      operational: operational.text.trim(),
-      maps: mapLink.text.trim(),
+      if (widget.existingDestination == null) {
+        result = await createDestination(
+          name: destinationName.text.trim(),
+          location: location.text.trim(),
+          description: description.text.trim(),
+          subcategoryIds: selectedSubCategories.cast<int>(),
+          facilityIds: selectedFasility.cast<int>(),
+          images: previewImages,
+          operational: operational.text.trim(),
+          maps: mapLink.text.trim(),
+          latitude: double.tryParse(latitude.text) ?? 0,
+          longitude: double.tryParse(longitude.text) ?? 0,
+          sosId: selectedSOS?.id_sos ?? 0,
+          doText: dosItems.join(','),
+          dontText: dontsItems.join(','),
+          safetyText: safetyGuidelinesItems.join(','),
+        );
+      } else {
+        result = await updateDestination(
+          id: widget.existingDestination!.id_destination,
+          name: destinationName.text.trim(),
+          location: location.text.trim(),
+          description: description.text.trim(),
+          subcategoryIds: selectedSubCategories.cast<int>(),
+          facilityIds: selectedFasility.cast<int>(),
+          operational: operational.text.trim(),
+          maps: mapLink.text.trim(),
+          latitude: double.tryParse(latitude.text) ?? 0,
+          longitude: double.tryParse(longitude.text) ?? 0,
+          sosId: selectedSOS?.id_sos ?? 0,
+          doText: dosItems.join(','),
+          dontText: dontsItems.join(','),
+          safetyText: safetyGuidelinesItems.join(','),
+        );
+      }
 
-      imageUrl: convertImagesToBase64(),
+      widget.onSave(result);
+      widget.onClose();
 
-      latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
-      longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
-
-      subCategoryId: subCategories.where(
-        (sub) => selectedSubCategories.contains(sub.id_subCategory),
-      ).toList(),
-
-      dos: [...dosItems],
-      donts: [...dontsItems],
-      safetyGuidelines: [...safetyGuidelinesItems],
-
-      facilities: facilities
-          .where((f) => selectedFasility.contains(f.id_facility))
-          .toList(),
-
-      sos: selectedSOS != null ? [selectedSOS!] : [],
-    );
-
-    widget.onSave(newDest);
-    widget.onClose();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.existingDestination == null
+                ? "Destination created successfully!"
+                : "Destination updated successfully!",
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   @override
