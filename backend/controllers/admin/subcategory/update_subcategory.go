@@ -39,6 +39,11 @@ func UpdateSubcategory(c *gin.Context) {
 		return
 	}
 
+	if err := config.DB.Preload("Category").First(&subcategory, subcategory.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat relasi subcategory"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Subcategory berhasil diupdate",
 		"data":    subcategory,
