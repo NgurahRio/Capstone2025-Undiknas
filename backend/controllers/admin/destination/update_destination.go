@@ -14,10 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type DestinationImage struct {
-	Image string `json:"image"`
-}
-
 func UpdateDestination(c *gin.Context) {
 	id := c.Param("id")
 
@@ -29,7 +25,7 @@ func UpdateDestination(c *gin.Context) {
 	}
 
 	changed := make(map[string]interface{})
-	imageChanged := false 
+	imageChanged := false
 
 	if v := c.PostForm("subcategoryId"); v != "" {
 
@@ -109,8 +105,10 @@ func UpdateDestination(c *gin.Context) {
 	form, formErr := c.MultipartForm()
 	if formErr == nil {
 
-		var oldImages []DestinationImage
-		_ = json.Unmarshal([]byte(destination.Imagedata), &oldImages)
+		var oldImages []string
+		if err := json.Unmarshal([]byte(destination.Imagedata), &oldImages); err != nil {
+			oldImages = []string{}
+		}
 
 		for key, files := range form.File {
 
@@ -132,8 +130,8 @@ func UpdateDestination(c *gin.Context) {
 					newBase64 := base64.StdEncoding.EncodeToString(rawBytes)
 
 
-					if newBase64 != oldImages[index].Image {
-						oldImages[index].Image = newBase64
+					if newBase64 != oldImages[index] {
+						oldImages[index] = newBase64
 						changed[key] = "replaced"
 						imageChanged = true
 					}
