@@ -64,10 +64,11 @@ export default function PopularPlaces() {
                     title={item.title}
                     subtitle={item.location}
                     img={item.img}
-                    rating="4.8" // Nanti bisa ambil dari DB kolom 'rating'
-                    onPress={() => navigate('/destination')}
+                    rating="4.8"
+                    // PERUBAHAN DISINI: Gunakan item.id untuk navigasi
+                    onPress={() => navigate(`/destination/${item.id}`)}
                 />
-             ))
+            ))
           )}
         </div>
 

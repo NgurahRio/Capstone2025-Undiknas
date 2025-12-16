@@ -79,6 +79,54 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+// backend/server.js (Tambahkan/Update bagian ini)
+
+// API 2: GET Detail Destinasi (Untuk Halaman Detail)
+app.get('/api/destinations/:id', async (req, res) => {
+    const id = req.params.id;
+    const sql = "SELECT * FROM destination WHERE id_destination = ?";
+    
+    db.query(sql, [id], (err, data) => {
+        if(err) return res.status(500).json({ error: err.message });
+        if(data.length === 0) return res.status(404).json({ message: "Wisata tidak ditemukan" });
+
+        const item = data[0];
+        let imageList = [];
+
+        // Logika Parsing Gambar (Sama seperti endpoint all)
+        try {
+            if (item.imagedata) {
+                const parsed = JSON.parse(item.imagedata);
+                // Jika array, kita ambil semua gambar untuk dijadikan galeri
+                if (Array.isArray(parsed)) {
+                    imageList = parsed.map(img => `data:image/jpeg;base64,${img}`);
+                } else {
+                     // Jika string tunggal
+                     imageList = [`data:image/jpeg;base64,${parsed}`];
+                }
+            }
+        } catch (e) {
+            console.log("Error parsing image detail:", e);
+            imageList = ['https://via.placeholder.com/800x600?text=No+Image'];
+        }
+
+        // Jika gambar kosong setelah diproses
+        if(imageList.length === 0) imageList = ['https://via.placeholder.com/800x600?text=No+Image'];
+
+        const result = {
+            id: item.id_destination,
+            title: item.namedestination,
+            location: item.location,
+            description: item.description,
+            price: item.price_budget, // Mengambil kolom price_budget
+            images: imageList, // Mengirim Array gambar untuk slider
+            rating: 4.8 // Hardcode rating (karena belum ada tabel review)
+        };
+
+        return res.json(result);
+    });
+});
+
 app.listen(3000, () => {
   console.log("Server berjalan di port 3000...");
 });

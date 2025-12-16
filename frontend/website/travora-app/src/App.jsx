@@ -1,11 +1,10 @@
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
+import Footer from './components/common/Footer';
 import Home from './pages/Home';
-// Import halaman lain jika sudah dibuat:
-// import Profile from './pages/Profile';
-// import Destination from './pages/Destination';
+import Destination from './pages/Destination'; // Import Halaman Detail
+import Profile from './pages/Profile'; // Import Halaman Profile (Akan dibuat di langkah 4)
 
 export default function App() {
   return (
@@ -13,21 +12,19 @@ export default function App() {
       <div className="min-h-screen bg-[#FAFAFA] font-poppins text-gray-800">
         <Navbar />
         
-        <div className="pt-[90px]"> {/* Memberi jarak karena Navbar fixed */}
+        <div className="pt-[90px]">
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* <Route path="/profile" element={<Profile />} /> */}
-            {/* <Route path="/destination/:id" element={<Destination />} /> */}
             
-            {/* Halaman 404 sederhana */}
-            <Route path="*" element={<div className="p-20 text-center">Halaman belum dibuat</div>} />
+            {/* Route Dinamis untuk Detail */}
+            <Route path="/destination/:id" element={<Destination />} />
+            
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<div className="p-20 text-center">Page Not Found</div>} />
           </Routes>
         </div>
 
-        {/* Footer bisa ditaruh disini */}
-        <footer className="bg-white py-10 mt-20 text-center border-t">
-            <p>© 2025 Travora</p>
-        </footer>
+        <Footer />
       </div>
     </Router>
   );
