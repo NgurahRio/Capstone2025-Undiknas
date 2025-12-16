@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,7 +90,7 @@ func normalizeSubPackageData(data string) map[string]subPackageDetail {
 func GetAllPackages(c *gin.Context) {
 	var pkgs []models.Packages
 
-	if err := config.DB.Find(&pkgs).Error; err != nil {
+	if err := config.DB.Preload("Destination").Find(&pkgs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil semua packages",
 		})
@@ -101,10 +102,42 @@ func GetAllPackages(c *gin.Context) {
 	for _, pkg := range pkgs {
 		data := normalizeSubPackageData(pkg.SubPackageData)
 
+		subIDs := []int{}
+		for k := range data {
+			if n, err := strconv.Atoi(strings.TrimSpace(k)); err == nil {
+				subIDs = append(subIDs, n)
+			}
+		}
+
+		var subpackages []models.SubPackage
+		if len(subIDs) > 0 {
+			if err := config.DB.Where("id_subpackage IN ?", subIDs).Find(&subpackages).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": "Gagal memuat data subpackage",
+				})
+				return
+			}
+		}
+
+		subResp := []gin.H{}
+		for _, sp := range subpackages {
+			subResp = append(subResp, gin.H{
+				"id_subpackage": sp.ID,
+				"jenispackage":  sp.Packagetype,
+			})
+		}
+
 		result = append(result, gin.H{
 			"id_packages":     pkg.ID,
 			"destinationId":   pkg.DestinationID,
+			"destination": gin.H{
+				"id_destination":  pkg.Destination.ID,
+				"namedestination": pkg.Destination.Name,
+				"location":        pkg.Destination.Location,
+				"description":     pkg.Destination.Description,
+			},
 			"subpackage_data": data,
+			"subpackages":     subResp,
 		})
 	}
 
@@ -134,7 +167,7 @@ func GetPackageByDestinationID(c *gin.Context) {
 	}
 
 	var pkg models.Packages
-	if err := config.DB.First(&pkg, "destinationId = ?", destID).Error; err != nil {
+	if err := config.DB.Preload("Destination").First(&pkg, "destinationId = ?", destID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Package untuk destinationId ini belum ada",
 		})
@@ -143,12 +176,44 @@ func GetPackageByDestinationID(c *gin.Context) {
 
 	subData := normalizeSubPackageData(pkg.SubPackageData)
 
+	subIDs := []int{}
+	for k := range subData {
+		if n, err := strconv.Atoi(strings.TrimSpace(k)); err == nil {
+			subIDs = append(subIDs, n)
+		}
+	}
+
+	var subpackages []models.SubPackage
+	if len(subIDs) > 0 {
+		if err := config.DB.Where("id_subpackage IN ?", subIDs).Find(&subpackages).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data subpackage",
+			})
+			return
+		}
+	}
+
+	subResp := []gin.H{}
+	for _, sp := range subpackages {
+		subResp = append(subResp, gin.H{
+			"id_subpackage": sp.ID,
+			"jenispackage":  sp.Packagetype,
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil data package",
 		"data": gin.H{
 			"id_packages":     pkg.ID,
 			"destinationId":   pkg.DestinationID,
+			"destination": gin.H{
+				"id_destination":  pkg.Destination.ID,
+				"namedestination": pkg.Destination.Name,
+				"location":        pkg.Destination.Location,
+				"description":     pkg.Destination.Description,
+			},
 			"subpackage_data": subData,
+			"subpackages":     subResp,
 		},
 	})
 }
