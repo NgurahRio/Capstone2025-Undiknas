@@ -1,24 +1,25 @@
-const mysql = require('mysql2');
+// backend/db.js
+const mysql = require('mysql2/promise'); // PERUBAHAN DISINI (tambah /promise)
 
-// Gunakan createPool, BUKAN createConnection
 const db = mysql.createPool({
   host: 'localhost',
-  user: 'root',      
-  password: '',      
+  user: 'root',
+  password: '',
   database: 'db_wisatabaruu',
   waitForConnections: true,
-  connectionLimit: 10, // Maksimal 10 koneksi sekaligus
+  connectionLimit: 10,
   queueLimit: 0
 });
 
-// Cek koneksi saat pertama kali jalan (Opsional, hanya untuk debug)
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('Database connection failed:', err.message);
-  } else {
-    console.log('Connected to MySQL Database via Pool');
-    connection.release(); // Kembalikan koneksi ke pool
-  }
-});
+// Cek koneksi
+(async () => {
+    try {
+        const connection = await db.getConnection();
+        console.log('✅ Terhubung ke Database MySQL (Mode Promise)');
+        connection.release();
+    } catch (err) {
+        console.error('❌ Gagal koneksi database:', err.message);
+    }
+})();
 
 module.exports = db;
