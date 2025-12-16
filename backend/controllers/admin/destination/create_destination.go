@@ -140,6 +140,38 @@ func CreateDestination(c *gin.Context) {
 		return
 	}
 
+	var subResp []gin.H
+	if rawSubcategory != "" {
+		rawSubs := strings.Split(rawSubcategory, ",")
+		intIDs := []int{}
+		for _, idStr := range rawSubs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		var subcategories []models.Subcategory
+		if err := config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data subcategory",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, s := range subcategories {
+			subResp = append(subResp, gin.H{
+				"id_subcategories":  s.ID,
+				"namesubcategories": s.Name,
+				"categoriesId":      s.CategoryID,
+				"category": gin.H{
+					"id_categories": s.Category.ID,
+					"name":          s.Category.Name,
+				},
+			})
+		}
+	}
+
 	var facilityResp []gin.H
 	if rawFacility != "" {
 		rawIDs := strings.Split(rawFacility, ",")
@@ -184,6 +216,7 @@ func CreateDestination(c *gin.Context) {
 				"sosId":           destination.SosID,
 				"facilityId":      destination.FacilityID,
 				"subcategoryId":   destination.SubcategoryID,
+				"subcategory":     subResp,
 				"operational":     destination.Operational,
 				"longitude":       destination.Longitude,
 				"latitude":        destination.Latitude,
