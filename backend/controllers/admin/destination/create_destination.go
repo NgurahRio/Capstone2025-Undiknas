@@ -3,6 +3,7 @@ package destination
 import (
 	"backend/config"
 	"backend/models"
+	"backend/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -131,6 +132,42 @@ func CreateDestination(c *gin.Context) {
 		return
 	}
 
+	if err := config.DB.Preload("Sos").First(&destination, destination.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal memuat data relasi destinasi",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	var facilityResp []gin.H
+	if rawFacility != "" {
+		rawIDs := strings.Split(rawFacility, ",")
+		intIDs := []int{}
+		for _, idStr := range rawIDs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		var facilities []models.Facility
+		if err := config.DB.Where("id_facility IN ?", intIDs).Find(&facilities).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data fasilitas",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, f := range facilities {
+			facilityResp = append(facilityResp, gin.H{
+				"id_facility":  f.IDFacility,
+				"namefacility": f.NameFacility,
+				"icon":         utils.ToBase64(f.Icon),
+			})
+		}
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Destination berhasil ditambahkan",
 		"data": gin.H{
@@ -152,6 +189,13 @@ func CreateDestination(c *gin.Context) {
 				"latitude":        destination.Latitude,
 				"created_at":      destination.CreatedAt,
 				"updated_at":      destination.UpdatedAt,
+				"facilities":      facilityResp,
+				"sos": gin.H{
+					"id_sos":     destination.Sos.ID,
+					"name_sos":   destination.Sos.Name,
+					"alamat_sos": destination.Sos.Alamat,
+					"telepon":    destination.Sos.Telepon,
+				},
 			},
 		},
 	})
