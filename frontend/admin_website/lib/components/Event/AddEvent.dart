@@ -72,12 +72,9 @@ class _AddEventState extends State<AddEvent> {
       description.text = e.description;
       mapLink.text = e.maps;
       location.text = e.location;
-      dateDisplay.text = e.endDate != null
-        ? "${DateFormat("dd MMMM yyyy").format(DateTime.parse(e.startDate))} - "
-          "${DateFormat("dd MMMM yyyy").format(DateTime.parse(e.endDate!))}"
-        : DateFormat("dd MMMM yyyy").format(DateTime.parse(e.startDate));
-
-
+      dateDisplay.text = isValidEndDate(e.endDate)
+        ? "${formatDateDisplay(e.startDate)} - ${formatDateDisplay(e.endDate!)}"
+        : formatDateDisplay(e.startDate);
       if (e.startTime.isNotEmpty) {
         openTime = parseTime(e.startTime);
         startTime.text = e.startTime;
@@ -95,9 +92,7 @@ class _AddEventState extends State<AddEvent> {
       dosItems = [...e.dos ?? []];
       dontsItems = [...e.donts ?? []];
       safetyGuidelinesItems = [...e.safetyGuidelines ?? []];
-
       price.text = formatRupiah(e.price ?? 0);
-
       previewImages = e.imageUrl
           .where((img) => img.length > 100) 
           .map((img) => base64Decode(img))
@@ -229,46 +224,77 @@ class _AddEventState extends State<AddEvent> {
     });
   }
 
-  void saveEvent() {
-    if (eventName.text.isEmpty) return;
-    if (startDate.text.isEmpty) return;
+  Future<void> saveEvent() async {
+    if (eventName.text.isEmpty || startDate.text.isEmpty) return;
 
-    final base64Images = previewImages.map((img) => base64Encode(img)).toList();
+    try {
 
-    final rawPrice = price.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final priceValue = int.tryParse(rawPrice) ?? 0;
+      final rawPrice = price.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final priceValue = int.tryParse(rawPrice) ?? 0;
 
-    final newEvent = Event(
-      id_event: widget.existingEvent?.id_event ??
-          DateTime.now().millisecondsSinceEpoch,
+      final isUpdate = widget.existingEvent != null;
 
-      name: eventName.text.trim(),
-      description: description.text.trim(),
+      Event result;
 
-      imageUrl: base64Images,
-      startDate: startDate.text,
-      endDate: endDate.text.isNotEmpty
-          ? endDate.text
-          : null,
+      if (isUpdate) {
+        await updateEvent(
+          idEvent: widget.existingEvent!.id_event,
+          name: eventName.text.trim(),
+          description: description.text.trim(),
+          startDate: startDate.text,
+          endDate: endDate.text.isNotEmpty ? endDate.text : null,
+          startTime: startTime.text.trim(),
+          endTime: endTime.text.trim(),
+          location: location.text.trim(),
+          imageUrl: previewImages,
+          price: priceValue,
+          maps: mapLink.text.trim(),
+          latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
+          longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
+          doText: dosItems.join('\n'),
+          dontText: dontsItems.join('\n'),
+          safetyText: safetyGuidelinesItems.join('\n'),
+        );
 
-      startTime: startTime.text.trim(),
-      endTime: endTime.text.trim(),
+        result = await getEventById(widget.existingEvent!.id_event);
 
-      maps: mapLink.text.trim(),
-      location: location.text.trim(),
+      } else {
+        result = await createEvent(
+          name: eventName.text.trim(),
+          description: description.text.trim(),
+          startDate: startDate.text,
+          endDate: endDate.text.isNotEmpty ? endDate.text : null,
+          startTime: startTime.text.trim(),
+          endTime: endTime.text.trim(),
+          location: location.text.trim(),
+          imageUrl: previewImages,
+          price: priceValue,
+          maps: mapLink.text.trim(),
+          latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
+          longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
+          doText: dosItems.join('\n'),
+          dontText: dontsItems.join('\n'),
+          safetyText: safetyGuidelinesItems.join('\n'),
+        );
+      }
 
-      latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
-      longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
+      widget.onSave(result);
+      widget.onClose();
 
-      dos: [...dosItems],
-      donts: [...dontsItems],
-      safetyGuidelines: [...safetyGuidelinesItems],
-
-      price: priceValue,
-    );
-
-    widget.onSave(newEvent);
-    widget.onClose();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isUpdate 
+              ? "Event updated successfully" 
+              : "Event created successfully"),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+    }
   }
 
   @override

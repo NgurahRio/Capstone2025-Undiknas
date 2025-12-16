@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:admin_website/components/CurrencyFormat.dart';
+import 'package:admin_website/components/Event/CalendarEvent.dart';
 import 'package:admin_website/components/OpenGoogleMaps.dart';
 import 'package:admin_website/models/event_model.dart';
 import 'package:flutter/material.dart';
@@ -85,10 +86,6 @@ void showDetailEvent(
   BuildContext context,
   int id
   ) {
-  final evt = events.firstWhere(
-    (d) => d.id_event == id,
-    orElse: () => throw Exception("Event not found"),
-  );
 
   bool isBase64(String data) {
     return data.length > 200 || data.startsWith("iVBOR") || data.contains("data:image");
@@ -107,241 +104,258 @@ void showDetailEvent(
           borderRadius: BorderRadius.circular(18),
           child: SizedBox(
             width: 550,
-            child: SingleChildScrollView(
-              child: Stack(
-                children: [
-                  Column(
+            child: FutureBuilder<Event>(
+              future: getEventById(id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Text("Error: ${snapshot.error}");
+                }
+
+                final evt = snapshot.data!;
+
+                return SingleChildScrollView(
+                  child: Stack(
                     children: [
-                      SizedBox(
-                        height: 220,
-                        width: double.infinity,
-                        child: PageView.builder(
-                          itemCount: evt.imageUrl.length,
-                          itemBuilder: (context, index) {
-                            final image = evt.imageUrl[index];
-              
-                            return Image(
-                              image: isBase64(image)
-                                ? MemoryImage(base64Decode(image)) as ImageProvider
-                                : NetworkImage(image),
-                              fit: BoxFit.cover,
-                            );
-                          },
-                        ),
-                      ),
-              
-                      Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 5),
-                              child: Text(
-                                evt.name,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                      Column(
+                        children: [
+                          SizedBox(
+                            height: 220,
+                            width: double.infinity,
+                            child: PageView.builder(
+                              itemCount: evt.imageUrl.length,
+                              itemBuilder: (context, index) {
+                                final image = evt.imageUrl[index];
+                  
+                                return Image(
+                                  image: isBase64(image)
+                                    ? MemoryImage(base64Decode(image)) as ImageProvider
+                                    : NetworkImage(image),
+                                  fit: BoxFit.cover,
+                                );
+                              },
                             ),
-
-                            Row(
+                          ),
+                  
+                          Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: Colors.red, size: 18
-                                  ),
-                                ),
-                                Expanded(
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 5),
                                   child: Text(
-                                    evt.location,
+                                    evt.name,
                                     style: const TextStyle(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-
-                            Padding(
-                              padding: const EdgeInsets.only(top: 20, bottom: 15),
-                              child: Text(
-                                evt.description,
-                                textAlign: TextAlign.justify,
-                                style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 124, 124, 124), fontWeight: FontWeight.w300),
-                              ),
-                            ),
-
-                            if(evt.price != null)
-                              cardContent(
-                                title: "Ticket Price", 
-                                text: evt.price !=  0 ? "IDR. ${formatRupiah(evt.price!)}" : "Free Entry",
-                              ),
-
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: cardContent(
-                                    title: "Event Date", 
-                                    text: evt.endDate != null 
-                                      ? "${evt.startDate} - ${evt.endDate}" 
-                                      : evt.startDate,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: cardContent(
-                                    title: "Start Time - End TIme", 
-                                    text: "${evt.startTime} - ${evt.endTime}",
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: cardContent(
-                                    title: "Map Link", 
-                                    text: evt.maps
-                                  ),
-                                ),
-
-                                cardContent(
-                                  title: "(latitude, longitude)", 
-                                  text: "${evt.latitude}, ${evt.longitude}",
-                                ),
-                              ],
-                            ),
-
-                            Padding(
-                              padding: const EdgeInsets.only(top: 10, bottom: 15),
-                              child: GestureDetector(
-                                onTap: () {
-                                  OpenMap.openGoogleMaps(evt.maps);
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 7),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(255, 220, 220, 220),
-                                    borderRadius: BorderRadius.circular(7),
-                                  ),
-                                  child: const Text(
-                                    textAlign: TextAlign.center,
-                                    "View on Google Maps",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Colors.black,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (evt.dos != null && evt.dos!.isNotEmpty || evt.donts != null && evt.donts!.isNotEmpty)
-                                  Expanded(
-                                    child: cardContent(
-                                      title: "Do & Don't",
-                                      content: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          if(evt.dos!.isNotEmpty) ...[
-                                            const Padding(
-                                              padding: EdgeInsets.only(bottom: 3),
-                                              child: Row(
-                                                children: [
-                                                  Icon(Icons.check_box, color: Colors.green),
-                                                  Text("Dos"),
-                                                ],
-                                              ),
-                                            ),
-                                            ...evt.dos!.map(
-                                              (dos) => Padding(
-                                                padding: const EdgeInsets.only(bottom: 5),
-                                                child: Text(
-                                                  dos,
-                                                  style: const TextStyle(fontSize: 12),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                    
-                                          if(evt.donts!.isNotEmpty) ...[
-                                            const Padding(
-                                              padding: EdgeInsets.only(bottom: 3),
-                                              child: Row(
-                                                children: [
-                                                  Icon(Icons.close, color: Color(0xFFFF8484)),
-                                                  Text("Don'ts"),
-                                                ],
-                                              ),
-                                            ),
-                                            ...evt.donts!.map(
-                                              (dont) => Padding(
-                                                padding: const EdgeInsets.only(bottom: 5),
-                                                child: Text(
-                                                  dont,
-                                                  style: const TextStyle(fontSize: 12),
-                                                ),
-                                              ),
-                                            )
-                                          ]
-                                        ],
-                                      )
+              
+                                Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 5),
+                                      child: Icon(
+                                        Icons.location_on,
+                                        color: Colors.red, size: 18
+                                      ),
                                     ),
-                                  ),
-
-                                if (evt.safetyGuidelines != null && evt.safetyGuidelines!.isNotEmpty)
-                                  cardContent(
-                                    title: "Safety Guidelines",
-                                    content: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        ...evt.safetyGuidelines!.map(
-                                            (safety) => Padding(
-                                              padding: const EdgeInsets.only(bottom: 5),
-                                              child: Text(
-                                                safety,
-                                                style: const TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          )
-                                      ],
+                                    Expanded(
+                                      child: Text(
+                                        evt.location,
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     )
+                                  ],
+                                ),
+              
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20, bottom: 15),
+                                  child: Text(
+                                    evt.description,
+                                    textAlign: TextAlign.justify,
+                                    style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 124, 124, 124), fontWeight: FontWeight.w300),
                                   ),
+                                ),
+              
+                                if(evt.price != null)
+                                  cardContent(
+                                    title: "Ticket Price", 
+                                    text: evt.price !=  0 ? "IDR. ${formatRupiah(evt.price!)}" : "Free Entry",
+                                  ),
+              
+              
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: cardContent(
+                                        title: "Event Date", 
+                                        text: isValidEndDate(evt.endDate)
+                                            ? "${formatDateDisplay(evt.startDate)} - ${formatDateDisplay(evt.endDate!)}"
+                                            : formatDateDisplay(evt.startDate),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: cardContent(
+                                        title: "Start Time - End TIme", 
+                                        text: "${evt.startTime} - ${evt.endTime}",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+              
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: cardContent(
+                                        title: "Map Link", 
+                                        text: evt.maps
+                                      ),
+                                    ),
+              
+                                    cardContent(
+                                      title: "(latitude, longitude)", 
+                                      text: "${evt.latitude}, ${evt.longitude}",
+                                    ),
+                                  ],
+                                ),
+              
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10, bottom: 15),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      OpenMap.openGoogleMaps(evt.maps);
+                                    },
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(255, 220, 220, 220),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      child: const Text(
+                                        textAlign: TextAlign.center,
+                                        "View on Google Maps",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+              
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (evt.dos != null && evt.dos!.isNotEmpty || evt.donts != null && evt.donts!.isNotEmpty)
+                                      Expanded(
+                                        child: cardContent(
+                                          title: "Do & Don't",
+                                          content: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              if(evt.dos!.isNotEmpty) ...[
+                                                const Padding(
+                                                  padding: EdgeInsets.only(bottom: 3),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.check_box, color: Colors.green),
+                                                      Text("Dos"),
+                                                    ],
+                                                  ),
+                                                ),
+                                                ...evt.dos!.map(
+                                                  (dos) => Padding(
+                                                    padding: const EdgeInsets.only(bottom: 5),
+                                                    child: Text(
+                                                      dos,
+                                                      style: const TextStyle(fontSize: 12),
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                        
+                                              if(evt.donts!.isNotEmpty) ...[
+                                                const Padding(
+                                                  padding: EdgeInsets.only(bottom: 3),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.close, color: Color(0xFFFF8484)),
+                                                      Text("Don'ts"),
+                                                    ],
+                                                  ),
+                                                ),
+                                                ...evt.donts!.map(
+                                                  (dont) => Padding(
+                                                    padding: const EdgeInsets.only(bottom: 5),
+                                                    child: Text(
+                                                      dont,
+                                                      style: const TextStyle(fontSize: 12),
+                                                    ),
+                                                  ),
+                                                )
+                                              ]
+                                            ],
+                                          )
+                                        ),
+                                      ),
+              
+                                    if (evt.safetyGuidelines != null && evt.safetyGuidelines!.isNotEmpty)
+                                      Expanded(
+                                        child: cardContent(
+                                          title: "Safety Guidelines",
+                                          content: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              ...evt.safetyGuidelines!.map(
+                                                  (safety) => Padding(
+                                                    padding: const EdgeInsets.only(bottom: 5),
+                                                    child: Text(
+                                                      safety,
+                                                      style: const TextStyle(fontSize: 12),
+                                                    ),
+                                                  ),
+                                                )
+                                            ],
+                                          )
+                                        ),
+                                      ),
+                                  ],
+                                ),     
                               ],
-                            ),     
-                          ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.black54,
+                            child: Icon(Icons.close, color: Colors.white),
+                          ),
                         ),
                       ),
-              
-              
                     ],
                   ),
-              
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.close, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              }
             ),
           ),
         ),

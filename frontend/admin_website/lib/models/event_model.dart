@@ -1,3 +1,25 @@
+import 'dart:html' as html;
+import 'dart:typed_data';
+import 'package:admin_website/api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+List<String> _parseList(dynamic value) {
+  if (value == null) return [];
+
+  if (value is List) {
+    return value.map((e) => e.toString().trim()).toList();
+  }
+  if (value is String) {
+    return value
+        .split(RegExp(r'[,\n]'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+  return [];
+}
+
 class Event {
   final int id_event;
   final String name;
@@ -45,19 +67,198 @@ class Event {
       startTime: json['start_time'] ?? '',
       endTime: json['end_time'] ?? '',
       location: json['location'] ?? '',
-      imageUrl: json['image_event'] is List
-          ? List<String>.from(json['image_event'])
-          : [],
+      imageUrl: json['image_event'] == null
+        ? []
+        : (json['image_event'] is String
+            ? List<String>.from(jsonDecode(json['image_event']))
+            : List<String>.from(json['image_event'])),
       price: json['price'],
       maps: json['maps'] ?? '',
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      dos: json['do'] != null ? List<String>.from(json['dos']) : null,
-      donts: json['dont'] != null ? List<String>.from(json['donts']) : null,
-      safetyGuidelines: json['safety'] != null
-          ? List<String>.from(json['safety'])
-          : null,
+      latitude: json['latitude'] == null
+          ? 0.0
+          : (json['latitude'] as num).toDouble(),
+
+      longitude: json['longitude'] == null
+          ? 0.0
+          : (json['longitude'] as num).toDouble(),
+      dos: _parseList(json['do']),
+      donts: _parseList(json['dont']),
+      safetyGuidelines: _parseList(json['safety']),
     );
+  }
+}
+
+Future<List<Event>> getEvents() async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/event'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil event');
+  }
+  final decoded = jsonDecode(response.body);
+  final List list = decoded['data'];
+  return list.map((e) => Event.fromJson(e)).toList();
+}
+
+Future<Event> getEventById(int id) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/event/$id'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil detail event');
+  }
+
+  final decoded = jsonDecode(response.body);
+  final Map<String, dynamic> data = decoded['data'];
+  return Event.fromJson(data);
+}
+
+Future<Event> createEvent({
+  required String name,
+  required String description,
+  required String startDate,
+  String? endDate,
+  required String startTime,
+  required String endTime,
+  required String location,
+  required List<Uint8List> imageUrl,
+  int? price,
+  required String maps,
+  required double latitude,
+  required double longitude,
+  String doText = '',
+  String dontText = '',
+  String safetyText = '',
+}) async {
+  final token = html.window.localStorage['token'];
+
+  final uri = Uri.parse('$baseUrl/admin/event');
+  final request = http.MultipartRequest('POST', uri);
+  request.headers['Authorization'] = 'Bearer $token';
+
+  request.fields.addAll({
+    'nameevent': name,
+    'description': description,
+    'start_date': startDate,
+    if (endDate != null) 'end_date': endDate,
+    'start_time': startTime,
+    'end_time': endTime,
+    'location': location,
+    if (price != null) 'price': price.toString(),
+    'maps': maps,
+    'latitude': latitude.toString(),
+    'longitude': longitude.toString(),
+    'do': doText,
+    'dont': dontText,
+    'safety': safetyText,
+  });
+
+  for (var i = 0; i < imageUrl.length; i++) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        imageUrl[i],
+        filename: 'event_$i.jpg',
+      ),
+    );
+  }
+
+  final streamedResponse = await request.send();
+  final response = await http.Response.fromStream(streamedResponse);
+
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw Exception('Gagal membuat event');
+  }
+
+  final json = jsonDecode(response.body);
+  return Event.fromJson(json['data']);
+}
+
+Future<void> updateEvent({
+  required int idEvent,
+  required String name,
+  required String description,
+  required String startDate,
+  String? endDate,
+  required String startTime,
+  required String endTime,
+  required String location,
+  required List<Uint8List> imageUrl,
+  int? price,
+  required String maps,
+  required double latitude,
+  required double longitude,
+  String doText = '',
+  String dontText = '',
+  String safetyText = '',
+}) async {
+  final token = html.window.localStorage['token'];
+
+  final uri = Uri.parse('$baseUrl/admin/event/$idEvent');
+  final request = http.MultipartRequest('PUT', uri);
+  request.headers['Authorization'] = 'Bearer $token';
+
+  request.fields.addAll({
+    'nameevent': name,
+    'description': description,
+    'start_date': startDate,
+    if (endDate != null) 'end_date': endDate,
+    'start_time': startTime,
+    'end_time': endTime,
+    'location': location,
+    if (price != null) 'price': price.toString(),
+    'maps': maps,
+    'latitude': latitude.toString(),
+    'longitude': longitude.toString(),
+    'do': doText,
+    'dont': dontText,
+    'safety': safetyText,
+  });
+
+  for (var i = 0; i < imageUrl.length; i++) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        imageUrl[i],
+        filename: 'event_$i.jpg',
+      ),
+    );
+  }
+
+  final streamedResponse = await request.send();
+  final response = await http.Response.fromStream(streamedResponse);
+
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw Exception('Gagal update event');
+  }
+}
+
+Future<void> deleteEvent(int idEvent) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/admin/event/$idEvent'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal menghapus event');
   }
 }
 

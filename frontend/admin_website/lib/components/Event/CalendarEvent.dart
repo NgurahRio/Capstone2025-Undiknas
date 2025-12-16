@@ -3,6 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+bool isValidEndDate(String? date) {
+  if (date == null || date.isEmpty) return false;
+
+  if (date == '0000-00-00' || date == '0001-01-01') return false;
+
+  final parsed = DateTime.tryParse(date);
+  if (parsed == null) return false;
+
+  if (parsed.year < 1900) return false;
+
+  return true;
+}
+
+String formatDateDisplay(String isoDate) {
+  final dt = DateTime.parse(isoDate);
+  return DateFormat("dd MMMM yyyy").format(dt);
+}
+
 class CalenderStyle extends StatefulWidget {
   final Function(DateTime start, DateTime? end) onDateSelected;
     final DateTime? initialStart;
