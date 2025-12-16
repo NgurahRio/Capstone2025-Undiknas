@@ -43,7 +43,7 @@ export default function Home() {
         </div>
 
         {/* Travel Style Section */}
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-10" id="events-section">
            <div className="flex items-center gap-4">
               <div className="w-2 h-10 bg-black rounded-full"></div>
               <h2 className="text-4xl font-bold text-gray-900">Travel Style</h2>
