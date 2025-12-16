@@ -24,6 +24,22 @@ class _DestinationPageState extends State<DestinationPage> {
 
   Destination? editingDestination;
   List<Destination> destinationSearch = [];
+  List<Destination> destinations = [];
+  bool isLoading = true;
+
+  Future<void> loadDestinations() async {
+    try {
+      final data = await getDestinations();
+      setState(() {
+        destinations = data;
+        destinationSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchDestination.text.toLowerCase();
@@ -47,21 +63,30 @@ class _DestinationPageState extends State<DestinationPage> {
   @override
   void initState() {
     super.initState();
-
-    destinationSearch = destinations;
+    loadDestinations();
     searchDestination.addListener(_searchFunction);
   }
 
-  void deleteDestination(int id) {
+  void removeDestination(int id) {
     showPopUpDelete(
       context: context, 
       text: "Destination", 
-      onDelete: () {
-        setState(() {
-          destinations.removeWhere((item) => item.id_destination == id);
+      onDelete: ()  async{
+        try {
+          await deleteDestination(id);
+          setState(() {
+            destinations.removeWhere((item) => item.id_destination == id);
+            searchDestination.clear();
+          });
 
-          searchDestination.clear();
-        });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Destination deleted successfully')),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting destination: $e')),
+          );
+        }
       }
     );
   }
@@ -184,7 +209,7 @@ class _DestinationPageState extends State<DestinationPage> {
                                       Actionbutton(
                                         isDelete: true,
                                         label: "Delete", 
-                                        onTap: () => deleteDestination(dest.id_destination), 
+                                        onTap: () => removeDestination(dest.id_destination), 
                                       ),
                                     ],
                                   ),

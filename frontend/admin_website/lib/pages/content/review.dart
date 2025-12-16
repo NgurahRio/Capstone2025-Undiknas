@@ -18,6 +18,22 @@ class _ReviewPageState extends State<ReviewPage> {
   TextEditingController searchReview = TextEditingController();
 
   List<Review> reviewSearch = [];
+  List<Review> reviews = [];
+  bool isLoading = true;
+
+  Future<void> loadReviews() async {
+    try {
+      final data = await getReviews();
+      setState(() {
+        reviews = data;
+        reviewSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchReview.text.toLowerCase();
@@ -46,21 +62,35 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   void initState() {
     super.initState();
-
-    reviewSearch = reviews;
+    loadReviews();
     searchReview.addListener(_searchFunction);
   }
 
-  void deleteReview(int id) {
+  void removeReview(int id) {
     showPopUpDelete(
       context: context, 
       text: "Review", 
-      onDelete: () {
-        setState(() {
-          reviews.removeWhere((item) => item.id_review == id);
+      onDelete: () async {
+        try {
+          await deleteReview(id);
+          setState(() {
+            reviews.removeWhere((item) => item.id_review == id);
+            searchReview.clear();
+          });
 
-          searchReview.clear();
-        });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Review berhasil dihapus"),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     );
   }
@@ -140,7 +170,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                       Actionbutton(
                                         isDelete: true,
                                         label: "Delete", 
-                                        onTap: () => deleteReview(rev.id_review), 
+                                        onTap: () => removeReview(rev.id_review), 
                                       ),
                                     ],
                                   ),

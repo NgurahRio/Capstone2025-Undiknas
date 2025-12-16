@@ -61,11 +61,11 @@ class _FacilityPageState extends State<FacilityPage> {
     searchFacility.addListener(_searchFunction);
   }
 
-  void removeFacility(int id) {
+  void removeFacility (int id) {
     showPopUpDelete(
       context: context, 
       text: "Facility", 
-      onDelete: () async{
+      onDelete: () async {
         try {
           await deleteFacility(id);
           setState(() {

@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// POST /admin/category → create new category
 func CreateCategory(c *gin.Context) {
 	var input struct {
 		Name string `json:"name" binding:"required"`

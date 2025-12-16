@@ -12,7 +12,7 @@ import (
 func GetAllSubcategoriesUser(c *gin.Context) {
 	var subcategories []models.Subcategory
 
-	if err := config.DB.Find(&subcategories).Error; err != nil {
+	if err := config.DB.Preload("Category").Find(&subcategories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data subcategory"})
 		return
 	}
@@ -28,7 +28,7 @@ func GetSubcategoryByIDUser(c *gin.Context) {
 	id := c.Param("id")
 	var subcategory models.Subcategory
 
-	if err := config.DB.First(&subcategory, id).Error; err != nil {
+	if err := config.DB.Preload("Category").First(&subcategory, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Subcategory tidak ditemukan"})
 		return
 	}

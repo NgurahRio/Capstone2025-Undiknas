@@ -19,7 +19,7 @@ type destinationImages struct {
 func GetAllDestinationsUser(c *gin.Context) {
 
 	var destinations []models.Destination
-	if err := config.DB.Find(&destinations).Error; err != nil {
+	if err := config.DB.Preload("Sos").Find(&destinations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil data destinasi",
 		})
@@ -95,6 +95,13 @@ func GetAllDestinationsUser(c *gin.Context) {
 			"latitude":        d.Latitude,
 			"facilityId":      d.FacilityID,
 			"facilities":      facilityResp,
+			"sosId":           d.SosID,
+			"sos": gin.H{
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
+			},
 		})
 	}
 
@@ -104,12 +111,11 @@ func GetAllDestinationsUser(c *gin.Context) {
 	})
 }
 
-
 func GetDestinationByIDUser(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination
-	if err := config.DB.First(&d, "id_destination = ?", id).Error; err != nil {
+	if err := config.DB.Preload("Sos").First(&d, "id_destination = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Destinasi tidak ditemukan",
 		})
@@ -183,6 +189,13 @@ func GetDestinationByIDUser(c *gin.Context) {
 			"latitude":        d.Latitude,
 			"facilityId":      d.FacilityID,
 			"facilities":      facilityResp,
+			"sosId":           d.SosID,
+			"sos": gin.H{
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
+			},
 		},
 	})
 }

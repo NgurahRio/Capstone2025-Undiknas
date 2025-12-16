@@ -17,6 +17,7 @@ type Event struct {
 	Longitude     float64 `gorm:"column:longitude" json:"longitude"`
 	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
 	ImageEvent    string  `gorm:"column:image_event" json:"image_event"`
+	Location      string  `gorm:"column:location" json:"location"`
 }
 
 func (Event) TableName() string {

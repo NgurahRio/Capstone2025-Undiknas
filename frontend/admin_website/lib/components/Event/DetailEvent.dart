@@ -188,7 +188,9 @@ void showDetailEvent(
                                 Expanded(
                                   child: cardContent(
                                     title: "Event Date", 
-                                    text: evt.formattedDate,
+                                    text: evt.endDate != null 
+                                      ? "${evt.startDate} - ${evt.endDate}" 
+                                      : evt.startDate,
                                   ),
                                 ),
                                 Expanded(

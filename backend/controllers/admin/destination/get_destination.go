@@ -37,7 +37,7 @@ func normalizeImages(data string) []string {
 func GetAllDestinations(c *gin.Context) {
 
 	var destinations []models.Destination
-	if err := config.DB.Find(&destinations).Error; err != nil {
+	if err := config.DB.Preload("Sos").Find(&destinations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Gagal mengambil data destinasi",
 		})
@@ -61,13 +61,17 @@ func GetAllDestinations(c *gin.Context) {
 				}
 			}
 
-			config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+			config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 			for _, s := range subcategories {
 				subResp = append(subResp, gin.H{
-					"id_subcategory":   s.ID,
-					"name_subcategory": s.Name,
-					"category_id":      s.CategoryID,
+					"id_subcategories":  s.ID,
+					"namesubcategories": s.Name,
+					"categoriesId":      s.CategoryID,
+					"category": gin.H{
+						"id_categories": s.Category.ID,
+						"name":          s.Category.Name,
+					},
 				})
 			}
 		}
@@ -102,15 +106,23 @@ func GetAllDestinations(c *gin.Context) {
 			"namedestination": d.Name,
 			"location":        d.Location,
 			"description":     d.Description,
-			"images":          images, 
+			"images":          images,
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
 			"facilityId":      d.FacilityID,
 			"facilities":      facilityResp,
+			"sosId":           d.SosID,
+			"sos": gin.H{
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
+			},
 		})
 	}
 
@@ -124,7 +136,7 @@ func GetDestinationByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var d models.Destination
-	if err := config.DB.First(&d, "id_destination = ?", id).Error; err != nil {
+	if err := config.DB.Preload("Sos").First(&d, "id_destination = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Destinasi tidak ditemukan",
 		})
@@ -145,13 +157,17 @@ func GetDestinationByID(c *gin.Context) {
 			}
 		}
 
-		config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+		config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 		for _, s := range subcategories {
 			subResp = append(subResp, gin.H{
-				"id_subcategory":   s.ID,
-				"name_subcategory": s.Name,
-				"category_id":      s.CategoryID,
+				"id_subcategories":  s.ID,
+				"namesubcategories": s.Name,
+				"categoriesId":      s.CategoryID,
+				"category": gin.H{
+					"id_categories": s.Category.ID,
+					"name":          s.Category.Name,
+				},
 			})
 		}
 	}
@@ -192,11 +208,19 @@ func GetDestinationByID(c *gin.Context) {
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
 			"facilityId":      d.FacilityID,
 			"facilities":      facilityResp,
+			"sosId":           d.SosID,
+			"sos": gin.H{
+				"id_sos":     d.Sos.ID,
+				"name_sos":   d.Sos.Name,
+				"alamat_sos": d.Sos.Alamat,
+				"telepon":    d.Sos.Telepon,
+			},
 		},
 	})
 }

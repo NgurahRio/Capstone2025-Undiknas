@@ -8,18 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PUT /admin/subcategory/:id → update subcategory by ID
 func UpdateSubcategory(c *gin.Context) {
 	id := c.Param("id")
 	var subcategory models.Subcategory
 
-	// Check if subcategory exists
 	if err := config.DB.First(&subcategory, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Subcategory tidak ditemukan"})
 		return
 	}
 
-	// Bind input data
 	var input struct {
 		CategoryID uint   `json:"categoriesId"`
 		Name       string `json:"namesubcategories"`
@@ -30,7 +27,6 @@ func UpdateSubcategory(c *gin.Context) {
 		return
 	}
 
-	// Update fields
 	if input.CategoryID != 0 {
 		subcategory.CategoryID = input.CategoryID
 	}
@@ -38,9 +34,13 @@ func UpdateSubcategory(c *gin.Context) {
 		subcategory.Name = input.Name
 	}
 
-	// Save changes to database
 	if err := config.DB.Save(&subcategory).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate subcategory"})
+		return
+	}
+
+	if err := config.DB.Preload("Category").First(&subcategory, subcategory.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat relasi subcategory"})
 		return
 	}
 

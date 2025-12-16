@@ -1,4 +1,8 @@
 import 'package:admin_website/models/role_model.dart';
+import 'dart:html' as html;
+import 'package:admin_website/api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class User {
   final int id_user;
@@ -34,8 +38,45 @@ class User {
     );
   }
 
-
   static User? currentUser;
+}
+
+Future<List<User>> getUsers() async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/users'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal ambil user');
+  }
+
+  final jsonData = jsonDecode(response.body);
+  final List list = jsonData['data'];
+
+  return list.map((e) => User.fromJson(e)).toList();
+}
+
+Future<void> deleteUser (int idUser) async {
+  final token = html.window.localStorage['token'];
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/admin/users/$idUser'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal menghapus user');
+  }
 }
 
 final List<User> users = [

@@ -5,6 +5,34 @@ import 'package:admin_website/api.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+String detectExt(Uint8List bytes) {
+  if (bytes.length >= 12) {
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'png';
+    }
+
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8) {
+      return 'jpg';
+    }
+    if (bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'webp';
+    }
+  }
+
+  return 'jpg';
+}
+
+
 class Facility {
   final int id_facility;
   final String icon;
@@ -47,72 +75,74 @@ Future<List<Facility>> getFacilities() async {
   return list.map((e) => Facility.fromJson(e)).toList();
 }
 
-Future<void> createFacility({
+Future<Facility?> createFacility({
   required String nameFacility,
   required Uint8List iconBytes,
 }) async {
-  final token = html.window.localStorage['token'];
+  if (iconBytes.isEmpty) {
+    throw Exception('Icon tidak boleh kosong');
+  }
 
+  final token = html.window.localStorage['token'];
   final uri = Uri.parse('$baseUrl/admin/facility');
 
   final request = http.MultipartRequest('POST', uri);
-
   request.headers['Authorization'] = 'Bearer $token';
-
   request.fields['namefacility'] = nameFacility;
+
+  final ext = detectExt(iconBytes);
 
   request.files.add(
     http.MultipartFile.fromBytes(
       'icon',
       iconBytes,
-      filename: 'icon.png',
+      filename: 'icon.$ext', // 🔥 fleksibel
     ),
   );
 
-  final streamedResponse = await request.send();
+  final response = await request.send();
+  final body = await response.stream.bytesToString();
 
-  if (streamedResponse.statusCode != 201) {
-    final body = await streamedResponse.stream.bytesToString();
-    throw Exception('Gagal create facility: $body');
+  if (response.statusCode == 201 || response.statusCode == 200) {
+    final json = jsonDecode(body);
+    return Facility.fromJson(json['data']);
   }
+
+  throw Exception('Gagal create facility: $body');
 }
 
-Future<void> updateFacility({
+Future<bool> updateFacility({
   required int idFacility,
   String? nameFacility,
   Uint8List? iconBytes,
 }) async {
   final token = html.window.localStorage['token'];
-
   final uri = Uri.parse('$baseUrl/admin/facility/$idFacility');
 
   final request = http.MultipartRequest('PUT', uri);
-
   request.headers['Authorization'] = 'Bearer $token';
 
   if (nameFacility != null && nameFacility.isNotEmpty) {
     request.fields['namefacility'] = nameFacility;
   }
 
-  if (iconBytes != null) {
+  if (iconBytes != null && iconBytes.isNotEmpty) {
+    final ext = detectExt(iconBytes);
+
     request.files.add(
       http.MultipartFile.fromBytes(
         'icon',
         iconBytes,
-        filename: 'icon.png',
+        filename: 'icon.$ext',
       ),
     );
   }
 
   final response = await request.send();
-
-  if (response.statusCode != 200) {
-    final body = await response.stream.bytesToString();
-    throw Exception('Gagal update facility: $body');
-  }
+  return response.statusCode == 200;
 }
 
-Future<void> deleteFacility(int idFacility) async {
+Future<void> deleteFacility (int idFacility) async {
   final token = html.window.localStorage['token'];
 
   final response = await http.delete(

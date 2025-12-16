@@ -21,8 +21,24 @@ class _SosPageState extends State<SosPage> {
 
   bool openAddSos = false;
 
-  SOS? selectedSOS;
+  SOS? editingSOS;
+  List<SOS> sos = [];
   List<SOS> sosSearch = [];
+  bool isLoading = true;
+
+  Future<void> loadSOS() async {
+    try {
+      final data = await getSOS();
+      setState(() {
+        sos = data;
+        sosSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchSOS.text.toLowerCase();
@@ -41,21 +57,31 @@ class _SosPageState extends State<SosPage> {
   @override
   void initState() {
     super.initState();
-
-    sosSearch = sos;
+    loadSOS();
     searchSOS.addListener(_searchFunction);
   }
 
-  void deleteSOS(int id) {
+  void removeSOS (int id) {
     showPopUpDelete(
       context: context, 
       text: "SOS", 
-      onDelete: () {
-        setState(() {
-          sos.removeWhere((item) => item.id_sos == id);
+      onDelete: () async {
+        try{
+          await deleteSOS(id);
 
-          searchSOS.clear();
-        });
+          setState(() {
+            sos.removeWhere((item) => item.id_sos == id);
+            searchSOS.clear();
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("SOS berhasil dihapus"),
+            ),
+          );
+        } catch(e){
+          debugPrint(e.toString());
+        }
       }
     );
   }
@@ -87,7 +113,7 @@ class _SosPageState extends State<SosPage> {
                         text: "Add SOS", 
                         onPressed: () {
                           setState(() {
-                            selectedSOS = null;
+                            editingSOS = null;
                             openAddSos = true;
                           });
                         },
@@ -98,7 +124,7 @@ class _SosPageState extends State<SosPage> {
 
                 if(openAddSos)
                   AddSos(
-                    existingSos: selectedSOS,
+                    existingSos: editingSOS,
                     onClose: () {
                       setState(() {
                         openAddSos = false;
@@ -106,7 +132,7 @@ class _SosPageState extends State<SosPage> {
                     },
                     onSave: (updatedSos) {
                       setState(() {
-                        if (selectedSOS != null) {
+                        if (editingSOS != null) {
                           int index = sos.indexWhere((item) => item.id_sos == updatedSos.id_sos);
                           sos[index] = updatedSos;
                         } else {
@@ -116,69 +142,74 @@ class _SosPageState extends State<SosPage> {
                     },
                   ),
 
-                CardCostum(
-                  content: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                          children: [
-                            TableHeader(title: "Name"),
-                            TableHeader(title: "Location", flex: 2,),
-                            TableHeader(title: "Number"),
-                            TableHeader(title: "Actions"),             
-                          ],
-                        ),
-                      ),
-
-                      const Divider(height: 1,),
-
-                      ...sosSearch.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final sos = entry.value;
-
-                        final bool isEven = index % 2 == 0;
-
-                        return Container(
-                          color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Row(
-                              children: [
-                                TableContent(title: sos.name),
-                                TableContent(title: sos.address, flex: 2,),
-                                TableContent(title: sos.phone),
-
-                                Expanded(
-                                  flex: 1,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Actionbutton(
-                                        label: "Edit",
-                                        onTap: () {
-                                          setState(() {
-                                            selectedSOS = sos;
-                                            openAddSos = true;
-                                          });
-                                        }
-                                      ),
-                                      Actionbutton(
-                                        isDelete: true,
-                                        label: "Delete", 
-                                        onTap: () => deleteSOS(sos.id_sos), 
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
+                if(isLoading)
+                  const Center(
+                    child: CircularProgressIndicator()
                   )
-                )
+                else
+                  CardCostum(
+                    content: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Row(
+                            children: [
+                              TableHeader(title: "Name"),
+                              TableHeader(title: "Location", flex: 2,),
+                              TableHeader(title: "Number"),
+                              TableHeader(title: "Actions"),             
+                            ],
+                          ),
+                        ),
+
+                        const Divider(height: 1,),
+
+                        ...sosSearch.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final sos = entry.value;
+
+                          final bool isEven = index % 2 == 0;
+
+                          return Container(
+                            color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Row(
+                                children: [
+                                  TableContent(title: sos.name),
+                                  TableContent(title: sos.address, flex: 2,),
+                                  TableContent(title: sos.phone),
+
+                                  Expanded(
+                                    flex: 1,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Actionbutton(
+                                          label: "Edit",
+                                          onTap: () {
+                                            setState(() {
+                                              editingSOS = sos;
+                                              openAddSos = true;
+                                            });
+                                          }
+                                        ),
+                                        Actionbutton(
+                                          isDelete: true,
+                                          label: "Delete", 
+                                          onTap: () => removeSOS(sos.id_sos), 
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    )
+                  )
               ],
             ),
           ),

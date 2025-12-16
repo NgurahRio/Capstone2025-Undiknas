@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET /admin/category → get all categories
 func GetAllCategories(c *gin.Context) {
 	var categories []models.Category
 
@@ -23,7 +22,6 @@ func GetAllCategories(c *gin.Context) {
 	})
 }
 
-// GET /admin/category/:id → get category by ID
 func GetCategoryByID(c *gin.Context) {
 	id := c.Param("id")
 	var category models.Category

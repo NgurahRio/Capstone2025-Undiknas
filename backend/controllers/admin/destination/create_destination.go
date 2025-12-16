@@ -32,6 +32,7 @@ func CreateDestination(c *gin.Context) {
 	sosID, _ := strconv.Atoi(c.PostForm("sosId"))
 	longitude, _ := strconv.ParseFloat(c.PostForm("longitude"), 64)
 	latitude, _ := strconv.ParseFloat(c.PostForm("latitude"), 64)
+	operational := c.PostForm("operational")
 
 	rawFacility := c.PostForm("facilityId")
 	if rawFacility == "" {
@@ -117,6 +118,7 @@ func CreateDestination(c *gin.Context) {
 		FacilityID:    rawFacility,
 		Longitude:     longitude,
 		Latitude:      latitude,
+		Operational:   operational,
 		CreatedAt:     time.Now().Format("2006-01-02 15:04:05"),
 		UpdatedAt:     time.Now().Format("2006-01-02 15:04:05"),
 	}
@@ -145,6 +147,7 @@ func CreateDestination(c *gin.Context) {
 				"sosId":           destination.SosID,
 				"facilityId":      destination.FacilityID,
 				"subcategoryId":   destination.SubcategoryID,
+				"operational":     destination.Operational,
 				"longitude":       destination.Longitude,
 				"latitude":        destination.Latitude,
 				"created_at":      destination.CreatedAt,
