@@ -10,6 +10,7 @@ class User {
   final String username;
   final String email;
   final String? password;
+  final String? image;
 
   User({
     required this.id_user,
@@ -17,6 +18,7 @@ class User {
     required this.username,
     required this.email,
     this.password,
+    this.image,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {

@@ -17,7 +17,11 @@ class AuthService extends ChangeNotifier {
 
   AuthService() {
     _token = html.window.localStorage['token'];
-    if (_token != null) {
+    final userJson = html.window.localStorage['user'];
+
+    if (_token != null && userJson != null) {
+      _loggedUser = User.fromJson(jsonDecode(userJson));
+      User.currentUser = _loggedUser;
       _isLoggedIn = true;
     }
   }
@@ -32,9 +36,7 @@ class AuthService extends ChangeNotifier {
       }),
     );
 
-    if (response.statusCode != 200) {
-      return false;
-    }
+    if (response.statusCode != 200) return false;
 
     final data = jsonDecode(response.body);
 
@@ -43,9 +45,8 @@ class AuthService extends ChangeNotifier {
     User.currentUser = _loggedUser;
     _isLoggedIn = true;
 
-    // simpan ke localStorage
     html.window.localStorage['token'] = _token!;
-    html.window.localStorage['isLoggedIn'] = 'true';
+    html.window.localStorage['user'] = jsonEncode(data['user']);
 
     notifyListeners();
     return true;
@@ -57,7 +58,10 @@ class AuthService extends ChangeNotifier {
     _token = null;
     User.currentUser = null;
 
-    html.window.localStorage.clear();
+    html.window.localStorage.remove('token');
+    html.window.localStorage.remove('user');
+
     notifyListeners();
   }
 }
+

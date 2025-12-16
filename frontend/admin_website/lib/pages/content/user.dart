@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/DeletePopup.dart';
 import 'package:admin_website/components/HeaderCostum.dart';
@@ -20,6 +22,10 @@ class _UserPageState extends State<UserPage> {
   List<User> userSearch = [];
   List<User> users = [];
   bool isLoading = true;
+
+  bool isBase64(String data) {
+    return data.length > 200 || data.startsWith("iVBOR") || data.contains("data:image");
+  }
 
   Future<void> loadUsers() async {
     try {
@@ -170,6 +176,7 @@ class _UserPageState extends State<UserPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Row(
                           children: [
+                            TableHeader(title: "Image"),
                             TableHeader(title: "Name"),
                             TableHeader(title: "Email", flex: 2,),
                             TableHeader(title: "Role"),
@@ -192,6 +199,34 @@ class _UserPageState extends State<UserPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Row(
                               children: [
+                                TableContent(
+                                  content: Container(
+                                    alignment: Alignment.centerLeft,
+                                    height: 30,
+                                    width: 30,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: isBase64(user.image ?? "") 
+                                      ?  ClipOval(
+                                          child: Image.memory(
+                                            base64Decode(
+                                              user.image!.contains(',')
+                                                ? user.image!.split(',').last
+                                                : user.image!,
+                                            ),
+                                            height: 30,
+                                            width: 30,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Icon( 
+                                          Icons.account_circle,
+                                          size: 30,
+                                          color: Colors.grey[400],
+                                        ),
+                                  ),
+                                ),
                                 TableContent(title: user.username),
                                 TableContent(title: user.email, flex: 2,),
                                 TableContent(title: user.roleId.role_name),
