@@ -1,68 +1,147 @@
-import React from 'react';
-import { Lock, Trash2, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, MapPin, Trash2 } from 'lucide-react';
+import { api } from '../api'; // Pastikan file api.js aman
+import PlaceCard from '../components/cards/PlaceCard'; 
 
-const RecCard = ({ title, img, onPress }) => (
-  <div onClick={onPress} className="h-[350px] rounded-[32px] relative overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500">
-    <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={title} />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90"></div>
-    <div className="absolute bottom-8 left-8 right-8 text-white">
-      <h3 className="font-bold text-3xl mb-2">{title}</h3>
-      <p className="text-base italic text-gray-300 font-light mb-4">Explore the hidden beauty.</p>
-      <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-lg border border-white/30">DISCOVER</span>
-    </div>
-    <span className="absolute top-6 right-6 bg-[#82B1FF] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-wider shadow-lg">Adventure</span>
-  </div>
-);
+export default function Bookmark() {
+  const navigate = useNavigate();
+  
+  // State dengan nilai awal yang aman
+  const [user, setUser] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]); // Default array kosong []
+  const [loading, setLoading] = useState(true);
 
-export default function Bookmark({ isLoggedIn, onToggleLogin, onNavigate }) {
+  useEffect(() => {
+    // 1. Ambil User dari LocalStorage
+    const storedUser = localStorage.getItem('travora_user');
+    
+    if (!storedUser) {
+        setLoading(false);
+        return; 
+    }
+
+    try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+
+        // Cari ID yang valid (id_users / id / userId)
+        const validUserId = parsedUser.id_users || parsedUser.id || parsedUser.userId;
+
+        if (!validUserId) {
+            console.error("ID User tidak ditemukan di data login.");
+            setLoading(false);
+            return;
+        }
+
+        // 2. Fetch Data dari Backend
+        const fetchBookmarks = async () => {
+            try {
+                console.log("Mengambil bookmark untuk User ID:", validUserId);
+                const res = await api.get(`/bookmarks/${validUserId}`);
+                
+                // SAFETY CHECK: Pastikan data yang diterima adalah Array
+                if (Array.isArray(res.data)) {
+                    console.log("Data Bookmark Diterima:", res.data);
+                    setBookmarks(res.data);
+                } else {
+                    console.error("Format data salah (bukan array):", res.data);
+                    setBookmarks([]); // Paksa kosong biar gak error
+                }
+
+            } catch (err) {
+                console.error("Gagal request ke backend:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookmarks();
+
+    } catch (e) {
+        console.error("Error parsing user data:", e);
+        setLoading(false);
+    }
+  }, []);
+
+  // --- RENDER TAMPILAN ---
+
+  // 1. Belum Login
+  if (!user) {
+    return (
+        <div className="w-full min-h-screen pt-32 pb-20 animate-fade-in">
+           <div className="max-w-2xl mx-auto text-center px-6">
+                <div className="bg-white p-12 rounded-[40px] shadow-xl border border-gray-100">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Lock size={40} className="text-[#5E9BF5]" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Access Restricted</h1>
+                    <p className="text-gray-500 mb-8 text-lg">Please login to view your saved collection.</p>
+                    <button onClick={() => navigate('/auth')} className="bg-[#82B1FF] text-white px-10 py-4 rounded-full font-bold hover:bg-[#6fa5ff] transition">
+                        Login Now
+                    </button>
+                </div>
+           </div>
+        </div>
+    );
+  }
+
+  // 2. Loading
+  if (loading) {
+    return (
+        <div className="min-h-screen pt-40 text-center">
+            <p className="text-gray-400 text-lg animate-pulse">Loading your bookmarks...</p>
+        </div>
+    );
+  }
+
+  // 3. Tampilan Utama (Sukses)
   return (
     <div className="w-full animate-fade-in pb-20">
-      <div className="h-[450px] relative w-full">
+      {/* Header Image */}
+      <div className="h-[350px] relative w-full">
         <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=1200" className="w-full h-full object-cover brightness-50" alt="Book Hero" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="max-w-7xl w-full px-6 flex items-center">
-            <div className="w-2 h-16 bg-white mr-6"></div>
-            <h1 className="text-6xl font-bold text-white">Bookmark</h1>
-          </div>
+             <h1 className="text-5xl md:text-6xl font-bold text-white">My Bookmarks</h1>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto w-full px-6 py-20">
-        <h2 className="text-[#82B1FF] text-xl font-bold mb-4 uppercase tracking-wide">Your Collection</h2>
-        <div className="h-[1px] bg-gray-200 w-full mb-16"></div>
+        <div className="flex items-center justify-between mb-8">
+            <h2 className="text-[#82B1FF] text-xl font-bold uppercase tracking-wide">Saved Destinations</h2>
+            <span className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full text-sm font-bold border border-gray-200">
+                {bookmarks.length} Items
+            </span>
+        </div>
+        <div className="h-[1px] bg-gray-200 w-full mb-12"></div>
 
-        {!isLoggedIn ? (
-          <div className="text-center py-24 bg-white rounded-[40px] shadow-lg border border-gray-100">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Lock size={40} className="text-gray-400" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 text-gray-900">Please login first</h1>
-            <p className="text-gray-500 mb-10 text-lg">You need to be logged in to view your bookmarks.</p>
-            <button onClick={onToggleLogin} className="bg-[#82B1FF] text-white px-12 py-4 rounded-full font-bold text-xl hover:bg-[#6fa5ff] transition shadow-lg shadow-blue-200">
-              Login / Sign up
-            </button>
-          </div>
+        {/* LOGIKA ISI KONTEN */}
+        {bookmarks.length === 0 ? (
+           // Tampilan Kosong
+           <div className="text-center py-24 bg-gray-50 rounded-[40px] border border-dashed border-gray-300">
+             <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <MapPin size={32} className="text-gray-300" />
+             </div>
+             <p className="text-2xl text-gray-800 font-bold mb-2">No bookmarks yet</p>
+             <p className="text-gray-400 mb-8">Start exploring Bali and save your favorite spots!</p>
+             <button onClick={() => navigate('/')} className="text-[#5E9BF5] font-bold border-b-2 border-[#5E9BF5] pb-1 hover:opacity-80">
+                Go to Explore
+             </button>
+           </div>
         ) : (
-          <div>
-            <div className="flex flex-wrap items-center gap-4 mb-12 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <button className="bg-[#82B1FF] text-white font-bold px-8 py-3 rounded-xl hover:opacity-90 transition shadow-md">Choose</button>
-              <button className="bg-white border border-gray-200 text-[#EF685B] font-bold px-8 py-3 rounded-xl flex items-center gap-2 hover:bg-red-50 transition">
-                <Trash2 size={18} /> Delete All
-              </button>
-              <div className="ml-auto">
-                <button className="text-gray-600 font-bold px-6 py-3 rounded-xl flex items-center gap-2 text-sm hover:bg-gray-50 transition">
-                  Show Destinations <ChevronDown size={18} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <RecCard title="Monkey Forest" img="https://images.unsplash.com/photo-1544644181-1484b3fdfc62" onPress={onNavigate} />
-              <RecCard title="Sacred Monkey" img="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1" onPress={onNavigate} />
-              <RecCard title="Ubud Yoga" img="https://images.unsplash.com/photo-1598091383021-15ddea10925d" onPress={onNavigate} />
-              <RecCard title="Local Culture" img="https://images.unsplash.com/photo-1516483638261-f4dbaf036963" onPress={onNavigate} />
-            </div>
-          </div>
+           // Tampilan Ada Data
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {bookmarks.map((item) => (
+                  <PlaceCard 
+                    key={item.id} 
+                    title={item.title} 
+                    subtitle={item.location}
+                    img={item.img} 
+                    rating="4.9"
+                    onPress={() => navigate(`/destination/${item.id}`)} 
+                  />
+              ))}
+           </div>
         )}
       </div>
     </div>

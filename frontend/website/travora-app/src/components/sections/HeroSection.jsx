@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Compass, Search, ArrowRight } from 'lucide-react';
 
-export default function HeroSection() {
+// Terima props 'onSearch' dari Parent (Home)
+export default function HeroSection({ onSearch }) {
+  const [query, setQuery] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSearch) {
+        onSearch(query); // Kirim text ke Home.jsx
+    }
+  };
+
   return (
     <div className="relative h-[650px] w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-black">
@@ -21,17 +31,21 @@ export default function HeroSection() {
           </h1>
           <h2 className="text-3xl lg:text-4xl font-bold text-white/90 mb-12">The Best Ubud Experience</h2>
 
-          <div className="bg-white p-2 rounded-2xl shadow-2xl flex items-center max-w-xl w-full transform hover:scale-[1.01] transition duration-300">
+          {/* FORM PENCARIAN */}
+          <form onSubmit={handleSubmit} className="bg-white p-2 rounded-2xl shadow-2xl flex items-center max-w-xl w-full transform hover:scale-[1.01] transition duration-300">
             <div className="pl-4 text-gray-400"><Search size={24} /></div>
             <input 
               type="text" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               className="flex-1 px-4 py-3 outline-none text-gray-700 text-lg placeholder-gray-400 bg-transparent"
               placeholder="Where do you want to go?"
             />
-            <button className="bg-[#576D85] text-white w-14 h-14 rounded-xl flex items-center justify-center hover:bg-[#4a5e73] transition shadow-lg">
+            <button type="submit" className="bg-[#576D85] text-white w-14 h-14 rounded-xl flex items-center justify-center hover:bg-[#4a5e73] transition shadow-lg">
               <ArrowRight size={24} />
             </button>
-          </div>
+          </form>
+
         </div>
       </div>
     </div>
