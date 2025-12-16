@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import { ArrowLeft, ArrowRight, MapPin, Heart, Star, Camera, Square, User, ShoppingBag, Utensils, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, Heart, Star, Camera, Square, User, ShoppingBag, Utensils } from 'lucide-react';
 
 export default function Destination() {
   const { id } = useParams();
@@ -19,12 +19,21 @@ export default function Destination() {
     // 1. Ambil User ID dari LocalStorage
     const storedUser = localStorage.getItem('travora_user');
     let currentUserId = null;
+
     if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        // Pastikan properti ini sesuai dengan respon login backend (id_users)
-        const theId = parsed.id_users || parsed.id; 
-        setUserId(theId);
-        currentUserId = theId;
+        try {
+            const parsed = JSON.parse(storedUser);
+            // Ambil id_users (sesuai database SQL Anda)
+            const theId = parsed.id_users || parsed.id; 
+            
+            if (theId) {
+                setUserId(theId);
+                currentUserId = theId;
+                console.log("User detected for bookmark:", theId);
+            }
+        } catch (e) {
+            console.error("Error parsing user data", e);
+        }
     }
 
     // 2. Fetch Detail Wisata & Status Bookmark
@@ -37,6 +46,7 @@ export default function Destination() {
         if (currentUserId) {
             try {
                 const checkRes = await api.get(`/bookmarks/check/${currentUserId}/${id}`);
+                console.log("Status Bookmark Awal:", checkRes.data.isBookmarked);
                 setIsBookmarked(checkRes.data.isBookmarked);
             } catch (err) {
                 console.error("Gagal cek status bookmark", err);
@@ -52,25 +62,42 @@ export default function Destination() {
   }, [id]);
 
   // Handle Klik Love
-  const handleBookmark = async () => {
+const handleBookmark = async () => {
+    // 1. Cek apakah User ID ada?
     if (!userId) {
-        alert("Silakan Login terlebih dahulu!");
+        alert("STOP: User ID tidak ditemukan. Anda belum login atau login expired.");
         navigate('/auth');
         return;
     }
 
-    // Ubah UI duluan biar cepat (Optimistic Update)
+    // Optimistic Update (Ubah warna dulu biar cepat)
     const oldState = isBookmarked;
     setIsBookmarked(!isBookmarked);
 
     try {
-        await api.post('/bookmarks/toggle', {
+        // 3. Kirim Request
+        console.log("Sending request to /bookmarks/toggle...");
+        
+        const response = await api.post('/bookmarks/toggle', {
             userId: userId,
             destinationId: id
         });
+
+        // 4. Jika berhasil
+        console.log("Response dari server:", response.data);
+        // alert(`SUKSES: ${response.data.message}`); // Aktifkan jika ingin lihat popup sukses
+        
     } catch (err) {
-        setIsBookmarked(oldState); // Balikin kalau gagal
-        alert("Gagal menyimpan bookmark. Cek koneksi server.");
+        // 5. Jika Gagal
+        console.error("ERROR AXIOS:", err);
+        setIsBookmarked(oldState); // Balikin warna
+        
+        // Cek detail error
+        if (err.code === "ERR_NETWORK") {
+            alert("GAGAL KONEKSI: Backend mati atau Port salah. Cek terminal 'node server.js'!");
+        } else {
+            alert(`GAGAL SAVE: ${err.response?.data?.message || err.message}`);
+        }
     }
   };
 
@@ -131,12 +158,12 @@ export default function Destination() {
                 {/* TOMBOL LOVE */}
                 <button 
                     onClick={handleBookmark}
-                    className="p-3 rounded-full hover:bg-gray-100 transition shadow-sm border border-gray-100"
+                    className="p-3 rounded-full hover:bg-gray-100 transition shadow-sm border border-gray-100 group"
                     title={isBookmarked ? "Remove from Bookmark" : "Add to Bookmark"}
                 >
                     <Heart 
                         size={40} 
-                        className={`transition duration-300 ${isBookmarked ? 'fill-[#EF685B] text-[#EF685B]' : 'text-gray-300 hover:text-[#EF685B]'}`} 
+                        className={`transition duration-300 ${isBookmarked ? 'fill-[#EF685B] text-[#EF685B]' : 'text-gray-300 group-hover:text-[#EF685B]'}`} 
                     />
                 </button>
               </div>
@@ -150,7 +177,21 @@ export default function Destination() {
               {data.description || "Deskripsi belum tersedia untuk tempat ini."}
             </p>
 
-            {/* Price Card */}
+            {/* --- POSISI DITUKAR: Facilities DULUAN --- */}
+            
+            {/* Facilities */}
+            <div className="space-y-6">
+              <h3 className="text-3xl font-bold text-gray-900">Facilities</h3>
+              <div className="grid grid-cols-5 gap-4 bg-gray-50 p-8 rounded-3xl border border-gray-100">
+                <IconCol icon={<Camera size={28} />} label="Photo" />
+                <IconCol icon={<Square size={28} />} label="Parking" />
+                <IconCol icon={<User size={28} />} label="Guide" />
+                <IconCol icon={<ShoppingBag size={28} />} label="Shop" />
+                <IconCol icon={<Utensils size={28} />} label="Food" />
+              </div>
+            </div>
+
+            {/* Entrance Ticket (Price Card) - Sekarang di Bawah Facilities */}
             <div className="border border-gray-200 rounded-3xl p-10 shadow-lg bg-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-[#EBC136] text-white px-4 py-2 rounded-bl-2xl font-bold text-xs">BEST VALUE</div>
                 <h4 className="text-2xl font-bold mb-6 text-gray-900">Entrance Ticket</h4>
@@ -165,38 +206,27 @@ export default function Destination() {
                 </div>
             </div>
 
-            {/* Facilities */}
-            <div className="space-y-6">
-              <h3 className="text-3xl font-bold text-gray-900">Facilities</h3>
-              <div className="grid grid-cols-5 gap-4 bg-gray-50 p-8 rounded-3xl border border-gray-100">
-                <IconCol icon={<Camera size={28} />} label="Photo" />
-                <IconCol icon={<Square size={28} />} label="Parking" />
-                <IconCol icon={<User size={28} />} label="Guide" />
-                <IconCol icon={<ShoppingBag size={28} />} label="Shop" />
-                <IconCol icon={<Utensils size={28} />} label="Food" />
-              </div>
-            </div>
           </div>
 
           {/* Right Sidebar (MAPS & REVIEWS) */}
           <div className="lg:w-1/3 flex flex-col gap-10">
             
-            {/* MAP PLACEHOLDER (Google Maps Iframe) */}
+            {/* MAP PLACEHOLDER */}
             <div className="bg-white p-4 rounded-[32px] shadow-xl border border-gray-100">
               <div className="w-full h-[300px] rounded-2xl overflow-hidden bg-gray-200 relative group">
-                {/* Ini adalah Map Placeholder (Ubud Area) karena backend belum punya koordinat */}
                 <iframe 
                   width="100%" 
                   height="100%" 
                   frameBorder="0" 
                   scrolling="no" 
-                  marginHeight="0" 
-                  marginWidth="0" 
-                  src="https://maps.google.com/maps?q=Ubud%20Bali&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                  // Menggunakan Embed generic Google Maps agar tidak blank
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3944.209664687576!2d115.26066231478403!3d-8.514083993880314!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd23d739f22c9c3%3A0x54a38573d1f69208!2sUbud%2C%20Gianyar%20Regency%2C%20Bali!5e0!3m2!1sen!2sid!4v1645512345678!5m2!1sen!2sid"
                   title="Map" 
                   className="absolute inset-0 grayscale group-hover:grayscale-0 transition duration-500"
                 ></iframe>
               </div>
+              
+              {/* Link yang BENAR ke Google Maps Search */}
               <a 
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`} 
                 target="_blank" 

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, MapPin } from 'lucide-react';
-import { api } from '../api';
+import { Lock, MapPin, Trash2 } from 'lucide-react';
+import { api } from '../api'; // Pastikan file api.js aman
 import PlaceCard from '../components/cards/PlaceCard'; 
 
 export default function Bookmark() {
   const navigate = useNavigate();
+  
+  // State dengan nilai awal yang aman
   const [user, setUser] = useState(null);
-  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]); // Default array kosong []
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Cek apakah ada data user di LocalStorage
+    // 1. Ambil User dari LocalStorage
     const storedUser = localStorage.getItem('travora_user');
     
     if (!storedUser) {
@@ -19,35 +21,50 @@ export default function Bookmark() {
         return; 
     }
 
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
+    try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
 
-    // Ambil ID yang benar (id_users)
-    const userId = parsedUser.id_users || parsedUser.id;
+        // Cari ID yang valid (id_users / id / userId)
+        const validUserId = parsedUser.id_users || parsedUser.id || parsedUser.userId;
 
-    if (!userId) {
-        console.error("ID User tidak ditemukan di data login");
-        setLoading(false);
-        return;
-    }
-
-    // 2. Ambil data bookmark dari backend
-    const fetchBookmarks = async () => {
-        try {
-            console.log("Mengambil bookmark untuk User ID:", userId);
-            const res = await api.get(`/bookmarks/${userId}`);
-            console.log("Data Bookmark diterima:", res.data); // Cek console browser
-            setBookmarks(res.data);
-        } catch (err) {
-            console.error("Gagal load bookmark", err);
-        } finally {
+        if (!validUserId) {
+            console.error("ID User tidak ditemukan di data login.");
             setLoading(false);
+            return;
         }
-    };
-    fetchBookmarks();
+
+        // 2. Fetch Data dari Backend
+        const fetchBookmarks = async () => {
+            try {
+                console.log("Mengambil bookmark untuk User ID:", validUserId);
+                const res = await api.get(`/bookmarks/${validUserId}`);
+                
+                // SAFETY CHECK: Pastikan data yang diterima adalah Array
+                if (Array.isArray(res.data)) {
+                    console.log("Data Bookmark Diterima:", res.data);
+                    setBookmarks(res.data);
+                } else {
+                    console.error("Format data salah (bukan array):", res.data);
+                    setBookmarks([]); // Paksa kosong biar gak error
+                }
+
+            } catch (err) {
+                console.error("Gagal request ke backend:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookmarks();
+
+    } catch (e) {
+        console.error("Error parsing user data:", e);
+        setLoading(false);
+    }
   }, []);
 
-  // --- RENDER ---
+  // --- RENDER TAMPILAN ---
 
   // 1. Belum Login
   if (!user) {
@@ -60,7 +77,7 @@ export default function Bookmark() {
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-4">Access Restricted</h1>
                     <p className="text-gray-500 mb-8 text-lg">Please login to view your saved collection.</p>
-                    <button onClick={() => navigate('/auth')} className="bg-[#82B1FF] text-white px-10 py-4 rounded-full font-bold hover:bg-[#6fa5ff] transition shadow-lg shadow-blue-200">
+                    <button onClick={() => navigate('/auth')} className="bg-[#82B1FF] text-white px-10 py-4 rounded-full font-bold hover:bg-[#6fa5ff] transition">
                         Login Now
                     </button>
                 </div>
@@ -69,26 +86,23 @@ export default function Bookmark() {
     );
   }
 
-  // 2. Loading State
+  // 2. Loading
   if (loading) {
     return (
         <div className="min-h-screen pt-40 text-center">
-            <p className="text-gray-400 text-lg animate-pulse">Fetching your collection...</p>
+            <p className="text-gray-400 text-lg animate-pulse">Loading your bookmarks...</p>
         </div>
     );
   }
 
-  // 3. Tampilan Utama
+  // 3. Tampilan Utama (Sukses)
   return (
     <div className="w-full animate-fade-in pb-20">
       {/* Header Image */}
-      <div className="h-[400px] relative w-full">
+      <div className="h-[350px] relative w-full">
         <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=1200" className="w-full h-full object-cover brightness-50" alt="Book Hero" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="max-w-7xl w-full px-6 flex items-center">
-            <div className="w-2 h-16 bg-white mr-6"></div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white">My Bookmarks</h1>
-          </div>
+             <h1 className="text-5xl md:text-6xl font-bold text-white">My Bookmarks</h1>
         </div>
       </div>
 
@@ -101,8 +115,9 @@ export default function Bookmark() {
         </div>
         <div className="h-[1px] bg-gray-200 w-full mb-12"></div>
 
-        {/* Jika Bookmark Kosong */}
+        {/* LOGIKA ISI KONTEN */}
         {bookmarks.length === 0 ? (
+           // Tampilan Kosong
            <div className="text-center py-24 bg-gray-50 rounded-[40px] border border-dashed border-gray-300">
              <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                 <MapPin size={32} className="text-gray-300" />
@@ -114,7 +129,7 @@ export default function Bookmark() {
              </button>
            </div>
         ) : (
-           /* Jika Ada Data */
+           // Tampilan Ada Data
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {bookmarks.map((item) => (
                   <PlaceCard 
