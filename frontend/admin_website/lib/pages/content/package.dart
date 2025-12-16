@@ -34,7 +34,10 @@ class _PackagePageState extends State<PackagePage> {
       } else {
         packageSearch = packages.where((pac) {
           final matchDestination = pac.destinationId.name.toLowerCase().contains(query);
-          final matchSubPackage = pac.subPackage.any((sub) => sub.name.toLowerCase().contains(query));
+          final matchSubPackage =
+            pac.subPackages.keys.any(
+              (sub) => sub.name.toLowerCase().contains(query),
+            );
 
           return matchDestination || matchSubPackage;
         }).toList();
@@ -157,7 +160,7 @@ class _PackagePageState extends State<PackagePage> {
                                 TableContent(title: pac.destinationId.name),
                                 const TableContent(title: "Destination"),
                                 TableContent(
-                                  title: pac.subPackage.map((s) => s.name).join(", "), 
+                                  title: pac.subPackages.keys.map((s) => s.name).join(", "), 
                                   flex: 3,
                                 ),
                             
