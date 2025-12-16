@@ -213,15 +213,15 @@ void showDetailPackage(
 
                   const Divider(height: 1,),
 
-                  ...pac.subPackage.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final dest = entry.value;
+                  ...pac.subPackages.entries.toList().asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final dest = entry.value.key;        // SubPackage model
+                      final detail = entry.value.value;      // Map<String, dynamic>
 
-                    final bool isdest = index % 2 == 0;
+                      final bool isdest = index % 2 == 0;
 
-                    final includesList = pac.includes[dest.id_subPackage] ?? [];
-
-                    final price = pac.getPrice(dest.id_subPackage);
+                      final int price = detail['price'];
+                      final List includesList = detail['include'];
 
                     return Container(
                       color: isdest ? Colors.white : const Color(0xFFEDF6FF),
@@ -243,14 +243,14 @@ void showDetailPackage(
                                     child: Row(
                                       children: [
                                         // icon
-                                        isBase64 (inc["icon"]!)
+                                        isBase64 (inc["image"]!)
                                           ? Image.memory(
-                                              base64Decode(inc["icon"]!),
+                                              base64Decode(inc["image"]!),
                                               width: 20,
                                               height: 20,
                                             )
                                           : Image.asset(  
-                                              inc["icon"]!,
+                                              inc["image"]!,
                                               width: 20,
                                               height: 20,
                                             ),

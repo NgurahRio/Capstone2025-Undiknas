@@ -17,25 +17,58 @@ class OverviewPage extends StatefulWidget {
 class _OverviewPageState extends State<OverviewPage> {
   TextEditingController search = TextEditingController();
 
+  int totalDestinations = 0;
+  int totalEvents = 0;
+  int totalCategories = 0;
+  int totalUsers = 0;
+  bool isLoading = true;
+
+
+  Future<void> loadOverview() async {
+    try {
+      final d = await getDestinations();
+      final e = await getEvents();
+      final c = await getCategories();
+      final u = await getUsers();
+
+      setState(() {
+        totalDestinations = d.length;
+        totalEvents = e.length;
+        totalCategories = c.length;
+        totalUsers = u.length;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+      isLoading = false;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadOverview();
+  }
+
   @override
   Widget build(BuildContext context) {
 
     final overviewItems = [
       {
         "title": "Destinations",
-        "value": destinations.length,
+        "value": totalDestinations,
       },
       {
         "title": "Events",
-        "value": events.length,
+        "value": totalEvents,
       },
       {
         "title": "Categories",
-        "value": categories.length,
+        "value": totalCategories,
       },
       {
         "title": "Users active",
-        "value": users.length,
+        "value": totalUsers,
       },
     ];
 
@@ -50,44 +83,47 @@ class _OverviewPageState extends State<OverviewPage> {
                 
                 HeaderCostum(controller: search, isSearch: false,),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 35),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: Responsive.isDesktop(context) ? 2 : 1,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 30,
-                      mainAxisExtent: 100
-                    ), 
-                    itemCount: overviewItems.length,
-                    itemBuilder: (context, index) {
-                      final item = overviewItems[index];
-                  
-                      return CardCostum(
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "${item["title"]}",
-                              style: TextStyle(fontSize: Responsive.text(context, 16)),
-                            ),
+                if (isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 35),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: Responsive.isDesktop(context) ? 2 : 1,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 30,
+                        mainAxisExtent: 100
+                      ), 
+                      itemCount: overviewItems.length,
+                      itemBuilder: (context, index) {
+                        final item = overviewItems[index];
+                    
+                        return CardCostum(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "${item["title"]}",
+                                style: TextStyle(fontSize: Responsive.text(context, 16)),
+                              ),
 
-                            Text(
-                              "${item["value"]}",
-                              style: TextStyle(fontSize: Responsive.text(context, 40)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                              Text(
+                                "${item["value"]}",
+                                style: TextStyle(fontSize: Responsive.text(context, 40)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    ),
                   ),
-                ),
-
-
               ],
             ),
           ),

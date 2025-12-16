@@ -42,6 +42,25 @@ class _AddPackageState extends State<AddPackage> {
 
   Destination? selectedDestination;
   List<SubPackage> selectedSubPackages = [];
+  List<Destination> destinations = [];
+  List<SubPackage> subPackages = [];
+  bool isLoading = true;
+
+  Future<void> loadData() async {
+    try {
+      final destData = await getDestinations();
+      final subPackData = await getSubPackages();
+
+      setState(() {
+        destinations = destData;
+        subPackages = subPackData;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   Map<int, PackageTypeFormData> perTypeForm = {};
 
@@ -58,46 +77,40 @@ class _AddPackageState extends State<AddPackage> {
   @override
   void initState() {
     super.initState();
+    loadData();
 
-    if (widget.existingPackage != null) {
-      final p = widget.existingPackage!;
+    final p = widget.existingPackage;
+    if (p == null) return;
 
-      selectedDestination = p.destinationId;
+    selectedDestination = p.destinationId;
+    selectedSubPackages = p.subPackages.keys.toList();
 
-      selectedSubPackages = [...p.subPackage];
+    for (final sp in selectedSubPackages) {
+      final data = p.subPackages[sp]!;
+      final form = PackageTypeFormData();
 
-      for (var sp in selectedSubPackages) {
-        final form = PackageTypeFormData();
+      // price
+      form.price.text = formatRupiah(data["price"]);
 
-        final price = p.subPackagePrices[sp.id_subPackage] ?? 0;
-        form.price.text = formatRupiah(price);
+      // include
+      final includes = data["include"] as List;
+      for (final inc in includes) {
+        form.includedItems.add(inc["name"]);
 
-        if (p.includes.containsKey(sp.id_subPackage)) {
-          for (var inc in p.includes[sp.id_subPackage]!) {
-            form.includedItems.add(inc["name"]!);
-
-            final icon = inc["icon"];
-            if (icon != null && icon.isNotEmpty) {
-              if (icon.startsWith("data:image") || icon.length > 200) {
-                try {
-                  form.includedImages.add(base64Decode(icon));
-                } catch (_) {
-                  form.includedImages.add(icon);
-                }
-              } else {
-                form.includedImages.add(icon);
-              }
-            } else {
-              form.includedImages.add(null);
-            }
+        final img = inc["image"];
+        if (img != null && img.isNotEmpty) {
+          try {
+            form.includedImages.add(base64Decode(img));
+          } catch (_) {
+            form.includedImages.add(img);
           }
         }
-
-        perTypeForm[sp.id_subPackage] = form;
       }
+
+      perTypeForm[sp.id_subPackage] = form;
     }
   }
-
+  
   void togglePackageType(SubPackage sp, bool selected) {
     setState(() {
       if (selected) {
@@ -216,71 +229,64 @@ class _AddPackageState extends State<AddPackage> {
 
   Future<void> savePackage() async {
     if (selectedDestination == null) {
-      print("Please select destination!");
+      debugPrint("Please select destination!");
       return;
     }
 
     if (selectedSubPackages.isEmpty) {
-      print("Please select at least one package type!");
+      debugPrint("Please select at least one package type!");
       return;
     }
 
-    final Map<int, int> prices = {};
-    final Map<int, List<Map<String, String>>> includes = {};
+    final Map<SubPackage, Map<String, dynamic>> subPackageMap = {};
 
-    for (var sp in selectedSubPackages) {
+    for (final sp in selectedSubPackages) {
       final form = perTypeForm[sp.id_subPackage]!;
 
-      if (form.price.text.isEmpty) {
-        print("Price for ${sp.name} is empty!");
-        return;
-      }
-      String clean = form.price.text.replaceAll('.', '');
-
-      if (clean.isEmpty) {
-        print("Price for ${sp.name} is empty!");
+      // ===== PRICE =====
+      final cleanPrice = form.price.text.replaceAll('.', '');
+      if (cleanPrice.isEmpty) {
+        debugPrint("Price for ${sp.name} is empty");
         return;
       }
 
-      prices[sp.id_subPackage] = int.parse(clean);
+      final int price = int.parse(cleanPrice);
 
-      includes[sp.id_subPackage] = List.generate(
-        form.includedItems.length,
-        (i) {
-          final img = form.includedImages[i];
+      // ===== INCLUDE =====
+      final List<Map<String, String>> includes = [];
 
-          String encodedIcon = "";
+      for (int i = 0; i < form.includedItems.length; i++) {
+        final img = form.includedImages[i];
 
-          if (img != null) {
-            if (img is Uint8List) {
-              encodedIcon = base64Encode(img);
-            } else if (img is String) {
-              encodedIcon = img;
-            }
-          }
+        String imageEncoded = "";
 
-          return {
-            "icon": encodedIcon,
-            "name": form.includedItems[i],
-          };
-        },
-      );
+        if (img is Uint8List) {
+          imageEncoded = base64Encode(img);
+        } else if (img is String) {
+          imageEncoded = img;
+        }
+
+        includes.add({
+          "image": imageEncoded,
+          "name": form.includedItems[i],
+        });
+      }
+
+      // ===== MAP KE MODEL KEDUA =====
+      subPackageMap[sp] = {
+        "price": price,
+        "include": includes,
+      };
     }
 
-    final bool isEdit = widget.existingPackage != null;
-
     final newPackage = Package(
-      id_package: isEdit 
-          ? widget.existingPackage!.id_package 
-          : DateTime.now().millisecondsSinceEpoch,
+      id_package: widget.existingPackage?.id_package
+          ?? DateTime.now().millisecondsSinceEpoch,
       destinationId: selectedDestination!,
-      subPackage: selectedSubPackages,
-      subPackagePrices: prices,
-      includes: includes,
+      subPackages: subPackageMap,
     );
 
     widget.onSave(newPackage);
-
     widget.onClose();
   }
 
