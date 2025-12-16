@@ -3,6 +3,7 @@ package destination
 import (
 	"backend/config"
 	"backend/models"
+	"backend/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -131,6 +132,74 @@ func CreateDestination(c *gin.Context) {
 		return
 	}
 
+	if err := config.DB.Preload("Sos").First(&destination, destination.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Gagal memuat data relasi destinasi",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	var subResp []gin.H
+	if rawSubcategory != "" {
+		rawSubs := strings.Split(rawSubcategory, ",")
+		intIDs := []int{}
+		for _, idStr := range rawSubs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		var subcategories []models.Subcategory
+		if err := config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data subcategory",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, s := range subcategories {
+			subResp = append(subResp, gin.H{
+				"id_subcategories":  s.ID,
+				"namesubcategories": s.Name,
+				"categoriesId":      s.CategoryID,
+				"category": gin.H{
+					"id_categories": s.Category.ID,
+					"name":          s.Category.Name,
+				},
+			})
+		}
+	}
+
+	var facilityResp []gin.H
+	if rawFacility != "" {
+		rawIDs := strings.Split(rawFacility, ",")
+		intIDs := []int{}
+		for _, idStr := range rawIDs {
+			if n, err := strconv.Atoi(strings.TrimSpace(idStr)); err == nil {
+				intIDs = append(intIDs, n)
+			}
+		}
+
+		var facilities []models.Facility
+		if err := config.DB.Where("id_facility IN ?", intIDs).Find(&facilities).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data fasilitas",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		for _, f := range facilities {
+			facilityResp = append(facilityResp, gin.H{
+				"id_facility":  f.IDFacility,
+				"namefacility": f.NameFacility,
+				"icon":         utils.ToBase64(f.Icon),
+			})
+		}
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Destination berhasil ditambahkan",
 		"data": gin.H{
@@ -147,11 +216,19 @@ func CreateDestination(c *gin.Context) {
 				"sosId":           destination.SosID,
 				"facilityId":      destination.FacilityID,
 				"subcategoryId":   destination.SubcategoryID,
+				"subcategory":     subResp,
 				"operational":     destination.Operational,
 				"longitude":       destination.Longitude,
 				"latitude":        destination.Latitude,
 				"created_at":      destination.CreatedAt,
 				"updated_at":      destination.UpdatedAt,
+				"facilities":      facilityResp,
+				"sos": gin.H{
+					"id_sos":     destination.Sos.ID,
+					"name_sos":   destination.Sos.Name,
+					"alamat_sos": destination.Sos.Alamat,
+					"telepon":    destination.Sos.Telepon,
+				},
 			},
 		},
 	})
