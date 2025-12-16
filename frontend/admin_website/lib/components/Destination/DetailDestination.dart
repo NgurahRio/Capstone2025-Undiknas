@@ -175,6 +175,12 @@ class _DetailDestinationState extends State<DetailDestination> {
     bool isBase64(String data) {
       return data.length > 200 || data.startsWith("iVBOR") || data.contains("data:image");
     }
+
+    final uniqueCategories = <int, String>{};
+
+    for (final sub in dest.subCategoryId) {
+      uniqueCategories[sub.categoryId.id_category] = sub.categoryId.name;
+    }
     return SingleChildScrollView(
       child: Stack(
         children: [
@@ -255,12 +261,9 @@ class _DetailDestinationState extends State<DetailDestination> {
                       child: Wrap(
                         spacing: 5,
                         runSpacing: 5,
-                        children: dest.subCategoryId
-                          .map((subc) => subc.categoryId)
-                          .toSet()
-                          .map((cat) {
-                            return boxType(text: cat.name);
-                          }).toList(),
+                        children: uniqueCategories.entries.map((e) {
+                          return boxType(text: e.value);
+                        }).toList(),
                       ),
                     ),
 

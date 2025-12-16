@@ -2,6 +2,7 @@ import 'package:admin_website/components/ButtonCostum.dart';
 import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/DeletePopup.dart';
 import 'package:admin_website/components/Event/AddEvent.dart';
+import 'package:admin_website/components/Event/CalendarEvent.dart';
 import 'package:admin_website/components/Event/DetailEvent.dart';
 import 'package:admin_website/components/CurrencyFormat.dart';
 import 'package:admin_website/components/HeaderCostum.dart';
@@ -10,7 +11,6 @@ import 'package:admin_website/components/Table/TabelContent.dart';
 import 'package:admin_website/components/Table/TableHeader.dart';
 import 'package:admin_website/models/event_model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class EventPage extends StatefulWidget {
   const EventPage({super.key});
@@ -26,10 +26,21 @@ class _EventPageState extends State<EventPage> {
 
   Event? editingEvent;
   List<Event> eventSearch = [];
+  List<Event> events = [];
+  bool isLoading = true;
 
-  String formatDateDisplay(String isoDate) {
-    final dt = DateTime.parse(isoDate);
-    return DateFormat("dd MMMM yyyy").format(dt);
+  Future<void> loadEvents() async {
+    try {
+      final data = await getEvents();
+      setState(() {
+        events = data;
+        eventSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
   }
 
   void _searchFunction() {
@@ -50,21 +61,30 @@ class _EventPageState extends State<EventPage> {
   @override
   void initState() {
     super.initState();
-
-    eventSearch = events;
+    loadEvents();
     searchEvent.addListener(_searchFunction);
   }
 
-  void deleteEvent(int id) {
+  void removeEvent(int id) {
     showPopUpDelete(
       context: context, 
       text: "Event", 
-      onDelete: () {
-        setState(() {
-          events.removeWhere((item) => item.id_event == id);
-
-          searchEvent.clear();
-        });
+      onDelete: () async {
+        try {
+          await deleteEvent(id);
+          setState(() {
+            events.removeWhere((item) => item.id_event == id);
+            searchEvent.clear();
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Event deleted successfully"),
+            ),
+          );
+        } catch (e) {
+          debugPrint(e.toString());
+        }
       }
     );
   }
@@ -159,7 +179,7 @@ class _EventPageState extends State<EventPage> {
                               children: [
                                 TableContent(title: evt.name, flex: 2,),
                                 TableContent(
-                                  title: evt.endDate != null && evt.endDate!.isNotEmpty
+                                  title: isValidEndDate(evt.endDate)
                                       ? "${formatDateDisplay(evt.startDate)} - ${formatDateDisplay(evt.endDate!)}"
                                       : formatDateDisplay(evt.startDate),
                                   flex: 2,
@@ -190,7 +210,7 @@ class _EventPageState extends State<EventPage> {
                                       Actionbutton(
                                         isDelete: true,
                                         label: "Delete", 
-                                        onTap: () => deleteEvent(evt.id_event), 
+                                        onTap: () => removeEvent(evt.id_event), 
                                       ),
                                     ],
                                   ),

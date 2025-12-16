@@ -302,9 +302,9 @@ class _AddDestinationState extends State<AddDestination> {
           latitude: double.tryParse(latitude.text) ?? 0,
           longitude: double.tryParse(longitude.text) ?? 0,
           sosId: selectedSOS?.id_sos ?? 0,
-          doText: dosItems.join(','),
-          dontText: dontsItems.join(','),
-          safetyText: safetyGuidelinesItems.join(','),
+          doText: dosItems.join('\n'),
+          dontText: dontsItems.join('\n'),
+          safetyText: safetyGuidelinesItems.join('\n'),
         );
       } else {
         result = await updateDestination(
@@ -319,9 +319,10 @@ class _AddDestinationState extends State<AddDestination> {
           latitude: double.tryParse(latitude.text) ?? 0,
           longitude: double.tryParse(longitude.text) ?? 0,
           sosId: selectedSOS?.id_sos ?? 0,
-          doText: dosItems.join(','),
-          dontText: dontsItems.join(','),
-          safetyText: safetyGuidelinesItems.join(','),
+          doText: dosItems.join('\n'),
+          dontText: dontsItems.join('\n'),
+          safetyText: safetyGuidelinesItems.join('\n'),
+          imageUrl: previewImages
         );
       }
 
@@ -590,10 +591,10 @@ class _AddDestinationState extends State<AddDestination> {
               Row(
                 children: [
                   Expanded(
-                    child: TextFieldCostum(
+                    child: BoxTextContent(
                       controller: operational, 
-                      text: "write destination operational hours"
-                    ),
+                      label: "Select operational hours"
+                    )
                   ),
 
                   Padding(

@@ -207,11 +207,11 @@ Future<Destination> updateDestination({
   required String doText,
   required String dontText,
   required String safetyText,
-  Map<int, Uint8List>? updatedImages,
+  required List<Uint8List>  imageUrl
 }) async {
   final token = html.window.localStorage['token'];
-  final uri = Uri.parse('$baseUrl/admin/destination/$id');
 
+  final uri = Uri.parse('$baseUrl/admin/destination/$id');
   final request = http.MultipartRequest('PUT', uri);
   request.headers['Authorization'] = 'Bearer $token';
 
@@ -231,22 +231,20 @@ Future<Destination> updateDestination({
     'sosId': sosId.toString(),
   });
 
-  if (updatedImages != null) {
-    for (final entry in updatedImages.entries) {
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'image[${entry.key}]',
-          entry.value,
-          filename: 'destination_${entry.key}.jpg',
-        ),
-      );
-    }
+    for (var i = 0; i < imageUrl.length; i++) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image[$i]',
+        imageUrl[i],
+        filename: 'destination_$i.jpg',
+      ),
+    );
   }
 
   final streamed = await request.send();
   final response = await http.Response.fromStream(streamed);
 
-  if (response.statusCode != 200) {
+  if (response.statusCode != 200 && response.statusCode != 201) {
     throw Exception(response.body);
   }
 
