@@ -591,10 +591,10 @@ class _AddDestinationState extends State<AddDestination> {
               Row(
                 children: [
                   Expanded(
-                    child: TextFieldCostum(
+                    child: BoxTextContent(
                       controller: operational, 
-                      text: "write destination operational hours"
-                    ),
+                      label: "Select operational hours"
+                    )
                   ),
 
                   Padding(

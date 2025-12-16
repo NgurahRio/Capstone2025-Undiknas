@@ -377,9 +377,9 @@ class _AddEventState extends State<AddEvent> {
                   ),
 
                   Expanded(
-                    child: TextFieldCostum(
+                    child: BoxTextContent(
                       controller: dateDisplay, 
-                      text: "write date event"
+                      label: "Select event date"
                     ),
                   )
                 ],
@@ -410,10 +410,10 @@ class _AddEventState extends State<AddEvent> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFieldCostum(
+                              child: BoxTextContent(
                                 controller: startTime, 
-                                text: "write start time event"
-                              ),
+                                label: "Select start time"
+                              )
                             ),
                         
                             Padding(
@@ -445,10 +445,10 @@ class _AddEventState extends State<AddEvent> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFieldCostum(
+                              child: BoxTextContent(
                                 controller: endTime, 
-                                text: "write end time event"
-                              ),
+                                label: "Select end time"
+                              )
                             ),
                         
                             Padding(

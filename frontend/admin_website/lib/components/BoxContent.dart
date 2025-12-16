@@ -243,3 +243,42 @@ class _BoxImageContentState extends State<BoxImageContent> {
     );
   }
 }
+
+
+class BoxTextContent extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+
+  const BoxTextContent({
+    super.key,
+    required this.controller,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final text = value.text.trim();
+        final isEmpty = text.isEmpty;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: Colors.black54, width: 0.5),
+          ),
+          child: Text(
+            isEmpty ? label : text,
+            style: TextStyle(
+              color: isEmpty ? Colors.grey : Colors.black87,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
