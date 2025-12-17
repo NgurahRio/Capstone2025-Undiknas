@@ -47,6 +47,15 @@ func CreateEvent(c *gin.Context) {
 			return
 		}
 
+		// Validasi apakah destinationId ada di database
+		var destCheck models.Destination
+		if err := config.DB.First(&destCheck, "id_destination = ?", dID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "destinationId tidak ditemukan di database",
+			})
+			return
+		}
+
 		tmp := uint(dID)
 		destIDPointer = &tmp
 	}
