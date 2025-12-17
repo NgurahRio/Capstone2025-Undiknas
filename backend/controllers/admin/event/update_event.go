@@ -27,6 +27,15 @@ func UpdateEvent(c *gin.Context) {
 
 	if destStr := c.PostForm("destinationId"); destStr != "" {
 		if destInt, err := strconv.Atoi(destStr); err == nil && destInt >= 0 {
+			// Validasi apakah destinationId ada di database
+			var destCheck models.Destination
+			if err := config.DB.First(&destCheck, "id_destination = ?", destInt).Error; err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"message": "destinationId tidak ditemukan di database",
+				})
+				return
+			}
+
 			tmp := uint(destInt)
 			event.DestinationID = &tmp
 			updated["destinationId"] = destInt
