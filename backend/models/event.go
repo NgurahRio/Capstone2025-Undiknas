@@ -18,6 +18,9 @@ type Event struct {
 	Latitude      float64 `gorm:"column:latitude" json:"latitude"`
 	ImageEvent    string  `gorm:"column:image_event" json:"image_event"`
 	Location      string  `gorm:"column:location" json:"location"`
+
+	// Relasi dengan Destination
+	Destination *Destination `gorm:"foreignKey:DestinationID;references:ID" json:"destination,omitempty"`
 }
 
 func (Event) TableName() string {
