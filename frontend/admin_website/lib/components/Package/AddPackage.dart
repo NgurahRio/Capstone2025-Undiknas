@@ -22,14 +22,17 @@ class PackageTypeFormData {
 
 class AddPackage extends StatefulWidget {
   final VoidCallback onClose;
-  final Function(Package) onSave;
+  final VoidCallback onSave;
   final Package? existingPackage;
+
+  final List<Package> packages;
 
   const AddPackage({
     super.key,
     required this.onClose,
     required this.onSave,
     this.existingPackage,
+    required this.packages,
   });
 
   @override
@@ -65,13 +68,13 @@ class _AddPackageState extends State<AddPackage> {
   Map<int, PackageTypeFormData> perTypeForm = {};
 
   List<Destination> get availableDestinations {
-    final usedDestinationIds = packages.map((p) => p.destinationId.id_destination).toSet();
+    final usedDestinationIds = widget.packages
+        .map((p) => p.destinationId.id_destination)
+        .toSet();
 
-    if (widget.existingPackage != null) {
-      usedDestinationIds.remove(widget.existingPackage!.destinationId.id_destination);
-    }
-
-    return destinations.where((d) => !usedDestinationIds.contains(d.id_destination)).toList();
+    return destinations
+        .where((d) => !usedDestinationIds.contains(d.id_destination))
+        .toList();
   }
 
   @override
@@ -88,11 +91,7 @@ class _AddPackageState extends State<AddPackage> {
     for (final sp in selectedSubPackages) {
       final data = p.subPackages[sp]!;
       final form = PackageTypeFormData();
-
-      // price
       form.price.text = formatRupiah(data["price"]);
-
-      // include
       final includes = data["include"] as List;
       for (final inc in includes) {
         form.includedItems.add(inc["name"]);
@@ -228,67 +227,71 @@ class _AddPackageState extends State<AddPackage> {
   }
 
   Future<void> savePackage() async {
-    if (selectedDestination == null) {
-      debugPrint("Please select destination!");
-      return;
-    }
+    if (selectedDestination == null) return;
+    if (selectedSubPackages.isEmpty) return;
 
-    if (selectedSubPackages.isEmpty) {
-      debugPrint("Please select at least one package type!");
-      return;
-    }
-
-    final Map<SubPackage, Map<String, dynamic>> subPackageMap = {};
+    final List<SubPackageInput> inputs = [];
 
     for (final sp in selectedSubPackages) {
       final form = perTypeForm[sp.id_subPackage]!;
 
-      // ===== PRICE =====
       final cleanPrice = form.price.text.replaceAll('.', '');
-      if (cleanPrice.isEmpty) {
-        debugPrint("Price for ${sp.name} is empty");
-        return;
-      }
-
       final int price = int.parse(cleanPrice);
 
-      // ===== INCLUDE =====
-      final List<Map<String, String>> includes = [];
-
       for (int i = 0; i < form.includedItems.length; i++) {
-        final img = form.includedImages[i];
+        final image = form.includedImages[i];
 
-        String imageEncoded = "";
-
-        if (img is Uint8List) {
-          imageEncoded = base64Encode(img);
-        } else if (img is String) {
-          imageEncoded = img;
+        if (image is! Uint8List) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Image "${form.includedItems[i]}" wajib dipilih ulang',
+              ),
+            ),
+          );
+          return;
         }
 
-        includes.add({
-          "image": imageEncoded,
-          "name": form.includedItems[i],
-        });
-      }
+        if (image.length > 500 * 1024) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Ukuran gambar "${form.includedItems[i]}" terlalu besar (maks 500KB)',
+              ),
+            ),
+          );
+          return;
+        }
 
-      // ===== MAP KE MODEL KEDUA =====
-      subPackageMap[sp] = {
-        "price": price,
-        "include": includes,
-      };
+        inputs.add(
+          SubPackageInput(
+            subPackageId: sp.id_subPackage,
+            price: price,
+            includeName: form.includedItems[i],
+            imageBytes: image,
+            imageName: 'include_${sp.id_subPackage}_${i + 1}.png',
+          ),
+        );
+      }
     }
 
-    final newPackage = Package(
-      id_package: widget.existingPackage?.id_package
-          ?? DateTime.now().millisecondsSinceEpoch,
-      destinationId: selectedDestination!,
-      subPackages: subPackageMap,
-    );
+    // 🔥 CREATE vs UPDATE
+    if (widget.existingPackage == null) {
+      await createPackages(
+        destinationId: selectedDestination!.id_destination,
+        subPackages: inputs,
+      );
+    } else {
+      await updatePackages(
+        destinationId: selectedDestination!.id_destination,
+        subPackages: inputs,
+      );
+    }
 
-    widget.onSave(newPackage);
+    widget.onSave();
     widget.onClose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -335,52 +338,56 @@ class _AddPackageState extends State<AddPackage> {
                 link: _destinationLink,
                 key: _destinationKey,
                 child: GestureDetector(
-                  onTap: () {
-                    if (_isDropdownDestination) {
-                      _overlayDestination?.remove();
-                      _overlayDestination = null;
-                      setState(() => _isDropdownDestination = false);
-                    } else {
-                      _showDropdown(
-                        link: _destinationLink,
-                        keyButton: _destinationKey,
-                        onSaveOverlay: (entry) => _overlayDestination = entry,
-                        onVisibleChange: () => setState(() => _isDropdownDestination = true),
-                        content: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxHeight: 180,
-                          ),
-                          child: SingleChildScrollView(
-                            child: ListView(
-                              shrinkWrap: true,
-                              padding: EdgeInsets.zero,
-                              children: availableDestinations.map((d) {
-                                return InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedDestination = d;
-                                    });
-                            
-                                    _overlayDestination?.remove();
-                                    _isDropdownDestination = false;
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    child: Text(
-                                      d.name,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                  onTap:  widget.existingPackage != null 
+                  ? null 
+                  : () {
+                      if (_isDropdownDestination) {
+                        _overlayDestination?.remove();
+                        _overlayDestination = null;
+                        setState(() => _isDropdownDestination = false);
+                      } else {
+                        _showDropdown(
+                          link: _destinationLink,
+                          keyButton: _destinationKey,
+                          onSaveOverlay: (entry) => _overlayDestination = entry,
+                          onVisibleChange: () => setState(() => _isDropdownDestination = true),
+                          content: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxHeight: 180,
                             ),
-                          ),
-                        )
-                      );
-                    }
-                  },
+                            child: SingleChildScrollView(
+                              child: ListView(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                children: availableDestinations.map((d) {
+                                  return InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedDestination = d;
+                                      });
+                              
+                                      _overlayDestination?.remove();
+                                      _isDropdownDestination = false;
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      child: Text(
+                                        d.name,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          )
+                        );
+                      }
+                    },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: widget.existingPackage != null
+                      ? const EdgeInsets.symmetric(horizontal: 10, vertical: 7)
+                      : const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black54, width: 0.5),
                       borderRadius: BorderRadius.circular(5),
@@ -396,11 +403,15 @@ class _AddPackageState extends State<AddPackage> {
                             fontSize: 13,
                           ),
                         ),
-                        Icon(
-                          _isDropdownDestination
-                          ? Icons.arrow_drop_up
-                          : Icons.arrow_drop_down
-                        ),
+
+                        if (widget.existingPackage != null)
+                          const SizedBox.shrink()
+                        else
+                          Icon(
+                            _isDropdownDestination
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down
+                          ),
                       ],
                     ),
                   ),
