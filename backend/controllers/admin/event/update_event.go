@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,9 +26,13 @@ func UpdateEvent(c *gin.Context) {
 
 	updated := gin.H{}
 
-	if destStr := c.PostForm("destinationId"); destStr != "" {
-		if destInt, err := strconv.Atoi(destStr); err == nil && destInt >= 0 {
-			// Validasi apakah destinationId ada di database
+	if destStr, provided := c.GetPostForm("destinationId"); provided {
+		destStr = strings.TrimSpace(destStr)
+		if destStr == "" || strings.EqualFold(destStr, "null") {
+			event.DestinationID = nil
+			updated["destinationId"] = nil
+		} else if destInt, err := strconv.Atoi(destStr); err == nil && destInt >= 0 {
+
 			var destCheck models.Destination
 			if err := config.DB.First(&destCheck, "id_destination = ?", destInt).Error; err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
@@ -39,6 +44,9 @@ func UpdateEvent(c *gin.Context) {
 			tmp := uint(destInt)
 			event.DestinationID = &tmp
 			updated["destinationId"] = destInt
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "destinationId tidak valid"})
+			return
 		}
 	}
 
@@ -86,7 +94,6 @@ func UpdateEvent(c *gin.Context) {
 
 	imagesBase64 := []string{}
 
-	// Collect multiple images if provided under the same "image" field.
 	if form, formErr := c.MultipartForm(); formErr == nil && form != nil {
 		if files, ok := form.File["image"]; ok {
 			for idx, file := range files {
