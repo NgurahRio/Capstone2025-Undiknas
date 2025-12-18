@@ -29,7 +29,6 @@ func CreateEvent(c *gin.Context) {
 	longitudeStr := c.PostForm("longitude")
 	latitudeStr := c.PostForm("latitude")
 
-	// Validate event name
 	if nameEvent == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "nameevent wajib diisi",
@@ -47,7 +46,6 @@ func CreateEvent(c *gin.Context) {
 			return
 		}
 
-		// Validasi apakah destinationId ada di database
 		var destCheck models.Destination
 		if err := config.DB.First(&destCheck, "id_destination = ?", dID).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -136,6 +134,15 @@ func CreateEvent(c *gin.Context) {
 			"message": "Gagal menambahkan event",
 		})
 		return
+	}
+
+	if event.DestinationID != nil {
+		if err := config.DB.Preload("Destination").First(&event, event.ID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Gagal memuat data destinasi",
+			})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
