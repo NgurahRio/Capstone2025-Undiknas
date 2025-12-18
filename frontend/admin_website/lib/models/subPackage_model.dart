@@ -21,6 +21,16 @@ class SubPackage {
       icon: json['image'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SubPackage &&
+          runtimeType == other.runtimeType &&
+          id_subPackage == other.id_subPackage;
+
+  @override
+  int get hashCode => id_subPackage.hashCode;
 }
 
 Future<List<SubPackage>> getSubPackages() async {

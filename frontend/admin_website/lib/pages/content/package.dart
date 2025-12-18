@@ -24,6 +24,22 @@ class _PackagePageState extends State<PackagePage> {
 
   Package? editingPackage;
   List<Package> packageSearch = [];
+  List<Package> packages = [];
+  bool isLoading = true;
+
+  Future<void> loadPackages() async {
+    try {
+      final data = await getPackages();
+      setState(() {
+        packages = data;
+        packageSearch = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      isLoading = false;
+      debugPrint(e.toString());
+    }
+  }
 
   void _searchFunction() {
     String query = searchPackage.text.toLowerCase();
@@ -48,21 +64,29 @@ class _PackagePageState extends State<PackagePage> {
   @override
   void initState() {
     super.initState();
-
-    packageSearch = packages;
+    loadPackages();
     searchPackage.addListener(_searchFunction);
   }
 
-  void deletePackage(int id) {
+  void removePackage(int id) {
     showPopUpDelete(
       context: context, 
       text: "Package", 
-      onDelete: () {
-        setState(() {
-          packages.removeWhere((item) => item.id_package == id);
+      onDelete: ()  async {
+        try {
+          await deletePackage(id);
+          setState(() {
+            packages.removeWhere((item) => item.destinationId.id_destination == id);
+            packageSearch = packages;
+            searchPackage.clear();
+          });
 
-          searchPackage.clear();
-        });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Package deleted successfully')),
+          );
+        } catch (e) {
+          debugPrint(e.toString());
+        }
       }
     );
   }
@@ -105,6 +129,7 @@ class _PackagePageState extends State<PackagePage> {
 
                 if (openAddPackage)
                   AddPackage(
+                    packages: packages,
                     existingPackage: editingPackage,
                     onClose: () {
                       setState(() {
@@ -112,20 +137,10 @@ class _PackagePageState extends State<PackagePage> {
                         editingPackage = null;
                       });
                     },
-                    onSave: (savedPackage) {
-                      setState(() {
-                        if (editingPackage != null) {
-                          final index = packages.indexWhere(
-                            (p) => p.id_package == savedPackage.id_package
-                          );
-                          if (index != -1) {
-                            packages[index] = savedPackage;
-                          }
-                        } else {
-                          packages.add(savedPackage);
-                        }
-                      });
+                    onSave: () async {
+                      await loadPackages();
                     },
+                      
                   ),
 
                 CardCostum(
@@ -171,7 +186,7 @@ class _PackagePageState extends State<PackagePage> {
                                     children: [
                                       Actionbutton(
                                         label: "View Detail", 
-                                        onTap: () => showDetailPackage(context, pac.id_package),
+                                        onTap: () => showDetailPackage(context, pac.destinationId.id_destination),
                                       ),
                                       Actionbutton(
                                         label: "Edit", 
@@ -185,7 +200,7 @@ class _PackagePageState extends State<PackagePage> {
                                       Actionbutton(
                                         isDelete: true,
                                         label: "Delete", 
-                                        onTap: () => deletePackage(pac.id_package), 
+                                        onTap: () => removePackage(pac.destinationId.id_destination), 
                                       ),
                                     ],
                                   ),
