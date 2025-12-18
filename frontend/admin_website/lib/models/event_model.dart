@@ -1,6 +1,7 @@
 import 'dart:html' as html;
 import 'dart:typed_data';
 import 'package:admin_website/api.dart';
+import 'package:admin_website/models/destination_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -22,6 +23,7 @@ List<String> _parseList(dynamic value) {
 
 class Event {
   final int id_event;
+  final Destination? destinationId;
   final String name;
   final String description;
   final String startDate;
@@ -40,6 +42,7 @@ class Event {
 
   Event({
     required this.id_event,
+    this.destinationId,
     required this.name,
     required this.description,
     required this.startDate,
@@ -60,6 +63,9 @@ class Event {
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id_event: json['id_event'],
+      destinationId: json['destination'] != null
+          ? Destination.fromJson(json['destination'])
+          : null,
       name: json['nameevent'] ?? '',
       description: json['description'] ?? '',
       startDate: json['start_date'],
@@ -67,11 +73,19 @@ class Event {
       startTime: json['start_time'] ?? '',
       endTime: json['end_time'] ?? '',
       location: json['location'] ?? '',
-      imageUrl: json['image_event'] == null
-        ? []
-        : (json['image_event'] is String
-            ? List<String>.from(jsonDecode(json['image_event']))
-            : List<String>.from(json['image_event'])),
+      imageUrl: () {
+        final img = json['image_event'];
+        if (img == null || img == '') {
+          return <String>[];
+        }
+        if (img is String) {
+          return List<String>.from(jsonDecode(img));
+        }
+        if (img is List) {
+          return List<String>.from(img);
+        }
+        return <String>[];
+      }(),
       price: json['price'],
       maps: json['maps'] ?? '',
       latitude: json['latitude'] == null
@@ -127,18 +141,19 @@ Future<Event> getEventById(int id) async {
 }
 
 Future<Event> createEvent({
+  required int? destinationId,
   required String name,
   required String description,
   required String startDate,
   String? endDate,
   required String startTime,
   required String endTime,
-  required String location,
+  String? location,
   required List<Uint8List> imageUrl,
   int? price,
-  required String maps,
-  required double latitude,
-  required double longitude,
+  String? maps,
+  double? latitude,
+  double? longitude,
   String doText = '',
   String dontText = '',
   String safetyText = '',
@@ -151,16 +166,17 @@ Future<Event> createEvent({
 
   request.fields.addAll({
     'nameevent': name,
+    'destinationId': destinationId != null ? destinationId.toString() : '',
     'description': description,
     'start_date': startDate,
     if (endDate != null) 'end_date': endDate,
     'start_time': startTime,
     'end_time': endTime,
-    'location': location,
+    'location': location ?? '',
     if (price != null) 'price': price.toString(),
-    'maps': maps,
-    'latitude': latitude.toString(),
-    'longitude': longitude.toString(),
+    'maps': maps ?? '',
+    'latitude': latitude?.toString() ?? '',
+    'longitude': longitude?.toString() ?? '',
     'do': doText,
     'dont': dontText,
     'safety': safetyText,
@@ -189,18 +205,19 @@ Future<Event> createEvent({
 
 Future<void> updateEvent({
   required int idEvent,
+  required int? destinationId,
   required String name,
   required String description,
   required String startDate,
   String? endDate,
   required String startTime,
   required String endTime,
-  required String location,
+  String? location,
   required List<Uint8List> imageUrl,
   int? price,
-  required String maps,
-  required double latitude,
-  required double longitude,
+  String? maps,
+  double? latitude,
+  double? longitude,
   String doText = '',
   String dontText = '',
   String safetyText = '',
@@ -212,15 +229,18 @@ Future<void> updateEvent({
   request.headers['Authorization'] = 'Bearer $token';
 
   request.fields.addAll({
+    'destinationId': (destinationId == null || destinationId == 0)
+      ? 'null'
+      : destinationId.toString(),
     'nameevent': name,
     'description': description,
     'start_date': startDate,
     if (endDate != null) 'end_date': endDate,
     'start_time': startTime,
     'end_time': endTime,
-    'location': location,
+    'location': location ?? '',
     if (price != null) 'price': price.toString(),
-    'maps': maps,
+    'maps': maps ?? '',
     'latitude': latitude.toString(),
     'longitude': longitude.toString(),
     'do': doText,

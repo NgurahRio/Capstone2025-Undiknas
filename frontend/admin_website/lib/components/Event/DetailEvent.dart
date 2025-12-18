@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:admin_website/components/CardCostum.dart';
 import 'package:admin_website/components/CurrencyFormat.dart';
+import 'package:admin_website/components/Destination/DetailDestination.dart';
 import 'package:admin_website/components/Event/CalendarEvent.dart';
 import 'package:admin_website/components/OpenGoogleMaps.dart';
+import 'package:admin_website/models/destination_model.dart';
 import 'package:admin_website/models/event_model.dart';
 import 'package:flutter/material.dart';
 
@@ -82,6 +85,64 @@ Widget cardContent ({
   );
 }
 
+OverlayEntry? _overlayDest;
+final LayerLink _destLink = LayerLink();
+final GlobalKey _destKey = GlobalKey();
+bool _isDropdownDest = false;
+
+void _showDestination({
+  required BuildContext context,
+  required int id,
+}) {
+  if (_isDropdownDest && _overlayDest != null) {
+    _overlayDest!.remove();
+    _overlayDest = null;
+    _isDropdownDest = false;
+    return;
+  }
+
+  final overlay = Overlay.of(context);
+  final renderBox = _destKey.currentContext!.findRenderObject() as RenderBox;
+  final size = renderBox.size;
+  final offset = renderBox.localToGlobal(Offset.zero);
+
+  final entry = OverlayEntry(
+    builder: (context) => Positioned(
+      left: offset.dx,
+      width: 300,
+      height: 350,
+      child: CompositedTransformFollower(
+        link: _destLink,
+        showWhenUnlinked: false,
+        offset: Offset(size.width, -100),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Material(
+            color: Colors.white,
+            elevation: 4,
+            borderRadius: BorderRadius.circular(15),
+            child: DetailDestination(id: id, isSmall: true,),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  overlay.insert(entry);
+  _overlayDest = entry;
+  _isDropdownDest = true;
+}
+
+Future<Map<String, dynamic>> getEventAndDestination(int id) async {
+  final event = await getEventById(id);
+  final destination = await getDestinationById(event.destinationId!.id_destination);
+
+  return {
+    'event': event,
+    'destination': destination,
+  };
+}
+
 void showDetailEvent(
   BuildContext context,
   int id
@@ -104,8 +165,9 @@ void showDetailEvent(
           borderRadius: BorderRadius.circular(18),
           child: SizedBox(
             width: 550,
-            child: FutureBuilder<Event>(
-              future: getEventById(id),
+            key: _destKey,
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: getEventAndDestination(id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -117,7 +179,10 @@ void showDetailEvent(
                   return Text("Error: ${snapshot.error}");
                 }
 
-                final evt = snapshot.data!;
+                final evt = snapshot.data![ 'event' ] as Event;
+                final dest = snapshot.data!['destination'] as Destination;
+
+                final String imageDest = dest.imageUrl.isNotEmpty ? dest.imageUrl.first : '';
 
                 return SingleChildScrollView(
                   child: Stack(
@@ -157,26 +222,116 @@ void showDetailEvent(
                                     ),
                                   ),
                                 ),
-              
-                                Row(
-                                  children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 5),
-                                      child: Icon(
-                                        Icons.location_on,
-                                        color: Colors.red, size: 18
-                                      ),
+
+                                if(evt.destinationId != null)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20),
+                                    child: Stack(
+                                      children: [
+                                        CompositedTransformTarget(
+                                          link: _destLink,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              _showDestination(
+                                                context: context, 
+                                                id: evt.destinationId!.id_destination
+                                              );
+                                            },
+                                            child: SizedBox(
+                                              width: 350,
+                                              child: CardCostum(
+                                                content: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(5),
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        width: 80,
+                                                        height: 80,
+                                                        margin: const EdgeInsets.only(right: 10),
+                                                        decoration: BoxDecoration(
+                                                          image: DecorationImage(
+                                                            fit: BoxFit.cover,
+                                                            image: isBase64(imageDest)
+                                                              ? MemoryImage(base64Decode(imageDest)) as ImageProvider
+                                                              : NetworkImage(imageDest)
+                                                          )
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(bottom: 3),
+                                                              child: Text(
+                                                                evt.destinationId!.name,
+                                                                style: const TextStyle(
+                                                                  fontWeight: FontWeight.w700,
+                                                                  fontSize: 16
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        
+                                                            Row(
+                                                              children: [
+                                                                const Padding(
+                                                                  padding: EdgeInsets.only(right: 5),
+                                                                  child: Icon(
+                                                                    Icons.location_on,
+                                                                    color: Colors.red, size: 12
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    evt.destinationId!.location,
+                                                                    style: const TextStyle(
+                                                                      color: Colors.black87,
+                                                                      fontSize: 11
+                                                                    ),
+                                                                  ),
+                                                                )
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    
+                                        const Positioned(
+                                          top: 3,
+                                          right: 3,
+                                          child: Icon(Icons.ads_click, color: Color(0xFF8AC4Fa),)
+                                        )
+                                      ],
                                     ),
-                                    Expanded(
-                                      child: Text(
-                                        evt.location,
-                                        style: const TextStyle(
-                                          color: Colors.black87,
+                                  ),
+              
+                                if(evt.destinationId == null)
+                                  Row(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 5),
+                                        child: Icon(
+                                          Icons.location_on,
+                                          color: Colors.red, size: 18
                                         ),
                                       ),
-                                    )
-                                  ],
-                                ),
+                                      Expanded(
+                                        child: Text(
+                                          evt.location,
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
               
                                 Padding(
                                   padding: const EdgeInsets.only(top: 20, bottom: 15),
@@ -213,29 +368,33 @@ void showDetailEvent(
                                     ),
                                   ],
                                 ),
-              
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: cardContent(
-                                        title: "Map Link", 
-                                        text: evt.maps
+
+
+                                if(evt.destinationId == null)
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: cardContent(
+                                          title: "Map Link", 
+                                          text: evt.maps
+                                        ),
                                       ),
-                                    ),
-              
-                                    cardContent(
-                                      title: "(latitude, longitude)", 
-                                      text: "${evt.latitude}, ${evt.longitude}",
-                                    ),
-                                  ],
-                                ),
+                
+                                      cardContent(
+                                        title: "(latitude, longitude)", 
+                                        text: "${evt.latitude}, ${evt.longitude}",
+                                      ),
+                                    ],
+                                  ),
               
                                 Padding(
                                   padding: const EdgeInsets.only(top: 10, bottom: 15),
                                   child: GestureDetector(
                                     onTap: () {
-                                      OpenMap.openGoogleMaps(evt.maps);
+                                      OpenMap.openGoogleMaps(evt.destinationId != null
+                                        ? evt.destinationId!.maps
+                                        : evt.maps);
                                     },
                                     child: Container(
                                       width: double.infinity,
@@ -361,5 +520,11 @@ void showDetailEvent(
         ),
       );
     },
-  );
+  ).then((_) {
+    if (_isDropdownDest && _overlayDest != null) {
+      _overlayDest!.remove();
+      _overlayDest = null;
+    }
+      _isDropdownDest = false;
+  });
 }

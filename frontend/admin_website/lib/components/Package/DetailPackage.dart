@@ -100,8 +100,7 @@ void showDetailPackage(
               final pac = snapshot.data!['package'] as Package;
               final dest = snapshot.data!['destination'] as Destination;
 
-              final String imageDest =
-                dest.imageUrl.isNotEmpty ? dest.imageUrl.first : '';
+              final String imageDest = dest.imageUrl.isNotEmpty ? dest.imageUrl.first : '';
 
               return SingleChildScrollView(
                 child: Padding(
@@ -234,8 +233,8 @@ void showDetailPackage(
               
                       ...pac.subPackages.entries.toList().asMap().entries.map((entry) {
                           final index = entry.key;
-                          final dest = entry.value.key;        // SubPackage model
-                          final detail = entry.value.value;      // Map<String, dynamic>
+                          final dest = entry.value.key;
+                          final detail = entry.value.value;
               
                           final bool isdest = index % 2 == 0;
               
@@ -312,7 +311,6 @@ void showDetailPackage(
       _overlayDest!.remove();
       _overlayDest = null;
     }
-
     _isDropdownDest = false;
   });
 }

@@ -184,7 +184,12 @@ class _EventPageState extends State<EventPage> {
                                       : formatDateDisplay(evt.startDate),
                                   flex: 2,
                                 ),
-                                TableContent(title: evt.location, flex: 2,),
+                                TableContent(
+                                  title: evt.location == " "
+                                      ? evt.destinationId!.location
+                                      : evt.location, 
+                                  flex: 2,
+                                ),
                                 TableContent(
                                   title: evt.price != 0 ? formatRupiah(evt.price ?? 0) : "Free Entry"
                                 ),

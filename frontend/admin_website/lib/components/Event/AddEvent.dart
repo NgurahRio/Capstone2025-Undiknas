@@ -5,9 +5,11 @@ import 'package:admin_website/components/ButtonCostum.dart';
 import 'package:admin_website/components/Event/CalendarEvent.dart';
 import 'package:admin_website/components/CurrencyFormat.dart';
 import 'package:admin_website/components/OpenGoogleMaps.dart';
+import 'package:admin_website/components/Table/TabelContent.dart';
 import 'package:admin_website/components/TextFieldCostum.dart';
 import 'package:admin_website/components/TimePicker.dart';
 import 'package:admin_website/components/WebPickerFile.dart';
+import 'package:admin_website/models/destination_model.dart';
 import 'package:admin_website/models/event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -49,6 +51,19 @@ class _AddEventState extends State<AddEvent> {
   List<String> dosItems = [];
   List<String> dontsItems = [];
   List<String> safetyGuidelinesItems =  [];
+  Destination? selectedDestination;
+  List<Destination> destinations = [];
+  
+  Future<void> loadDestinations() async {
+    try {
+      final data = await getDestinations();
+      setState(() {
+        destinations = data;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
 
   TimeOfDay? openTime;
   TimeOfDay? closeTime;
@@ -64,10 +79,12 @@ class _AddEventState extends State<AddEvent> {
   @override
   void initState() {
     super.initState();
+    loadDestinations();
 
     final e = widget.existingEvent;
 
     if (e != null) {
+      selectedDestination = e.destinationId;
       eventName.text = e.name;
       description.text = e.description;
       mapLink.text = e.maps;
@@ -173,6 +190,49 @@ class _AddEventState extends State<AddEvent> {
           "${DateFormat("dd MMMM yyyy").format(end)}";
   }
 
+  OverlayEntry? _overlayDest;
+  final LayerLink _destLink = LayerLink();
+  final GlobalKey _destKey = GlobalKey();
+  bool _isDropdownDest = false;
+
+  void _showDropdown({
+    required LayerLink link,
+    required GlobalKey keyButton,
+    required ValueSetter<OverlayEntry> onSaveOverlay,
+    required VoidCallback onVisibleChange,
+    required Widget content,
+  }) {
+    final overlay = Overlay.of(context);
+    final RenderBox renderBox = keyButton.currentContext!.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        left: offset.dx,
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: link,
+          showWhenUnlinked: false,
+          offset: Offset(0, size.height + 2),
+          child: Material(
+            color: Colors.white,
+            elevation: 4,
+            borderRadius: BorderRadius.circular(5),
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: content,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+    onSaveOverlay(overlayEntry);
+    onVisibleChange();
+  }
+
   void removeImageSelected(int index) {
     setState(() {
       previewImages.removeAt(index);
@@ -228,50 +288,70 @@ class _AddEventState extends State<AddEvent> {
     if (eventName.text.isEmpty || startDate.text.isEmpty) return;
 
     try {
-
       final rawPrice = price.text.replaceAll(RegExp(r'[^0-9]'), '');
       final priceValue = int.tryParse(rawPrice) ?? 0;
 
       final isUpdate = widget.existingEvent != null;
+      final bool useDestination = selectedDestination != null;
 
+      if (!useDestination) {
+        if (
+          mapLink.text.isEmpty ||
+          location.text.isEmpty ||
+          latitude.text.isEmpty ||
+          longitude.text.isEmpty
+        ) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Maps, location, latitude, dan longitude wajib diisi"),
+            ),
+          );
+          return;
+        }
+      }
+      final String finalMaps = useDestination ? " " : mapLink.text.trim();
+      final String finalLocation = useDestination ? " " : location.text.trim();
+      final double finalLatitude = useDestination ? 0.0 : double.parse(latitude.text.trim());
+      final double finalLongitude = useDestination ? 0.0 : double.parse(longitude.text.trim());
       Event result;
 
       if (isUpdate) {
         await updateEvent(
           idEvent: widget.existingEvent!.id_event,
+          destinationId: useDestination ? selectedDestination!.id_destination : null,
           name: eventName.text.trim(),
           description: description.text.trim(),
           startDate: startDate.text,
           endDate: endDate.text.isNotEmpty ? endDate.text : null,
           startTime: startTime.text.trim(),
           endTime: endTime.text.trim(),
-          location: location.text.trim(),
+          location: finalLocation,
           imageUrl: previewImages,
           price: priceValue,
-          maps: mapLink.text.trim(),
-          latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
-          longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
+          maps: finalMaps,
+          latitude: finalLatitude,
+          longitude: finalLongitude,
           doText: dosItems.join('\n'),
           dontText: dontsItems.join('\n'),
           safetyText: safetyGuidelinesItems.join('\n'),
         );
 
         result = await getEventById(widget.existingEvent!.id_event);
-
       } else {
         result = await createEvent(
+          destinationId: useDestination ? selectedDestination!.id_destination : null,
           name: eventName.text.trim(),
           description: description.text.trim(),
           startDate: startDate.text,
           endDate: endDate.text.isNotEmpty ? endDate.text : null,
           startTime: startTime.text.trim(),
           endTime: endTime.text.trim(),
-          location: location.text.trim(),
+          location: finalLocation,
           imageUrl: previewImages,
           price: priceValue,
-          maps: mapLink.text.trim(),
-          latitude: double.tryParse(latitude.text.trim()) ?? 0.0,
-          longitude: double.tryParse(longitude.text.trim()) ?? 0.0,
+          maps: finalMaps,
+          latitude: finalLatitude,
+          longitude: finalLongitude,
           doText: dosItems.join('\n'),
           dontText: dontsItems.join('\n'),
           safetyText: safetyGuidelinesItems.join('\n'),
@@ -284,16 +364,16 @@ class _AddEventState extends State<AddEvent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isUpdate 
-              ? "Event updated successfully" 
-              : "Event created successfully"),
+            isUpdate
+                ? "Event updated successfully"
+                : "Event created successfully",
+          ),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
-    } finally {
     }
   }
 
@@ -354,6 +434,121 @@ class _AddEventState extends State<AddEvent> {
                     ),
                   ),
                 ],
+              ),
+
+              fieldLabel(text: "Selected Destination (Optional)"),
+              
+              CompositedTransformTarget(
+                link: _destLink,
+                key: _destKey,
+                child: GestureDetector(
+                  onTap: () {
+                    if (_isDropdownDest) {
+                      _overlayDest?.remove();
+                      _overlayDest = null;
+                      setState(() => _isDropdownDest = false);
+                    } else {
+                      _showDropdown(
+                        link: _destLink,
+                        keyButton: _destKey,
+                        onSaveOverlay: (entry) => _overlayDest = entry,
+                        onVisibleChange: () => setState(() => _isDropdownDest = true),
+                        content: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: 180,
+                          ),
+                          child: SingleChildScrollView(
+                            child: ListView(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              children: destinations.map((d) {
+                                return InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedDestination = d;
+
+                                      mapLink.clear();
+                                      location.clear();
+                                      latitude.clear();
+                                      longitude.clear();
+                                    });
+
+                                    _overlayDest?.remove();
+                                    _isDropdownDest = false;
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: Row(
+                                      children: [
+                                        TableContent(title: d.name),
+                                        TableContent(title: d.location, flex: 2,),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        )
+                      );
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black54, width: 0.5),
+                            borderRadius: BorderRadius.circular(5),
+                            color: Colors.white,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                selectedDestination == null
+                                  ? "Select Destination"
+                                  : "${selectedDestination!.name} (${selectedDestination!.location})",
+                                style: TextStyle(
+                                  color: selectedDestination == null ? const Color(0xFFB6B6B6) : Colors.black,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Icon(
+                                _isDropdownDest
+                                ? Icons.arrow_drop_up
+                                : Icons.arrow_drop_down
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (selectedDestination != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedDestination = null;
+
+                                mapLink.clear();
+                                location.clear();
+                                latitude.clear();
+                                longitude.clear();
+                              });
+                            },
+                            child: const Icon(
+                              Icons.close,
+                              size: 20,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
 
               fieldLabel(text: "Event Time"),
@@ -467,50 +662,57 @@ class _AddEventState extends State<AddEvent> {
                 ],
               ),
 
-              fieldLabel(text: "Map Link"),
+              if(selectedDestination == null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    fieldLabel(text: "Map Link"),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFieldCostum(
-                      controller: mapLink, 
-                      text: "write the destination map link"
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFieldCostum(
+                            controller: mapLink, 
+                            text: "write the destination map link"
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: ButtonCostum3(
+                            icon: Icons.map_outlined, 
+                            text: "Gmaps", 
+                            onTap: () {
+                              OpenMap.openGoogleMaps(mapLink.text);
+                            }
+                          ),
+                        )
+                      ],
                     ),
-                  ),
 
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: ButtonCostum3(
-                      icon: Icons.map_outlined, 
-                      text: "Gmaps", 
-                      onTap: () {
-                        OpenMap.openGoogleMaps(mapLink.text);
-                      }
+                    fieldLabel(text: "Location"),
+
+                    TextFieldCostum(
+                      controller: location, 
+                      text: "Enter location or address"
                     ),
-                  )
-                ],
-              ),
 
-              fieldLabel(text: "Location"),
+                    fieldLabel(text: "Latitude"),
+                    
+                    TextFieldCostum(
+                      controller: latitude, 
+                      text: "write latitude destination"
+                    ),
 
-              TextFieldCostum(
-                controller: location, 
-                text: "Enter location or address"
-              ),
+                    fieldLabel(text: "Longitude"),
 
-              fieldLabel(text: "Latitude"),
-              
-              TextFieldCostum(
-                controller: latitude, 
-                text: "write latitude destination"
-              ),
+                    TextFieldCostum(
+                      controller: longitude, 
+                      text: "write longitude destination"
+                    ),
+                  ],
+                ),
 
-              fieldLabel(text: "Longitude"),
-
-              TextFieldCostum(
-                controller: longitude, 
-                text: "write longitude destination"
-              ),
 
 
               fieldLabel(text: "Do & Don't"),
