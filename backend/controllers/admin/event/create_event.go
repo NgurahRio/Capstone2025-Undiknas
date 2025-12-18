@@ -63,14 +63,28 @@ func CreateEvent(c *gin.Context) {
 		price, _ = strconv.ParseFloat(priceStr, 64)
 	}
 
-	var longitude float64 = 0
+	var longitude *float64
 	if longitudeStr != "" {
-		longitude, _ = strconv.ParseFloat(longitudeStr, 64)
+		parsedLongitude, convErr := strconv.ParseFloat(longitudeStr, 64)
+		if convErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "longitude harus angka",
+			})
+			return
+		}
+		longitude = &parsedLongitude
 	}
 
-	var latitude float64 = 0
+	var latitude *float64
 	if latitudeStr != "" {
-		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
+		parsedLatitude, convErr := strconv.ParseFloat(latitudeStr, 64)
+		if convErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "latitude harus angka",
+			})
+			return
+		}
+		latitude = &parsedLatitude
 	}
 
 	imagesBase64 := []string{}
@@ -95,7 +109,6 @@ func CreateEvent(c *gin.Context) {
 			}
 		}
 	}
-
 
 	var imageBase64 string
 	if len(imagesBase64) > 0 {

@@ -78,17 +78,31 @@ func UpdateEvent(c *gin.Context) {
 		}
 	}
 
-	if lonStr := c.PostForm("longitude"); lonStr != "" {
-		if lon, err := strconv.ParseFloat(lonStr, 64); err == nil {
-			event.Longitude = lon
+	if lonStr, provided := c.GetPostForm("longitude"); provided {
+		lonStr = strings.TrimSpace(lonStr)
+		if lonStr == "" || strings.EqualFold(lonStr, "null") {
+			event.Longitude = nil
+			updated["longitude"] = nil
+		} else if lon, err := strconv.ParseFloat(lonStr, 64); err == nil {
+			event.Longitude = &lon
 			updated["longitude"] = lon
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "longitude harus angka"})
+			return
 		}
 	}
 
-	if latStr := c.PostForm("latitude"); latStr != "" {
-		if lat, err := strconv.ParseFloat(latStr, 64); err == nil {
-			event.Latitude = lat
+	if latStr, provided := c.GetPostForm("latitude"); provided {
+		latStr = strings.TrimSpace(latStr)
+		if latStr == "" || strings.EqualFold(latStr, "null") {
+			event.Latitude = nil
+			updated["latitude"] = nil
+		} else if lat, err := strconv.ParseFloat(latStr, 64); err == nil {
+			event.Latitude = &lat
 			updated["latitude"] = lat
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "latitude harus angka"})
+			return
 		}
 	}
 
