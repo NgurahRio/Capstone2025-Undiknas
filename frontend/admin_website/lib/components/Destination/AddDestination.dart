@@ -200,11 +200,17 @@ class _AddDestinationState extends State<AddDestination> {
     required ValueSetter<OverlayEntry> onSaveOverlay,
     required VoidCallback onVisibleChange,
     required Widget content,
+    double dropdownHeight = 180,
   }) {
     final overlay = Overlay.of(context);
-    final RenderBox renderBox = keyButton.currentContext!.findRenderObject() as RenderBox;
+    final renderBox = keyButton.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
+
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final spaceBelow = screenHeight - (offset.dy + size.height);
+    final showAbove = spaceBelow < dropdownHeight;
 
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -213,13 +219,17 @@ class _AddDestinationState extends State<AddDestination> {
         child: CompositedTransformFollower(
           link: link,
           showWhenUnlinked: false,
-          offset: Offset(0, size.height + 2),
+          offset: showAbove
+              ? Offset(0, -dropdownHeight - 5)
+              : Offset(0, size.height + 5),
           child: Material(
             color: Colors.white,
-            elevation: 4,
-            borderRadius: BorderRadius.circular(5),
-            child: Padding(
-              padding: const EdgeInsets.all(15),
+            elevation: 6,
+            borderRadius: BorderRadius.circular(6),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: dropdownHeight,
+              ),
               child: content,
             ),
           ),
@@ -387,22 +397,11 @@ class _AddDestinationState extends State<AddDestination> {
 
               fieldLabel(text: "Destination Galery (max 5 photo)"),
 
-              Row(
-                children: [
-                  BoxImageContent(
-                    images: previewImages, 
-                    delete: removeImageSelected
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: ButtonCostum3(
-                      icon: Icons.file_upload_outlined, 
-                      text: "upload", 
-                      onTap: onPickImage
-                    ),
-                  ),
-                ],
-              ),  
+              BoxImageContent(
+                onTap: onPickImage,
+                images: previewImages, 
+                delete: removeImageSelected
+              ),
 
               fieldLabel(text: "Tags Travel"), 
 
@@ -588,24 +587,10 @@ class _AddDestinationState extends State<AddDestination> {
 
               fieldLabel(text: "Operational"),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: BoxTextContent(
-                      controller: operational, 
-                      label: "Select operational hours"
-                    )
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: ButtonCostum3(
-                      text: "clock", 
-                      icon: Icons.access_time, 
-                      onTap: onPickTime
-                    ),
-                  )
-                ],
+              BoxTextContent(
+                controller: operational,
+                onTap: onPickTime, 
+                label: "Select operational hours"
               ),
 
               fieldLabel(text: "Map Link"),

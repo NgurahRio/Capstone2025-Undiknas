@@ -145,11 +145,13 @@ class _BoxAddContentState extends State<BoxAddContent> {
 class BoxImageContent extends StatefulWidget {
   final List<Uint8List?> images;
   final Function(int) delete;
+  final VoidCallback onTap;
 
   const BoxImageContent({
     super.key,
     required this.images,
     required this.delete,
+    required this.onTap,
   });
 
   @override
@@ -157,123 +159,238 @@ class BoxImageContent extends StatefulWidget {
 }
 
 class _BoxImageContentState extends State<BoxImageContent> {
-  late List<bool> hoverDeleteImage;
+  bool isHover = false;
+  late List<bool> hoverDelete;
 
   @override
   void initState() {
     super.initState();
-    hoverDeleteImage = List.generate(widget.images.length, (_) => false);
+    hoverDelete = List.generate(widget.images.length, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (hoverDeleteImage.length != widget.images.length) {
-      hoverDeleteImage = List.generate(widget.images.length, (_) => false);
+    if (hoverDelete.length != widget.images.length) {
+      hoverDelete = List.generate(widget.images.length, (_) => false);
     }
 
-    return Expanded(
-      child: Container(
-        padding: widget.images.isEmpty 
-          ? const EdgeInsets.symmetric(horizontal: 15, vertical: 7)
-          : const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(color: Colors.black54, width: 0.5)
-        ),
-        child: widget.images.isEmpty
-          ? const Text(
-              "Choose File",
-              style: TextStyle(color: Colors.grey),
-            )
-          : SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: widget.images.length,
-                itemBuilder: (context, index) {
-                  return Stack(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.all(5),
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: MemoryImage(widget.images[index]!)
-                          )
-                        ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: MouseRegion(
-                          onEnter: (_) {
-                            setState(() => hoverDeleteImage[index] = true);
-                          },
-                          onExit: (_) {
-                            setState(() => hoverDeleteImage[index] = false);
-                          },
-                          child: GestureDetector(
-                            onTap: () => widget.delete(index),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              decoration: BoxDecoration(
-                                color: hoverDeleteImage[index]
-                                    ? const Color(0xFFE06666)
-                                    : const Color(0xFFFF8484),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: const Icon(
-                                Icons.close, 
-                                color: Colors.white
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHover = true),
+      onExit: (_) => setState(() => isHover = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          alignment: Alignment.center,
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          padding: widget.images.isEmpty
+              ? EdgeInsets.zero
+              : const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: isHover ? const Color(0xFFEFF6FF) : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isHover ? Colors.black : Colors.grey,
+              width: 0.6,
             ),
-      )
+          ),
+          child: Stack(
+            children: [
+              widget.images.isEmpty
+                  ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 7),
+                    child: Wrap(
+                        spacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.file_upload_outlined,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                          Text(
+                            "Upload",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ),
+                  )
+                  : SizedBox(
+                      height: 110,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: widget.images.length,
+                        itemBuilder: (context, index) {
+                          return MouseRegion(
+                            onEnter: (_) =>
+                                setState(() => hoverDelete[index] = true),
+                            onExit: (_) =>
+                                setState(() => hoverDelete[index] = false),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.all(5),
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    image: DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image:
+                                          MemoryImage(widget.images[index]!),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 6,
+                                  right: 6,
+                                  child: GestureDetector(
+                                    onTap: () => widget.delete(index),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 120),
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: hoverDelete[index]
+                                            ? const Color(0xFFE06666)
+                                            : const Color(0xFFFF8484),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+              if (isHover)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: widget.images.isNotEmpty
+                      ? Center(
+                          child: Wrap(
+                            spacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.file_upload_outlined,
+                                color: Colors.black,
+                                size: 20,
+                              ),
+                              Text(
+                                "Upload",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
 
-class BoxTextContent extends StatelessWidget {
+class BoxTextContent extends StatefulWidget {
   final TextEditingController controller;
   final String label;
+  final VoidCallback? onTap;
 
   const BoxTextContent({
     super.key,
     required this.controller,
     required this.label,
+    this.onTap,
   });
+
+  @override
+  State<BoxTextContent> createState() => _BoxTextContentState();
+}
+
+class _BoxTextContentState extends State<BoxTextContent> {
+  bool isHover = false;
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
+      valueListenable: widget.controller,
       builder: (context, value, _) {
         final text = value.text.trim();
         final isEmpty = text.isEmpty;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: Colors.black54, width: 0.5),
-          ),
-          child: Text(
-            isEmpty ? label : text,
-            style: TextStyle(
-              color: isEmpty ? Colors.grey : Colors.black87,
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => isHover = true),
+          onExit: (_) => setState(() => isHover = false),
+          child: GestureDetector(
+            onTap: widget.onTap,
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 15,
+                vertical: 7,
+              ),
+              decoration: BoxDecoration(
+                color: isHover && widget.onTap != null ? const Color(0xFFEFF6FF) : Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isHover && widget.onTap != null ? Colors.black : Colors.black54,
+                  width: 0.5,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Expanded(
+                    child: Text(
+                      isEmpty ? widget.label : text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isEmpty ? Colors.grey : Colors.black87,
+                      ),
+                    ),
+                  ),
+
+                  if (isHover && widget.onTap != null)
+                    Positioned.fill(
+                      child: Center(
+                          child: Wrap(
+                            spacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.access_time,
+                                color: Colors.black,
+                                size: 20,
+                              ),
+                              Text(
+                                "Clock",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ],
+                          ),
+                        )
+                    ),
+                ],
+              ),
             ),
           ),
         );
@@ -281,4 +398,6 @@ class BoxTextContent extends StatelessWidget {
     );
   }
 }
+
+
 

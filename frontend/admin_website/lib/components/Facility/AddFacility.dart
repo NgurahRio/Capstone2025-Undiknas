@@ -28,6 +28,8 @@ class _AddFacilityState extends State<AddFacility> {
 
   Uint8List? previewIcon;
 
+  bool isHover = false;
+
   bool isBase64(String data) {
     return data.length > 100;
   }
@@ -89,9 +91,9 @@ class _AddFacilityState extends State<AddFacility> {
 
         widget.onSave(
           Facility(
-            id_facility: newFacility.id_facility, // 🔥 ID backend
+            id_facility: newFacility.id_facility,
             name: newFacility.name,
-            icon: base64Encode(previewIcon!), // preview sementara
+            icon: base64Encode(previewIcon!),
           ),
         );
       } else {
@@ -184,34 +186,66 @@ class _AddFacilityState extends State<AddFacility> {
 
               Row(
                 children: [
-                  Container(
-                    height: 120,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: previewIcon == null
-                        ? const Center(
-                            child: Text(
-                              "Choose File",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          )
-                        : Image.memory(
-                            previewIcon!,
-                            fit: BoxFit.cover,
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    onEnter: (_) => setState(() => isHover = true),
+                    onExit: (_) => setState(() => isHover = false),
+                    child: GestureDetector(
+                      onTap: onPickImage,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 120,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: isHover
+                              ? const Color(0xFFEFF6FF)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: isHover ? Colors.black : Colors.grey,
+                            width: isHover ? 1.5 : 1,
                           ),
-                  ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: previewIcon == null
+                                ? const Center(
+                                    child: Text(
+                                      "Choose File",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.memory(
+                                      previewIcon!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                            ),
 
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: ButtonCostum3(
-                      icon: Icons.file_upload_outlined, 
-                      text: "upload", 
-                      onTap: onPickImage
+                            if (isHover)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.25),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.edit,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
 

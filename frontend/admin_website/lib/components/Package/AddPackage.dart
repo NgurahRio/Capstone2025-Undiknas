@@ -164,9 +164,6 @@ class _AddPackageState extends State<AddPackage> {
   final GlobalKey _destinationKey = GlobalKey();
   bool _isDropdownDestination = false;
 
-  OverlayEntry? _overlayType;
-  final LayerLink _typeLink = LayerLink();
-  final GlobalKey _typeKey = GlobalKey();
   bool _isDropdownType = false;
 
   void _showDropdown({
@@ -419,99 +416,97 @@ class _AddPackageState extends State<AddPackage> {
               ),
 
               fieldLabel(text: "Choose Package Type"),
-              
-              CompositedTransformTarget(
-                link: _typeLink,
-                key: _typeKey,
-                child: GestureDetector(
-                  onTap: () {
-                    if (_isDropdownType) {
-                      _overlayType?.remove();
-                      _overlayType = null;
-                      setState(() => _isDropdownType = false);
-                    } else {
-                      _showDropdown(
-                        link: _typeLink,
-                        keyButton: _typeKey,
-                        onSaveOverlay: (entry) => _overlayType = entry,
-                        onVisibleChange: () => setState(() => _isDropdownType = true),
-                        content: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxHeight: 180
-                          ),
-                          child: SingleChildScrollView(
-                            child: StatefulBuilder(
-                              builder: (context, setStateDialog) {
-                                return ListView(
-                                  shrinkWrap: true,
-                                  padding: EdgeInsets.zero,
-                                  children: subPackages.map((sp) {
-                                    bool isSelected = selectedSubPackages.contains(sp);
-                            
-                                    return InkWell(
-                                      onTap: () {
-                                        setStateDialog(() {
-                                          togglePackageType(sp, !isSelected);
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        child: Row(
-                                          children: [
-                                            Checkbox(
-                                              value: isSelected,
-                                              onChanged: (v) {
-                                                setStateDialog(() {
-                                                  togglePackageType(sp, v!);
-                                                });
-                                              },
-                                            ),
-                                            Text(
-                                              sp.name,
-                                              style: const TextStyle(fontSize: 14),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                );
-                              },
-                            ),
-                          ),
+
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isDropdownType = !_isDropdownType;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black54, width: 0.5),
+                    borderRadius: BorderRadius.circular(5),
+                    color: Colors.white,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedSubPackages.isEmpty
+                          ? "Select package type"
+                          : selectedSubPackages.map((e) => e.name).join(", "),
+                        style: TextStyle(
+                          color: selectedSubPackages.isEmpty ? const Color(0xFFB6B6B6) : Colors.black,
+                          fontSize: 13,
                         ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black54, width: 0.5),
-                      borderRadius: BorderRadius.circular(5),
-                      color: Colors.white,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          selectedSubPackages.isEmpty
-                            ? "Select package type"
-                            : selectedSubPackages.map((e) => e.name).join(", "),
-                          style: TextStyle(
-                            color: selectedSubPackages.isEmpty ? const Color(0xFFB6B6B6) : Colors.black,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Icon(
-                          _isDropdownType
-                          ? Icons.arrow_drop_up
-                          : Icons.arrow_drop_down
-                        ),
-                      ],
-                    ),
+                      ),
+                      Icon(
+                        _isDropdownType
+                        ? Icons.arrow_drop_up
+                        : Icons.arrow_drop_down
+                      ),
+                    ],
                   ),
                 ),
               ),
+
+              if(_isDropdownType)
+                Material(
+                  color: Colors.white,
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 180
+                      ),
+                      child: SingleChildScrollView(
+                        child: StatefulBuilder(
+                          builder: (context, setStateDialog) {
+                            return ListView(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              children: subPackages.map((sp) {
+                                bool isSelected = selectedSubPackages.contains(sp);
+                        
+                                return InkWell(
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      togglePackageType(sp, !isSelected);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    child: Row(
+                                      children: [
+                                        Checkbox(
+                                          value: isSelected,
+                                          onChanged: (v) {
+                                            setStateDialog(() {
+                                              togglePackageType(sp, v!);
+                                            });
+                                          },
+                                        ),
+                                        Text(
+                                          sp.name,
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
 
               if (selectedSubPackages.isNotEmpty)
                 Row(

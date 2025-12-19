@@ -32,7 +32,6 @@ String detectExt(Uint8List bytes) {
   return 'jpg';
 }
 
-
 class Facility {
   final int id_facility;
   final String icon;
@@ -96,7 +95,7 @@ Future<Facility?> createFacility({
     http.MultipartFile.fromBytes(
       'icon',
       iconBytes,
-      filename: 'icon.$ext', // 🔥 fleksibel
+      filename: 'icon.$ext',
     ),
   );
 

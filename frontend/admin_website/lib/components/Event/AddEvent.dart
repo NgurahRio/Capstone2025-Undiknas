@@ -419,21 +419,10 @@ class _AddEventState extends State<AddEvent> {
 
               fieldLabel(text: "Event Galery (max 5 photo)"),
 
-              Row(
-                children: [
-                  BoxImageContent(
-                    images: previewImages, 
-                    delete: removeImageSelected
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: ButtonCostum3(
-                      icon: Icons.file_upload_outlined, 
-                      text: "upload", 
-                      onTap: onPickImage
-                    ),
-                  ),
-                ],
+              BoxImageContent(
+                onTap: onPickImage,
+                images: previewImages, 
+                delete: removeImageSelected
               ),
 
               fieldLabel(text: "Selected Destination (Optional)"),
@@ -602,24 +591,10 @@ class _AddEventState extends State<AddEvent> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         fieldLabel(text: "Start Time Event"),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: BoxTextContent(
-                                controller: startTime, 
-                                label: "Select start time"
-                              )
-                            ),
-                        
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: ButtonCostum3(
-                                text: "clock", 
-                                icon: Icons.access_time, 
-                                onTap: onPickStartTime
-                              ),
-                            )
-                          ],
+                        BoxTextContent(
+                          onTap: onPickStartTime,
+                          controller: startTime, 
+                          label: "Select start time"
                         ),
                       ],
                     ),
@@ -637,24 +612,10 @@ class _AddEventState extends State<AddEvent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         fieldLabel(text: "End Time Event"),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: BoxTextContent(
-                                controller: endTime, 
-                                label: "Select end time"
-                              )
-                            ),
-                        
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: ButtonCostum3(
-                                text: "clock", 
-                                icon: Icons.access_time, 
-                                onTap: onPickEndTime
-                              ),
-                            )
-                          ],
+                        BoxTextContent(
+                          onTap: onPickEndTime,
+                          controller: endTime, 
+                          label: "Select end time"
                         ),
                       ],
                     ),

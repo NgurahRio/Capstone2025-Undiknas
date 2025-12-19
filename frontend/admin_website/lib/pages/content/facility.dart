@@ -176,7 +176,7 @@ class _FacilityPageState extends State<FacilityPage> {
                           final bool isEven = index % 2 == 0;
 
                           return Container(
-                            color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255), // warna berbeda
+                            color: isEven ? Colors.white : const Color.fromARGB(255, 237, 246, 255),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Row(
