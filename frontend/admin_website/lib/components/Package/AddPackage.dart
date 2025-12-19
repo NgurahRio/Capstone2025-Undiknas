@@ -15,7 +15,6 @@ class PackageTypeFormData {
   List<dynamic> includedImages = [];
 
   Uint8List? previewIncluded;
-  Uint8List? previewExcluded;
 
   TextEditingController price = TextEditingController();
 }
@@ -48,6 +47,8 @@ class _AddPackageState extends State<AddPackage> {
   List<Destination> destinations = [];
   List<SubPackage> subPackages = [];
   bool isLoading = true;
+  bool isHover = false;
+  final Set<int> _hoveredUpload = {};
 
   Future<void> loadData() async {
     try {
@@ -132,15 +133,6 @@ class _AddPackageState extends State<AddPackage> {
 
     setState(() {
       perTypeForm[id]!.previewIncluded = result.bytes;
-    });
-  }
-
-  Future<void> pickExcludedImage(int id) async {
-    final result = await pickImageWeb();
-    if (result == null) return;
-
-    setState(() {
-      perTypeForm[id]!.previewExcluded = result.bytes;
     });
   }
 
@@ -272,7 +264,6 @@ class _AddPackageState extends State<AddPackage> {
       }
     }
 
-    // 🔥 CREATE vs UPDATE
     if (widget.existingPackage == null) {
       await createPackages(
         destinationId: selectedDestination!.id_destination,
@@ -515,6 +506,9 @@ class _AddPackageState extends State<AddPackage> {
                     final form = perTypeForm[sp.id_subPackage]!;
                     final incCtrl = TextEditingController();
 
+                    final isHover = _hoveredUpload.contains(sp.id_subPackage);
+
+
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 20),
@@ -523,34 +517,73 @@ class _AddPackageState extends State<AddPackage> {
                           children: [
                             fieldLabel(text: "Included Items (${sp.name})"),
 
-                            Row(
-                              children: [
-                                Container(
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              onEnter: (_) {
+                                setState(() {
+                                  _hoveredUpload.add(sp.id_subPackage);
+                                });
+                              },
+                              onExit: (_) {
+                                setState(() {
+                                  _hoveredUpload.remove(sp.id_subPackage);
+                                });
+                              },
+                              child: GestureDetector(
+                                onTap: () => pickIncludedImage(sp.id_subPackage),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
                                   height: 35,
-                                  width: 35,
+                                  width: form.previewIncluded ==  null ? 75 : 35,
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.black54, width: 0.5),
-                                    borderRadius: BorderRadius.circular(5),
+                                    color: isHover
+                                        ? const Color(0xFFEFF6FF)
+                                        : Colors.transparent,
+                                    border: Border.all(
+                                      color: isHover ? Colors.black : Colors.grey,
+                                      width: isHover ? 1.5 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: form.previewIncluded == null
-                                    ? const Center(
-                                        child: Text(
-                                          "File",
-                                          style: TextStyle(color: Colors.grey),
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: form.previewIncluded == null
+                                          ? const Center(
+                                              child: Text(
+                                                "Upload",
+                                                style: TextStyle(color: Colors.grey),
+                                              ),
+                                            )
+                                          : ClipRRect(
+                                              borderRadius: BorderRadius.circular(6),
+                                              child: Image.memory(
+                                                form.previewIncluded!,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                      ),
+                            
+                                      if (isHover)
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.25),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                form.previewIncluded == null ? Icons.file_upload_outlined : Icons.edit,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                      )
-                                    : Image.memory(form.previewIncluded!),
-                                ),
-
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 5),
-                                  child: ButtonCostum3(
-                                    icon: Icons.file_upload_outlined,
-                                    text: "choose",
-                                    onTap: () => pickIncludedImage(sp.id_subPackage),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
 
                             Padding(

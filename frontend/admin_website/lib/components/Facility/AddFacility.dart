@@ -27,7 +27,6 @@ class _AddFacilityState extends State<AddFacility> {
   TextEditingController facilityName = TextEditingController();
 
   Uint8List? previewIcon;
-
   bool isHover = false;
 
   bool isBase64(String data) {
@@ -184,69 +183,65 @@ class _AddFacilityState extends State<AddFacility> {
 
               fieldLabel(text: "Icon"),
 
-              Row(
-                children: [
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    onEnter: (_) => setState(() => isHover = true),
-                    onExit: (_) => setState(() => isHover = false),
-                    child: GestureDetector(
-                      onTap: onPickImage,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        height: 120,
-                        width: 120,
-                        decoration: BoxDecoration(
-                          color: isHover
-                              ? const Color(0xFFEFF6FF)
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: isHover ? Colors.black : Colors.grey,
-                            width: isHover ? 1.5 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: previewIcon == null
-                                ? const Center(
-                                    child: Text(
-                                      "Choose File",
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  )
-                                : ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Image.memory(
-                                      previewIcon!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                            ),
-
-                            if (isHover)
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.25),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.edit,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                onEnter: (_) => setState(() => isHover = true),
+                onExit: (_) => setState(() => isHover = false),
+                child: GestureDetector(
+                  onTap: onPickImage,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 120,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: isHover
+                          ? const Color(0xFFEFF6FF)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isHover ? Colors.black : Colors.grey,
+                        width: isHover ? 1.5 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: previewIcon == null
+                            ? const Center(
+                                child: Text(
+                                  "Choose File",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.memory(
+                                  previewIcon!,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                          ],
                         ),
-                      ),
+              
+                        if (isHover)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  previewIcon == null ? Icons.file_upload_outlined : Icons.edit,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
 
               Padding(

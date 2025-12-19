@@ -189,7 +189,7 @@ class _BoxImageContentState extends State<BoxImageContent> {
               ? EdgeInsets.zero
               : const EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: isHover ? const Color(0xFFEFF6FF) : Colors.transparent,
+            color: isHover ? const Color(0xFFC9CED5) : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: isHover ? Colors.black : Colors.grey,
@@ -348,7 +348,7 @@ class _BoxTextContentState extends State<BoxTextContent> {
                 vertical: 7,
               ),
               decoration: BoxDecoration(
-                color: isHover && widget.onTap != null ? const Color(0xFFEFF6FF) : Colors.white,
+                color: isHover && widget.onTap != null ? const Color(0xFFC9CED5) : Colors.white,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: isHover && widget.onTap != null ? Colors.black : Colors.black54,
