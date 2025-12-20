@@ -3,6 +3,7 @@ package auth
 import (
 	"backend/config"
 	"backend/models"
+	"encoding/base64"
 	"errors"
 	"io"
 	"net/http"
@@ -13,14 +14,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// maxProfileImageSize caps profile image uploads to 5MB to avoid bloating the row.
 const maxProfileImageSize = 5 * 1024 * 1024
 
-// UpdateProfile memungkinkan pengguna memperbarui username, password, dan foto profil.
-// Gunakan konten multipart/form-data dengan field opsional:
-// - username: string
-// - password: string
-// - image: file (opsional)
 func UpdateProfile(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
@@ -48,7 +43,6 @@ func UpdateProfile(c *gin.Context) {
 	newPassword := c.PostForm("password")
 	oldPassword := c.PostForm("old_password")
 
-	// Perbarui username jika diberikan dan belum digunakan user lain.
 	if newUsername != "" && newUsername != user.Username {
 		var count int64
 		if err := config.DB.Model(&models.User{}).
@@ -64,7 +58,6 @@ func UpdateProfile(c *gin.Context) {
 		user.Username = newUsername
 	}
 
-	// Perbarui password jika diberikan, wajib sertakan old_password yang valid.
 	if newPassword != "" {
 		if oldPassword == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Password lama wajib diisi untuk mengganti password"})
@@ -84,7 +77,6 @@ func UpdateProfile(c *gin.Context) {
 		user.Password = string(hashed)
 	}
 
-	// Proses upload foto profil jika ada.
 	file, err := c.FormFile("image")
 	if err == nil {
 		if file.Size > maxProfileImageSize {
@@ -106,14 +98,16 @@ func UpdateProfile(c *gin.Context) {
 		}
 
 		user.Image = imgBytes
-	} else if !errors.Is(err, http.ErrMissingFile) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Gagal mengambil file foto profil"})
-		return
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui profil"})
 		return
+	}
+
+	var imageBase64 string
+	if len(user.Image) > 0 {
+		imageBase64 = base64.StdEncoding.EncodeToString(user.Image)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -124,6 +118,7 @@ func UpdateProfile(c *gin.Context) {
 			"email":    user.Email,
 			"roleId":   user.RoleID,
 			"hasImage": len(user.Image) > 0,
+			"image":    imageBase64,
 		},
 	})
 }
