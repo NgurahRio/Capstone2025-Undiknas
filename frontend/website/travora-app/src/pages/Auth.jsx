@@ -6,11 +6,10 @@ import Navbar from '../components/common/Navbar';
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true); // Toggle Login/Signup
+  const [isLogin, setIsLogin] = useState(true); 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null); // Untuk notifikasi sukses/gagal
+  const [message, setMessage] = useState(null); 
 
-  // State Form
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -26,43 +25,76 @@ export default function Auth() {
     setLoading(true);
     setMessage(null);
 
+    const endpoint = isLogin ? '/user/login' : '/user/register';
+
+    // === PERBAIKAN PENTING DI SINI ===
+    // Backend Go minta "identifier" saat login, bukan "username".
+    let payload = {};
+
+    if (isLogin) {
+        payload = {
+            identifier: formData.username, // Kita kirim username sebagai identifier
+            password: formData.password
+        };
+    } else {
+        // Kalau Register, biasanya tetap butuh field lengkap
+        payload = {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password
+        };
+    }
+
     try {
+      console.log(`Mengirim ke ${endpoint}...`, payload);
+
+      const res = await api.post(endpoint, payload); // Kirim payload yang sudah disesuaikan
+
+      console.log("Respon Server:", res.data);
+
       if (isLogin) {
-        // --- LOGIKA LOGIN ---
-        const res = await api.post('/login', {
-          username: formData.username,
-          password: formData.password
-        });
-        
-        if (res.data.status === "Success") {
-            localStorage.setItem('travora_user', JSON.stringify(res.data.user));
-            navigate('/profile'); // Redirect ke profile setelah login
+        // Handle struktur respon Go: { data: { token: "...", user: {...} } }
+        // Kita pakai optional chaining (?.) biar gak error kalau strukturnya beda dikit
+        const token = res.data.token || res.data.data?.token;
+        const userData = res.data.user || res.data.data?.user || { username: formData.username };
+
+        if (token) {
+            localStorage.setItem('travora_token', token);
+            localStorage.setItem('travora_user', JSON.stringify(userData));
+            
+            setMessage({ type: 'success', text: 'Login Berhasil!' });
+            setTimeout(() => {
+                navigate('/profile'); 
+            }, 1000);
+        } else {
+            throw new Error("Login berhasil tapi Token tidak diterima.");
         }
+
       } else {
-        // --- LOGIKA REGISTER ---
-        const res = await api.post('/register', formData);
-        if (res.data.status === "Success") {
-            setMessage({ type: 'success', text: 'Akun berhasil dibuat! Silakan Login.' });
-            setIsLogin(true); // Pindah ke mode login
-            setFormData({ username: '', email: '', password: '' }); // Reset form
-        }
+        setMessage({ type: 'success', text: 'Akun berhasil dibuat! Silakan Login.' });
+        setIsLogin(true); 
+        setFormData({ username: '', email: '', password: '' });
       }
+
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "Terjadi kesalahan koneksi.";
+      console.error("Error Auth:", err);
+      // Ambil pesan error spesifik dari Go
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || "Gagal terhubung ke server.";
       setMessage({ type: 'error', text: errorMsg });
     } finally {
       setLoading(false);
     }
   };
 
+  // --- TAMPILAN (Sama seperti sebelumnya) ---
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-poppins">
-      <Navbar /> {/* Opsional: Agar user bisa balik ke Home */}
+      <Navbar /> 
       
       <div className="pt-24 min-h-screen flex items-center justify-center p-6">
         <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden max-w-5xl w-full flex flex-col md:flex-row min-h-[600px]">
           
-          {/* BAGIAN KIRI: Form */}
+          {/* Form */}
           <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center">
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -73,7 +105,6 @@ export default function Auth() {
               </p>
             </div>
 
-            {/* Notifikasi Error/Success */}
             {message && (
               <div className={`p-4 rounded-xl mb-6 flex items-center gap-3 text-sm font-bold ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {message.type === 'success' ? <CheckCircle size={20}/> : <AlertCircle size={20}/>}
@@ -83,9 +114,8 @@ export default function Auth() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               
-              {/* Username Input */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Username</label>
+                <label className="text-sm font-bold text-gray-700 ml-1">Username / Email</label>
                 <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input 
@@ -100,7 +130,6 @@ export default function Auth() {
                 </div>
               </div>
 
-              {/* Email Input (Hanya muncul saat Signup) */}
               {!isLogin && (
                   <div className="space-y-2 animate-fade-in">
                     <label className="text-sm font-bold text-gray-700 ml-1">Email Address</label>
@@ -119,7 +148,6 @@ export default function Auth() {
                   </div>
               )}
 
-              {/* Password Input */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Password</label>
                 <div className="relative">
@@ -136,7 +164,6 @@ export default function Auth() {
                 </div>
               </div>
 
-              {/* Forgot Password (Hanya Login) */}
               {isLogin && (
                   <div className="flex justify-end">
                       <a href="#" className="text-sm text-[#5E9BF5] font-bold hover:underline">Forgot Password?</a>
@@ -170,7 +197,6 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* BAGIAN KANAN: Gambar / Dekorasi */}
           <div className="hidden md:block w-1/2 relative bg-blue-50">
              <img 
                 src={isLogin 
