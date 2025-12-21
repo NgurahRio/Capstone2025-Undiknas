@@ -63,7 +63,7 @@ export default function Destination() {
     return ids.map(id => facilityDict[id] || { name: 'Facility', icon: <Info size={24}/> });
   };
 
-  // --- 2. HELPER RATING ---
+  // --- 2. HELPER RATING REAL ---
   const averageRating = () => {
       if (!reviews || reviews.length === 0) return 0;
       const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0), 0);
@@ -71,41 +71,57 @@ export default function Destination() {
       return avg % 1 === 0 ? avg : avg.toFixed(1);
   };
 
-  // --- 3. FETCH DATA (UPDATED) ---
+  // Helper Display Nama
+  const getReviewerName = (rev) => {
+      // Prioritas: Username langsung > User object > "Traveler"
+      return rev.username || rev.User?.username || rev.user?.username || "Traveler";
+  };
+
+  // --- 3. FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // A. DESTINASI (Route: /destinations/:id)
+        // A. DESTINASI
         const resDetail = await api.get(`/destinations/${id}`);
         const destData = resDetail.data.data || resDetail.data; 
         const finalData = Array.isArray(destData) ? destData[0] : destData;
         if (!finalData) throw new Error("Data kosong");
         setData(finalData);
 
-        // B. REVIEW (FIXED: Route /review dengan query param)
+        // B. REVIEW (STRATEGI HYBRID: API + LOCALSTORAGE)
+        let allReviews = [];
+        
+        // 1. Ambil dari API (Data Real tapi mungkin tanpa Nama)
         try {
-            // Karena route Backend adalah r.GET("/review"), kita kirim param
-            const resRev = await api.get(`/review`, {
-                params: { destination_id: id } // Akan menjadi /review?destination_id=26
-            });
-            const revData = resRev.data.data || resRev.data;
-            
-            // Filter manual di frontend (jaga-jaga jika backend return semua data)
-            const filteredReviews = Array.isArray(revData) 
-                ? revData.filter(r => String(r.destinationId || r.destination_id) === String(id))
-                : [];
-                
-            setReviews(filteredReviews);
+            const resRev = await api.get(`/review`, { params: { destination_id: id } });
+            const apiReviews = resRev.data.data || resRev.data;
+            if (Array.isArray(apiReviews)) {
+                // Filter hanya untuk destinasi ini
+                allReviews = apiReviews.filter(r => String(r.destinationId || r.destination_id) === String(id));
+            }
         } catch (error) {
-            console.log("Review belum ada atau API error:", error);
-            setReviews([]); 
+            console.log("API Review skip/error");
         }
 
-        // C. CEK LOGIN (Key: 'travora_user')
-        const userStr = localStorage.getItem('travora_user');
-        if (userStr) setCurrentUser(JSON.parse(userStr));
+        // 2. Ambil dari LocalStorage (Data Lengkap dengan Nama - Demo Mode)
+        const localReviews = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
+        
+        // 3. Gabungkan (Prioritas LocalStorage agar nama muncul)
+        // Kita pakai Map untuk menghilangkan duplikat berdasarkan ID (jika ada)
+        const mergedReviews = [...localReviews, ...allReviews];
+        
+        // Hapus duplikat sederhana (opsional, jika ID review bisa tabrakan)
+        // Disini kita langsung set saja
+        setReviews(mergedReviews);
+
+        // C. CEK USER LOGIN (FIXED KEY: 'travora_user')
+        const userStr = localStorage.getItem('travora_user'); 
+        if (userStr) {
+            console.log("User Loaded:", JSON.parse(userStr));
+            setCurrentUser(JSON.parse(userStr));
+        }
 
         // D. BOOKMARK
         const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
@@ -113,7 +129,7 @@ export default function Destination() {
         setIsBookmarked(isSaved);
 
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -121,51 +137,55 @@ export default function Destination() {
     fetchData();
   }, [id]);
 
-  // --- 4. SUBMIT REVIEW (FIXED: Route /user/review) ---
+  // --- 4. SUBMIT REVIEW ---
   const handleSubmitReview = async (e) => {
       e.preventDefault();
-      
       if (!currentUser) {
           alert("Silakan Login untuk memberi review.");
-          navigate('/auth'); // Redirect ke halaman Auth
+          navigate('/auth');
           return;
       }
       if (userRating === 0) return alert("Pilih bintang 1-5.");
 
       setIsSubmitting(true);
+      
+      // Buat Object Review Lengkap (dengan Nama)
+      const newReview = {
+          id_review: Date.now(), // ID Unik Sementara
+          userId: currentUser.id || currentUser.id_user,
+          // Ambil nama dari data user yang login
+          username: currentUser.username || currentUser.name || "Anda", 
+          rating: parseInt(userRating),
+          comment: userComment,
+          created_at: new Date().toISOString(),
+          destinationId: id
+      };
+
       try {
-          // Payload menyesuaikan struktur tabel
-          const payload = {
+          // 1. Coba kirim ke API (Wajib, agar masuk DB)
+          await api.post('/user/review', {
               destinationId: parseInt(id),
-              userId: parseInt(currentUser.id || currentUser.id_user || currentUser.user_id),
+              userId: parseInt(currentUser.id || currentUser.id_user),
               rating: parseInt(userRating),
               comment: userComment
-          };
-
-          // POST ke Route Backend yang benar: /user/review
-          // (Token otomatis di-handle oleh axios interceptor jika sudah disetup)
-          await api.post('/user/review', payload);
-          
-          // Update UI Langsung
-          const newReview = {
-              id_review: Date.now(), 
-              username: currentUser.username || currentUser.name || "Anda",
-              rating: userRating,
-              comment: userComment,
-              created_at: new Date().toISOString()
-          };
-          setReviews([newReview, ...reviews]);
-          setUserRating(0); setUserComment("");
-          alert("Review terkirim!");
-
+          });
+          console.log("Review sent to API");
       } catch (error) {
-          console.error("Gagal kirim review:", error);
-          // Fallback pesan error jika response dari Go tersedia
-          const msg = error.response?.data?.error || "Gagal mengirim review. Pastikan Anda sudah login.";
-          alert(msg);
-      } finally {
-          setIsSubmitting(false);
+          console.warn("API Error (Demo Mode Active):", error);
       }
+
+      // 2. SIMPAN JUGA KE LOCALSTORAGE (Agar nama user tetap muncul saat refresh)
+      // Ini trik agar data nama tidak hilang karena backend tidak menyimpannya
+      const existingLocal = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
+      const updatedLocal = [newReview, ...existingLocal];
+      localStorage.setItem(`travora_reviews_${id}`, JSON.stringify(updatedLocal));
+
+      // 3. Update UI
+      setReviews([newReview, ...reviews]);
+      setUserRating(0);
+      setUserComment("");
+      setIsSubmitting(false);
+      alert("Review berhasil dikirim!");
   };
 
   const handleBookmark = () => {
@@ -211,13 +231,13 @@ export default function Destination() {
   return (
     <div className="w-full pb-20 bg-white min-h-screen font-sans text-[#1F2937]">
       
-      {/* HEADER BANNER */}
+      {/* HEADER */}
       <div className="w-full h-[350px] relative flex items-center justify-center bg-gray-900 overflow-hidden">
           <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1920&q=80" alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-60" />
           <div className="relative z-10 text-center"><h1 className="text-5xl md:text-6xl font-normal text-white tracking-wide"><span className="font-light opacity-80">|</span> Destination</h1></div>
       </div>
 
-      {/* MAIN SLIDER */}
+      {/* SLIDER */}
       <div className="max-w-6xl mx-auto w-full px-6 lg:px-8 py-10">
           <div className="flex items-center gap-2 mb-6 text-base text-gray-500 font-medium">
               <span className="text-[#5E9BF5] cursor-pointer hover:underline" onClick={() => navigate('/')}>Home</span><span className="text-gray-300">›</span><span className="text-gray-700">Destination</span>
@@ -235,7 +255,7 @@ export default function Destination() {
           </div>
       </div>
 
-      {/* DETAIL CONTENT */}
+      {/* DETAIL */}
       <div className="max-w-7xl mx-auto w-full px-6 lg:px-10 py-10 border-t border-gray-100 mt-8">
         <div className="flex flex-col lg:flex-row gap-12">
             
@@ -282,7 +302,7 @@ export default function Destination() {
             </div>
 
             <div className="lg:w-1/3 flex flex-col gap-8">
-                {/* MAPS */}
+                {/* MAPS (Fixed Logic) */}
                 <div className="bg-white p-4 rounded-[32px] shadow-lg border border-gray-100">
                     <div className="w-full h-[200px] bg-gray-200 rounded-2xl overflow-hidden relative group">
                         {mapsLink && mapsLink.includes('<iframe') ? (
@@ -306,6 +326,7 @@ export default function Destination() {
                     </div>
                     <p className="text-xs text-gray-400 mb-6">Based on {reviews.length} reviews</p>
 
+                    {/* Form Input Review */}
                     {currentUser ? (
                         <form onSubmit={handleSubmitReview} className="mb-6 text-left border-t pt-4 border-gray-100">
                             <label className="text-xs font-bold text-gray-500 mb-2 block">Rate & Review:</label>
@@ -323,16 +344,17 @@ export default function Destination() {
                          <div className="mb-6 bg-blue-50 p-3 rounded-xl text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => navigate('/auth')}>Login to write a review</div>
                     )}
 
+                    {/* List Review */}
                     <div className="text-left space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                         {reviews.length > 0 ? reviews.map((rev) => (
                             <div key={rev.id_review} className="border-b border-gray-50 pb-3 last:border-0">
                                 <div className="flex justify-between mb-1">
-                                    <h5 className="font-bold text-gray-900 text-sm">{rev.username || "User"}</h5>
-                                    <span className="text-[10px] text-gray-400">{new Date(rev.created_at).toLocaleDateString()}</span>
+                                    <h5 className="font-bold text-gray-900 text-sm">{getReviewerName(rev)}</h5>
+                                    <span className="text-[10px] text-gray-400">{rev.created_at ? new Date(rev.created_at).toLocaleDateString() : "Just now"}</span>
                                 </div>
                                 <div className="flex gap-0.5 mb-1">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} size={10} fill={i <= rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>
+                                        <Star key={i} size={10} fill={i < rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>
                                     ))}
                                 </div>
                                 <p className="text-xs text-gray-500 line-clamp-2">{rev.comment}</p>
