@@ -4,12 +4,15 @@ import 'package:mobile/componen/FormateDate.dart';
 import 'package:mobile/componen/WhatsApp.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
+import 'package:mobile/componen/formateImage.dart';
 import 'package:mobile/componen/headerCustom.dart';
+import 'package:mobile/models/bookmark_model.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/package.dart';
 import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subPackage.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_rating/flutter_rating.dart';
@@ -18,15 +21,15 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class DetailPage extends StatefulWidget {
   final Destination? destination;
   final Event? event;
-  final bool isInitialFavorite;
   final int? idFavorite;
+  final User currentUser;
 
   const DetailPage({
     super.key,
     this.destination,
     this.event,
-    this.isInitialFavorite = false,
     this.idFavorite,
+    required this.currentUser
   });
 
   @override
@@ -53,7 +56,6 @@ class _DetailPageState extends State<DetailPage> {
 
   Package? selectedPackage;
   SubPackage? selectedSubPackage;
-
 
   Future<void> _openMap(String query) async {
     final Uri url = Uri.parse(query);
@@ -83,7 +85,12 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
-    _isfavorites = widget.isInitialFavorite;
+
+    _isfavorites = isBookmarked(
+      userId: widget.currentUser.id_user,
+      destination: widget.destination,
+      event: widget.event,
+    );
   }
 
   Widget _BottonInfo({
@@ -209,7 +216,7 @@ class _DetailPageState extends State<DetailPage> {
                           decoration: const InputDecoration(
                             hintText: "What did you like about this trip?",
                             hintStyle: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: Colors.grey,
                               fontWeight: FontWeight.w400
                             ),
@@ -294,6 +301,133 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
+  void showAllReviews(BuildContext context) {
+    final allReviews = widget.destination != null
+        ? reviews.where((r) => r.destinationId?.id_destination == widget.destination!.id_destination).toList()
+        : reviews.where((r) => r.eventId?.id_event == widget.event!.id_event).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.85,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: const Text(
+                      "All Reviews",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: allReviews.length,
+                      itemBuilder: (context, index) {
+                        final rev = allReviews[index];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    rev.userId.username,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (rev.userId.id_user == widget.currentUser.id_user)
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 6),
+                                      child: Text(
+                                        "(you)",
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _ratingStars(
+                                    rating: rev.rating,
+                                    position: false,
+                                  ),
+                                  Text(
+                                    TimeOfDay.fromDateTime(rev.createdAt).format(context),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  rev.comment,
+                                  textAlign: TextAlign.justify,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+
+                              const Divider(height: 25),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildFreeEntryBox() {
     return Container(
       width: double.infinity,
@@ -321,6 +455,37 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
+  void toggleBookmark({
+    required User user,
+    Destination? destination,
+    Event? event,
+  }) {
+    assert(
+      (destination != null && event == null) ||
+      (destination == null && event != null),
+      'Either destination or event must be provided, not both',
+    );
+
+    final index = bookmarks.indexWhere((b) =>
+        b.userId.id_user == user.id_user &&
+        (destination != null
+            ? b.destinationId?.id_destination == destination.id_destination
+            : b.eventId?.id_event == event!.id_event));
+
+    if (index != -1) {
+      bookmarks.removeAt(index);
+    } else {
+      bookmarks.add(
+        Bookmark(
+          id_bookmark: DateTime.now().millisecondsSinceEpoch,
+          userId: user,
+          destinationId: destination,
+          eventId: event,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final  isDestination = widget.destination != null;
@@ -333,9 +498,10 @@ class _DetailPageState extends State<DetailPage> {
       ? averageRatingForDestination(destination!.id_destination)
       : averageRatingForEvent(event!.id_event);
 
-    final comments = isDestination
-      ? reviews.where((rat) => rat.destinationId?.id_destination == destination!.id_destination).toList()
-      : reviews.where((rat) => rat.eventId?.id_event == event!.id_event).toList();
+    final comments = (isDestination
+      ? reviews.where((rat) => rat.destinationId?.id_destination == destination!.id_destination)
+      : reviews.where((rat) => rat.eventId?.id_event == event!.id_event)
+    ).toList().reversed.take(5).toList();
 
     final destinationPackages = packages.where(
       (pkg) => pkg.destinationId.id_destination == destination?.id_destination
@@ -363,7 +529,7 @@ class _DetailPageState extends State<DetailPage> {
                     return Container(
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(images[index]),
+                          image: formatImage(images[index]),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -417,8 +583,19 @@ class _DetailPageState extends State<DetailPage> {
                                     size: 30,
                                   ),
                                   onPressed: () {
+
                                     setState(() {
-                                      _isfavorites = !_isfavorites;
+                                      toggleBookmark(
+                                        user: widget.currentUser,
+                                        destination: widget.destination,
+                                        event: widget.event,
+                                      );
+
+                                      _isfavorites = isBookmarked(
+                                        userId: widget.currentUser.id_user,
+                                        destination: widget.destination,
+                                        event: widget.event,
+                                      );
                                     });
                                   },
                                 ),
@@ -507,8 +684,8 @@ class _DetailPageState extends State<DetailPage> {
                                             margin: const EdgeInsets.only(right: 15),
                                             child: Column(
                                               children: [
-                                                Image.asset(  
-                                                  f.icon,
+                                                Image(
+                                                  image: formatImage(f.icon),
                                                   width: 30,
                                                   height: 30,
                                                   color: Colors.black,
@@ -715,7 +892,6 @@ class _DetailPageState extends State<DetailPage> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            /// 🔹 TITLE (SubPackage name)
                                             Text(
                                               selectedSubPackage!.name,
                                               style: const TextStyle(
@@ -734,7 +910,6 @@ class _DetailPageState extends State<DetailPage> {
                                               ),
                                             ),
 
-                                            /// 🔹 INCLUDES
                                             ...List<Map<String, dynamic>>.from(
                                               selectedPackage!.subPackages[selectedSubPackage!]!["include"],
                                             ).map((item) => SizedBox(
@@ -1126,12 +1301,33 @@ class _DetailPageState extends State<DetailPage> {
                                               padding: const EdgeInsets.only(top: 15),
                                               child: Column(
                                                 children: [
-                                                  const Text("comments",
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w700,
-                                                    )
+                                                  SizedBox(
+                                                    width: double.infinity,
+                                                    child: Stack(
+                                                      alignment: Alignment.center,
+                                                      children: [
+                                                        const Text("Reviews",
+                                                          style: TextStyle(
+                                                            fontSize: 22,
+                                                            color: Colors.black,
+                                                            fontWeight: FontWeight.w700,
+                                                          )
+                                                        ),
+                                                    
+                                                        Positioned(
+                                                          right: 20,
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              showAllReviews(context);
+                                                            },
+                                                            child: const Text(
+                                                              "See All",
+                                                              style: TextStyle(color: Color(0xFF8AC4FA), fontSize: 14),
+                                                            )
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
                                                   ),
 
                                                   Text(avarageRating.toStringAsFixed(1),
@@ -1172,12 +1368,31 @@ class _DetailPageState extends State<DetailPage> {
                                                   crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(rev.userId.username,
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        color: Colors.black,
-                                                        fontWeight: FontWeight.w500
-                                                      )
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      children: [
+                                                        Text(rev.userId.username,
+                                                          style: const TextStyle(
+                                                            fontSize: 16,
+                                                            color: Colors.black,
+                                                            fontWeight: FontWeight.w500
+                                                          )
+                                                        ),
+
+                                                        if(rev.userId.id_user == widget.currentUser.id_user)
+                                                          Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                                                            child: Text(
+                                                              "(you)",
+                                                              style: const TextStyle(
+                                                                fontStyle: FontStyle.italic,
+                                                                fontSize: 16,
+                                                                color: Colors.black,
+                                                                fontWeight: FontWeight.w300
+                                                              )
+                                                            ),
+                                                          ),
+                                                      ],
                                                     ),
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1291,6 +1506,7 @@ class _DetailPageState extends State<DetailPage> {
                                         MaterialPageRoute(builder: (context) => DetailPage(
                                           destination: item, 
                                           event: null,
+                                          currentUser: widget.currentUser,
                                         )),
                                       );
                                     },
@@ -1310,6 +1526,7 @@ class _DetailPageState extends State<DetailPage> {
                                           MaterialPageRoute(builder: (context) => DetailPage(
                                             destination: null, 
                                             event: item,
+                                            currentUser: widget.currentUser,
                                           )),
                                         );
                                       },

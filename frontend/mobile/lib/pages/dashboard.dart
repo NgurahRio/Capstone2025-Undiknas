@@ -8,11 +8,17 @@ import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 import 'package:mobile/pages/seeAll.dart';
 
 class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+  final User? currentUser;
+
+  const Dashboard({
+    super.key,
+    required this.currentUser
+  });
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -471,7 +477,13 @@ class _DashboardState extends State<Dashboard> {
                                       .toSet()
                                       .toList(),
                                     isDestination: true,
-                                    onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
+                                    onTap: () => _navigateTo(
+                                      DetailPage(
+                                        destination: item, 
+                                        event: null,
+                                        currentUser: widget.currentUser!,
+                                      )
+                                    ),
                                   );
                                 },
                               ),
@@ -493,6 +505,7 @@ class _DashboardState extends State<Dashboard> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => SeeAllPage(
+                                      currentUser: widget.currentUser,
                                       selectedCategories: selectedCategory,
                                       selectedSubCategories: selectedSubCategories,
                                       appliedSubCategories: appliedSubCategories,
@@ -545,7 +558,13 @@ class _DashboardState extends State<Dashboard> {
                                     .toSet()
                                     .toList(),
                                   isDestination: true,
-                                  onTap: () => _navigateTo(DetailPage(destination: item, event: null))
+                                  onTap: () => _navigateTo(
+                                    DetailPage(
+                                      destination: item, 
+                                      event: null,
+                                      currentUser: widget.currentUser!,
+                                    )
+                                  )
                                 );
                               }
                             )
@@ -571,7 +590,12 @@ class _DashboardState extends State<Dashboard> {
                               .map((sub) => sub.categoryId.name)
                               .toSet()
                               .toList(),
-                            onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
+                            onTap: () => _navigateTo(
+                              DetailPage(
+                                destination: item, 
+                                event: null,
+                                currentUser: widget.currentUser!,
+                              )),
                           );
                         },
                       ),
@@ -620,7 +644,13 @@ class _DashboardState extends State<Dashboard> {
                                   location: item.location, 
                                   subTitle: formatEventDate(item.startDate, item.endDate),
                                   price: item.price,
-                                  onTap: () => _navigateTo(DetailPage(destination: null, event: item))
+                                  onTap: () => _navigateTo(
+                                    DetailPage(
+                                      destination: null, 
+                                      event: item,
+                                      currentUser: widget.currentUser!,
+                                    )
+                                  )
                                 );
                               }
                             ),
@@ -645,7 +675,13 @@ class _DashboardState extends State<Dashboard> {
                               .toSet()
                               .toList(),
                             isDestination: true,
-                            onTap: () => _navigateTo(DetailPage(destination: item, event: null))
+                            onTap: () => _navigateTo(
+                              DetailPage(
+                                destination: item, 
+                                event: null,
+                                currentUser: widget.currentUser!,
+                              )
+                            )
                           );
                         }
                       )
