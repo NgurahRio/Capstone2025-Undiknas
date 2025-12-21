@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
+import 'package:mobile/componen/formateImage.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   final User? currentUser;
@@ -24,6 +27,194 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _obscureOldPass = true;
   final bool _obscureNewPass = true;
   final bool _obscureConfirmPass = true;
+
+  String? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _profileImage = widget.currentUser?.image;
+  }
+
+  Future<void> _pickFromGallery() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    final base64Image = base64Encode(bytes);
+
+    setState(() {
+      _profileImage = base64Image;
+    });
+
+    Navigator.pop(context);
+  }
+
+  Future<void> _pickFromCamera() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    final base64Image = base64Encode(bytes);
+
+    setState(() {
+      _profileImage = base64Image;
+    });
+
+    Navigator.pop(context);
+  }
+
+  Widget _imagePickerItem({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(icon),
+            ),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteImage() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Apa Anda yakin menghapus gambar?',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              setState(() {
+                _profileImage = null;
+              });
+
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileImageSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color.fromARGB(255, 222, 221, 221),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final hasImage =
+            _profileImage != null && _profileImage!.isNotEmpty;
+
+        return FractionallySizedBox(
+          widthFactor: 1.0,
+          heightFactor: hasImage ? 0.42 : 0.3,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasImage)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: _confirmDeleteImage,
+                        child: Container(
+                          width: 150,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(right: 6),
+                                child: Icon(Icons.delete, color: Colors.red),
+                              ),
+                              Text(
+                                'Hapus Gambar',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: _imagePickerItem(
+                    icon: Icons.photo_library,
+                    text: 'Pilih dari Galeri',
+                    onTap: _pickFromGallery,
+                  ),
+                ),
+
+                _imagePickerItem(
+                  icon: Icons.camera_alt,
+                  text: 'Ambil dari Kamera',
+                  onTap: _pickFromCamera,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Widget _passwordField({
     required TextEditingController controller,
@@ -71,6 +262,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  
 
   Widget _buttonEdit({
     required IconData icon,
@@ -288,11 +481,58 @@ class _ProfilePageState extends State<ProfilePage> {
                         else
                           Column(
                             children: [
-                              Text(
-                                user.username,
-                                style: const TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w900,
+                              Stack(
+                                children: [
+                                  Container(
+                                    height: 175,
+                                    width: 175,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: _profileImage != null && _profileImage!.isNotEmpty
+                                      ?  ClipOval(
+                                          child: Image(
+                                            image: formatImage(_profileImage!),
+                                            height: 175,
+                                            width: 175,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Icon( 
+                                          Icons.account_circle,
+                                          size: 175,
+                                          color: Colors.grey[400],
+                                        ),
+                                  ),
+
+                                  Positioned(
+                                    right: 15,
+                                    bottom: 10,
+                                    child: CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: Colors.white,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: const Icon(
+                                          Icons.photo_camera,
+                                          size: 25,
+                                          color: Colors.black,
+                                        ),
+                                        onPressed: _showProfileImageSheet,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsets.only(top: 30),
+                                child: Text(
+                                  user.username,
+                                  style: const TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
                               Text(user.email),

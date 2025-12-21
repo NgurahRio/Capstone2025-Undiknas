@@ -354,65 +354,112 @@ class _DetailPageState extends State<DetailPage> {
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 20),
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    rev.userId.username,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (rev.userId.id_user == widget.currentUser.id_user)
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 6),
-                                      child: Text(
-                                        "(you)",
-                                        style: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 14,
-                                          color: Colors.grey,
-                                        ),
+                              Container(
+                                height: 40,
+                                width: 40,
+                                margin: EdgeInsets.only(right: 7),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: rev.userId.image.isNotEmpty
+                                  ?  ClipOval(
+                                      child: Image(
+                                        image: formatImage(rev.userId.image),
+                                        height: 40,
+                                        width: 40,
+                                        fit: BoxFit.cover,
                                       ),
+                                    )
+                                  : Icon( 
+                                      Icons.account_circle,
+                                      size: 40,
+                                      color: Colors.grey[400],
                                     ),
-                                ],
                               ),
 
-
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _ratingStars(
-                                    rating: rev.rating,
-                                    position: false,
-                                  ),
-                                  Text(
-                                    TimeOfDay.fromDateTime(rev.createdAt).format(context),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Text(rev.userId.username,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.w500
+                                              )
+                                            ),
+                                    
+                                            if(rev.userId.id_user == widget.currentUser.id_user)
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7),
+                                                child: Text(
+                                                  "(you)",
+                                                  style: const TextStyle(
+                                                    fontStyle: FontStyle.italic,
+                                                    fontSize: 16,
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.w300
+                                                  )
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.only(right: 5),
+                                                  child: _ratingStars(
+                                                    rating: rev.rating,
+                                                    position: false
+                                                  ),
+                                                ),
+                                    
+                                                Text(
+                                                  rev.rating.toStringAsFixed(1),
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: Colors.black,
+                                                  ))
+                                              ],
+                                            ),
+                                    
+                                            Text(
+                                              TimeOfDay.fromDateTime(rev.createdAt).format(context),
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              )
+                                            )
+                                          ],
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 5),
+                                          child: Text(
+                                            rev.comment,
+                                            textAlign: TextAlign.justify,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey,
+                                            )
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-
-
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  rev.comment,
-                                  textAlign: TextAlign.justify,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
+                                  ],
                                 ),
                               ),
-
-                              const Divider(height: 25),
                             ],
                           ),
                         );
@@ -1363,77 +1410,111 @@ class _DetailPageState extends State<DetailPage> {
                                             ),
                                             ...comments.map((rev) {
                                               return Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 30),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 25),
+                                                child: Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.start,
-                                                      children: [
-                                                        Text(rev.userId.username,
-                                                          style: const TextStyle(
-                                                            fontSize: 16,
-                                                            color: Colors.black,
-                                                            fontWeight: FontWeight.w500
-                                                          )
-                                                        ),
-
-                                                        if(rev.userId.id_user == widget.currentUser.id_user)
-                                                          Padding(
-                                                            padding: const EdgeInsets.symmetric(horizontal: 7),
-                                                            child: Text(
-                                                              "(you)",
-                                                              style: const TextStyle(
-                                                                fontStyle: FontStyle.italic,
-                                                                fontSize: 16,
-                                                                color: Colors.black,
-                                                                fontWeight: FontWeight.w300
-                                                              )
+                                                    Container(
+                                                      height: 40,
+                                                      width: 40,
+                                                      margin: EdgeInsets.only(right: 7),
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: rev.userId.image.isNotEmpty
+                                                        ?  ClipOval(
+                                                            child: Image(
+                                                              image: formatImage(rev.userId.image),
+                                                              height: 40,
+                                                              width: 40,
+                                                              fit: BoxFit.cover,
                                                             ),
+                                                          )
+                                                        : Icon( 
+                                                            Icons.account_circle,
+                                                            size: 40,
+                                                            color: Colors.grey[400],
                                                           ),
-                                                      ],
                                                     ),
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(right: 5),
-                                                              child: _ratingStars(
-                                                                rating: rev.rating,
-                                                                position: false
+
+                                                    Expanded(
+                                                      child: Column(
+                                                        children: [
+                                                          Column(
+                                                            crossAxisAlignment:
+                                                              CrossAxisAlignment.start,
+                                                            children: [
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                                children: [
+                                                                  Text(rev.userId.username,
+                                                                    style: const TextStyle(
+                                                                      fontSize: 16,
+                                                                      color: Colors.black,
+                                                                      fontWeight: FontWeight.w500
+                                                                    )
+                                                                  ),
+                                                          
+                                                                  if(rev.userId.id_user == widget.currentUser.id_user)
+                                                                    Padding(
+                                                                      padding: const EdgeInsets.symmetric(horizontal: 7),
+                                                                      child: Text(
+                                                                        "(you)",
+                                                                        style: const TextStyle(
+                                                                          fontStyle: FontStyle.italic,
+                                                                          fontSize: 16,
+                                                                          color: Colors.black,
+                                                                          fontWeight: FontWeight.w300
+                                                                        )
+                                                                      ),
+                                                                    ),
+                                                                ],
                                                               ),
-                                                            ),
-
-                                                            Text(
-                                                              rev.rating.toStringAsFixed(1),
-                                                              style: const TextStyle(
-                                                                fontSize: 13,
-                                                                color: Colors.black,
-                                                              ))
-                                                          ],
-                                                        ),
-
-                                                        Text(
-                                                          TimeOfDay.fromDateTime(rev.createdAt).format(context),
-                                                          style: const TextStyle(
-                                                            fontSize: 14,
-                                                            color: Colors.grey,
-                                                          )
-                                                        )
-                                                      ],
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets.only(top: 5),
-                                                      child: Text(
-                                                        rev.comment,
-                                                        textAlign: TextAlign.justify,
-                                                        style: const TextStyle(
-                                                          fontSize: 13,
-                                                          color: Colors.grey,
-                                                        )
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Row(
+                                                                    children: [
+                                                                      Padding(
+                                                                        padding: const EdgeInsets.only(right: 5),
+                                                                        child: _ratingStars(
+                                                                          rating: rev.rating,
+                                                                          position: false
+                                                                        ),
+                                                                      ),
+                                                          
+                                                                      Text(
+                                                                        rev.rating.toStringAsFixed(1),
+                                                                        style: const TextStyle(
+                                                                          fontSize: 13,
+                                                                          color: Colors.black,
+                                                                        ))
+                                                                    ],
+                                                                  ),
+                                                          
+                                                                  Text(
+                                                                    TimeOfDay.fromDateTime(rev.createdAt).format(context),
+                                                                    style: const TextStyle(
+                                                                      fontSize: 14,
+                                                                      color: Colors.grey,
+                                                                    )
+                                                                  )
+                                                                ],
+                                                              ),
+                                                              Padding(
+                                                                padding: const EdgeInsets.only(top: 5),
+                                                                child: Text(
+                                                                  rev.comment,
+                                                                  textAlign: TextAlign.justify,
+                                                                  style: const TextStyle(
+                                                                    fontSize: 13,
+                                                                    color: Colors.grey,
+                                                                  )
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ],
