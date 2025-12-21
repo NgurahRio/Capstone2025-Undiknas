@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/componen/formateImage.dart';
 
 class CardItems1 extends StatelessWidget {
   final String image;
@@ -32,7 +33,7 @@ class CardItems1 extends StatelessWidget {
           height: 190,
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: NetworkImage(image),
+              image: formatImage(image),
               fit: BoxFit.cover,
             ),
             borderRadius: BorderRadius.circular(10)
@@ -201,10 +202,10 @@ class CardItems2 extends StatelessWidget {
                 padding: const EdgeInsets.all(5),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: Image.network(
-                    image,
+                  child: Image(
+                    image: formatImage(image),
                     fit: BoxFit.cover,
-                    height: 130, // tinggi gambar tetap boleh
+                    height: 130,
                     width: double.infinity,
                   ),
                 ),

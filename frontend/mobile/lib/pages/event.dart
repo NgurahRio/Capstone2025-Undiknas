@@ -4,10 +4,16 @@ import 'package:mobile/componen/calenderStyle.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/event_model.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class EventPage extends StatefulWidget {
-  const EventPage({super.key});
+  final User? currentUser;
+
+  const EventPage({
+    super.key,
+    required this.currentUser
+  });
 
   @override
   State<EventPage> createState() => _EventPageState();
@@ -127,6 +133,7 @@ class _EventPageState extends State<EventPage> {
                                     MaterialPageRoute(builder: (context) => DetailPage(
                                       destination: null, 
                                       event: item,
+                                      currentUser: widget.currentUser!,
                                     )),
                                   );
                                 },

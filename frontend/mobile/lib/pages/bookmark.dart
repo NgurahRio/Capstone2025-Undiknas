@@ -460,9 +460,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                                 MaterialPageRoute(builder: (context) => DetailPage(
                                                   destination: isEvent ? null : bookM.destinationId, 
                                                   event: isEvent ? bookM.eventId : null,
-                                                  isInitialFavorite: true,
+                                                  currentUser: widget.currentUser!,
                                                 )),
                                               );
+
+                                              setState(() {});
                                             },
                                           ),
                                         ),

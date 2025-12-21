@@ -4,6 +4,7 @@ import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/review_model.dart';
+import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class SeeAllPage extends StatefulWidget {
@@ -11,13 +12,15 @@ class SeeAllPage extends StatefulWidget {
   final List<dynamic> selectedSubCategories;
   final List<dynamic> appliedSubCategories;
   final void Function(List<dynamic> cats, List<dynamic> subs, List<dynamic> applied) onSaveStyle;
+  final User? currentUser;
 
   const SeeAllPage({
     super.key,
     required this.selectedCategories,
     required this.selectedSubCategories,
     required this.appliedSubCategories,
-    required this.onSaveStyle
+    required this.onSaveStyle,
+    required this.currentUser
   });
 
   @override
@@ -244,7 +247,11 @@ class _SeeAllPageState extends State<SeeAllPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DetailPage(destination: item, event: null),
+                                builder: (context) => DetailPage(
+                                  destination: item, 
+                                  event: null,
+                                  currentUser: widget.currentUser!,
+                                ),
                               ),
                             );
                           },

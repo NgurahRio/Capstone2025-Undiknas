@@ -16,15 +16,34 @@ class Bookmark {
   });
 }
 
+bool isBookmarked({
+  required int userId,
+  Destination? destination,
+  Event? event,
+}) {
+  assert(
+    (destination != null && event == null) ||
+    (destination == null && event != null),
+  );
+
+  return bookmarks.any((b) =>
+      b.userId.id_user == userId &&
+      (destination != null
+          ? b.destinationId?.id_destination == destination.id_destination
+          : b.eventId?.id_event == event!.id_event));
+}
+
+
+
 final List<Bookmark> bookmarks = [
   Bookmark(
     id_bookmark: 1,
-    userId: users.firstWhere((u) => u.id_user == 1),
+    userId: users.firstWhere((u) => u.id_user == 3),
     destinationId: destinations.firstWhere((d) => d.id_destination == 1),
   ),
   Bookmark(
     id_bookmark: 2,
-    userId: users.firstWhere((u) => u.id_user == 1),
+    userId: users.firstWhere((u) => u.id_user == 3),
     eventId: events.firstWhere((e) => e.id_event == 2),
   ),
   Bookmark(

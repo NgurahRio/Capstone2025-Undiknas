@@ -6,7 +6,7 @@ class User {
   final String username;
   final String email;
   final String? password;
-  final String? image;
+  final String image;
 
   User({
     required this.id_user,
@@ -14,7 +14,7 @@ class User {
     required this.username,
     required this.email,
     this.password,
-    this.image,
+    required this.image,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -33,6 +33,7 @@ class User {
       username: json['username'],
       email: json['email'],
       roleId: role,
+      image: json['image']
     );
   }
 
@@ -46,6 +47,7 @@ final List<User> users = [
     username: "Admin",
     email: "admin@gmail.com",
     password: "12345678",
+    image: ""
   ),
   User(
     id_user: 2,
@@ -53,6 +55,7 @@ final List<User> users = [
     username: "Riyo",
     email: "riyo@gmail.com",
     password: "12345678",
+    image: "assets/profile.jpg"
   ),
   User(
     id_user: 3,
@@ -60,5 +63,6 @@ final List<User> users = [
     username: "Wilson",
     email: "wdc@gmail.com",
     password: "12345678",
+    image: "assets/profile.jpg"
   ),
 ];

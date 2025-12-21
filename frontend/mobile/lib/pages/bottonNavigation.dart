@@ -17,8 +17,8 @@ class BottonNavigation extends StatefulWidget {
 class _BottonNavigationState extends State<BottonNavigation> {
   int _selectedIndex = 0;
   List<Widget> get screens => [
-    const Dashboard(),
-    const EventPage(),
+    Dashboard(currentUser: widget.currentUser),
+    EventPage(currentUser: widget.currentUser,),
     BookmarkPage(currentUser: widget.currentUser),
     ProfilePage(currentUser: widget.currentUser),
   ];
