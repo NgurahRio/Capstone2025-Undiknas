@@ -6,7 +6,7 @@ class CardItems1 extends StatelessWidget {
   final double? rating;
   final String title;
   final String subtitle;
-  final String? category;
+  final List<String>? categories;
   final VoidCallback onTap;
   final bool? isBookmark;
 
@@ -16,7 +16,7 @@ class CardItems1 extends StatelessWidget {
     this.rating,
     required this.title,
     required this.subtitle,
-    this.category,
+    this.categories,
     required this.onTap,
     this.isBookmark = false,
   });
@@ -106,29 +106,39 @@ class CardItems1 extends StatelessWidget {
                         ) 
                       ),
       
-                      if(category != null)
+                      if (categories != null && categories!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.all(5),
-                          child: Container(
-                            width: isBookmark == true ? 70 : 65,
-                            padding: const EdgeInsets.only(left: 6),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              gradient: const LinearGradient(
-                                colors: [Colors.white, Color.fromARGB(255, 64, 132, 196)],
-                                begin: Alignment.centerRight,
-                                end: Alignment.centerLeft,
-                                stops: [0.1, 0.7],
-                              )
-                            ),
-                            child: Text(
-                              category!, 
-                              style: TextStyle(
-                                fontSize: isBookmark == true ? 12 : 11, 
-                                fontWeight: FontWeight.w500, 
-                                fontStyle: FontStyle.italic
-                              )
-                            ),
+                          child: Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: categories!
+                                .toSet()
+                                .map((cat) => Container(
+                                      width: isBookmark == true ? 70 : 65,
+                                      padding: const EdgeInsets.only(left: 6),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Colors.white,
+                                            Color.fromARGB(255, 64, 132, 196)
+                                          ],
+                                          begin: Alignment.centerRight,
+                                          end: Alignment.centerLeft,
+                                          stops: [0.1, 0.7],
+                                        ),
+                                      ),
+                                      child: Text(
+                                        cat,
+                                        style: TextStyle(
+                                          fontSize: isBookmark == true ? 12 : 11,
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
                           ),
                         )
                     ],
@@ -147,7 +157,7 @@ class CardItems1 extends StatelessWidget {
 class CardItems2 extends StatelessWidget {
   final String image;
   final double? rating;
-  final String? category;
+  final List<String>? categories;
   final String title;
   final String? location;
   final String subTitle;
@@ -159,7 +169,7 @@ class CardItems2 extends StatelessWidget {
     super.key,
     required this.image,
     this.rating,
-    this.category,
+    this.categories,
     required this.title,
     this.location,
     required this.subTitle,
@@ -219,19 +229,35 @@ class CardItems2 extends StatelessWidget {
                               ],
                             ),
                       
-                          if(category != null)
-                            Container(
-                              padding: const EdgeInsets.only(left: 6),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                gradient: const LinearGradient(
-                                  colors: [Colors.white, Color.fromARGB(255, 64, 132, 196)],
-                                  begin: Alignment.centerRight,
-                                  end: Alignment.centerLeft,
-                                  stops: [0.1, 0.7],
-                                )
-                              ),
-                              child: Text(category!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, fontStyle: FontStyle.italic)),
+                          if (categories != null && categories!.isNotEmpty)
+                            Wrap(
+                              spacing: 4,
+                              children: categories!
+                                  .toSet()
+                                  .map((cat) => Container(
+                                        padding: const EdgeInsets.only(left: 6),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Colors.white,
+                                              Color.fromARGB(255, 64, 132, 196)
+                                            ],
+                                            begin: Alignment.centerRight,
+                                            end: Alignment.centerLeft,
+                                            stops: [0.1, 0.7],
+                                          ),
+                                        ),
+                                        child: Text(
+                                          cat,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
                             ),
                         ],
                       ),

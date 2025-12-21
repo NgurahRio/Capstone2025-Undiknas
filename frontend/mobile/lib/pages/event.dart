@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/componen/FormateDate.dart';
 import 'package:mobile/componen/calenderStyle.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
@@ -19,11 +20,27 @@ class _EventPageState extends State<EventPage> {
   List<Event> get _filteredData {
     if (_selectedDate == null) return events;
 
+    final selected = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+    );
+
     return events.where((item) {
-      final eventDate = item.date;
-      return eventDate.year == _selectedDate!.year &&
-             eventDate.month == _selectedDate!.month &&
-             eventDate.day == _selectedDate!.day;
+      try {
+        final start = DateTime.parse(item.startDate);
+        final end = item.endDate != null
+            ? DateTime.parse(item.endDate!)
+            : start;
+
+        final startOnly = DateTime(start.year, start.month, start.day);
+        final endOnly = DateTime(end.year, end.month, end.day);
+
+        return !selected.isBefore(startOnly) &&
+              !selected.isAfter(endOnly);
+      } catch (_) {
+        return false;
+      }
     }).toList();
   }
   
@@ -102,8 +119,8 @@ class _EventPageState extends State<EventPage> {
                               final item = filteredEvent[index];
                               return CardItems1(
                                 title: item.name,
-                                subtitle: item.formattedDate,
-                                image: item.imageUrl[0],
+                                subtitle: formatEventDate(item.startDate, item.endDate),
+                                image: item.imageUrl.first,
                                 onTap: () {
                                   Navigator.push(
                                     context,  

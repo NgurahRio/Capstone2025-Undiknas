@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/componen/FormateDate.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/category_model.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
-import 'package:mobile/models/rating_model.dart';
+import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
 import 'package:mobile/pages/detail.dart';
 import 'package:mobile/pages/seeAll.dart';
@@ -215,9 +216,11 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
 
-    final filteredDestinations = destinations.where(
-      (dest) => appliedSubCategories.contains(dest.subCategoryId.id_subCategory)
-    ).take(4).toList();
+    final filteredDestinations = destinations.where((dest) {
+      return dest.subCategoryId.any(
+        (sub) => appliedSubCategories.contains(sub.id_subCategory),
+      );
+    }).take(4).toList();
     
     final String selectedStyle = appliedSubCategories.isNotEmpty
       ? (() {
@@ -250,11 +253,23 @@ class _DashboardState extends State<Dashboard> {
     final topRatedDestinations = destinations.where((d) => ratings[d.id_destination]! >= 4).toList();
 
     final today = DateTime.now();
+
     final todayEvents = events.where((event) {
-      final eventDate = event.date;
-      return eventDate.year == today.year &&
-            eventDate.month == today.month &&
-            eventDate.day == today.day;
+      try {
+        final start = DateTime.parse(event.startDate);
+        final end = event.endDate != null
+            ? DateTime.parse(event.endDate!)
+            : start;
+
+        final todayOnly = DateTime(today.year, today.month, today.day);
+
+        return !todayOnly.isBefore(
+                  DateTime(start.year, start.month, start.day)) &&
+              !todayOnly.isAfter(
+                  DateTime(end.year, end.month, end.day));
+      } catch (_) {
+        return false;
+      }
     }).toList();
 
     return Scaffold(
@@ -451,7 +466,10 @@ class _DashboardState extends State<Dashboard> {
                                     title: item.name,
                                     subTitle: item.description,
                                     rating: ratDest,
-                                    category: item.subCategoryId.categoryId.name,
+                                    categories: item.subCategoryId
+                                      .map((sub) => sub.categoryId.name)
+                                      .toSet()
+                                      .toList(),
                                     isDestination: true,
                                     onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
                                   );
@@ -522,7 +540,10 @@ class _DashboardState extends State<Dashboard> {
                                   title: item.name, 
                                   subTitle: item.description,
                                   rating: ratDest,
-                                  category: item.subCategoryId.categoryId.name,
+                                  categories: item.subCategoryId
+                                    .map((sub) => sub.categoryId.name)
+                                    .toSet()
+                                    .toList(),
                                   isDestination: true,
                                   onTap: () => _navigateTo(DetailPage(destination: item, event: null))
                                 );
@@ -546,7 +567,10 @@ class _DashboardState extends State<Dashboard> {
                             rating: ratDest,
                             title: item.name,
                             subtitle: item.location,
-                            category: item.subCategoryId.categoryId.name,
+                            categories: item.subCategoryId
+                              .map((sub) => sub.categoryId.name)
+                              .toSet()
+                              .toList(),
                             onTap: () => _navigateTo(DetailPage(destination: item, event: null)),
                           );
                         },
@@ -594,7 +618,7 @@ class _DashboardState extends State<Dashboard> {
                                   image: item.imageUrl[0], 
                                   title: item.name, 
                                   location: item.location, 
-                                  subTitle: item.description,
+                                  subTitle: formatEventDate(item.startDate, item.endDate),
                                   price: item.price,
                                   onTap: () => _navigateTo(DetailPage(destination: null, event: item))
                                 );
@@ -616,7 +640,10 @@ class _DashboardState extends State<Dashboard> {
                             title: item.name, 
                             subTitle: item.description,
                             rating: ratDest,
-                            category: item.subCategoryId.categoryId.name,
+                            categories: item.subCategoryId
+                              .map((sub) => sub.categoryId.name)
+                              .toSet()
+                              .toList(),
                             isDestination: true,
                             onTap: () => _navigateTo(DetailPage(destination: item, event: null))
                           );

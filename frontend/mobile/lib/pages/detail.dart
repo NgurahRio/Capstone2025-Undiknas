@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/componen/FormateDate.dart';
 import 'package:mobile/componen/WhatsApp.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
@@ -7,7 +8,8 @@ import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/package.dart';
-import 'package:mobile/models/rating_model.dart';
+import 'package:mobile/models/review_model.dart';
+import 'package:mobile/models/subPackage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_rating/flutter_rating.dart';
@@ -50,6 +52,8 @@ class _DetailPageState extends State<DetailPage> {
   late bool _isfavorites;
 
   Package? selectedPackage;
+  SubPackage? selectedSubPackage;
+
 
   Future<void> _openMap(String query) async {
     final Uri url = Uri.parse(query);
@@ -165,9 +169,9 @@ class _DetailPageState extends State<DetailPage> {
     onVisibleChange();
   }
 
-  void showReviewPopup(BuildContext context) {
+  void showcommentPopup(BuildContext context) {
     double rating = 0.0;
-    TextEditingController reviewController = TextEditingController();
+    TextEditingController commentController = TextEditingController();
 
     showDialog(
       context: context,
@@ -187,7 +191,7 @@ class _DetailPageState extends State<DetailPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            "Write your review",
+                            "Write your comment",
                             style: TextStyle(
                               fontWeight: FontWeight.w400,
                               fontSize: 18,
@@ -199,7 +203,7 @@ class _DetailPageState extends State<DetailPage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: TextField(
-                          controller: reviewController,
+                          controller: commentController,
                           maxLength: 300,
                           maxLines: 3,
                           decoration: const InputDecoration(
@@ -260,13 +264,13 @@ class _DetailPageState extends State<DetailPage> {
                       ),
 
                       ButtonCostum(
-                        text: "Submit Review", 
+                        text: "Submit comment", 
                         height: 50,
                         onPressed: () {
-                          if (reviewController.text.isEmpty) {
+                          if (commentController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text("Please write your review first!"),
+                                content: Text("Please write your comment first!"),
                                 backgroundColor: Colors.redAccent,
                               ),
                             );
@@ -274,7 +278,7 @@ class _DetailPageState extends State<DetailPage> {
                           }
 
                           print("Rating: $rating");
-                          print("Review: ${reviewController.text}");
+                          print("comment: ${commentController.text}");
 
                           Navigator.pop(context);
                         },
@@ -329,9 +333,9 @@ class _DetailPageState extends State<DetailPage> {
       ? averageRatingForDestination(destination!.id_destination)
       : averageRatingForEvent(event!.id_event);
 
-    final reviews = isDestination
-      ? ratings.where((rat) => rat.destinationId?.id_destination == destination!.id_destination).toList()
-      : ratings.where((rat) => rat.eventId?.id_event == event!.id_event).toList();
+    final comments = isDestination
+      ? reviews.where((rat) => rat.destinationId?.id_destination == destination!.id_destination).toList()
+      : reviews.where((rat) => rat.eventId?.id_event == event!.id_event).toList();
 
     final destinationPackages = packages.where(
       (pkg) => pkg.destinationId.id_destination == destination?.id_destination
@@ -453,47 +457,29 @@ class _DetailPageState extends State<DetailPage> {
                               Wrap(
                                 spacing: 12,
                                 runSpacing: 4,
-                                children: [
-                                  Container(
-                                    width: 100,
-                                    padding: const EdgeInsets.symmetric(vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF8AC4FA),
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Text(
-                                      textAlign: TextAlign.center,
-                                      destination!.subCategoryId.categoryId.name,
-                                      style: const TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-
-                                  Container(
-                                    width: 100,
-                                    padding: const EdgeInsets.symmetric(vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF8AC4FA),
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Text(
-                                      textAlign: TextAlign.center,
-                                      destination.subCategoryId.name,
-                                      style: const TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                children: destination!.subCategoryId
+                                    .map((sub) => sub.categoryId.name)
+                                    .toSet()
+                                    .map((catName) => Container(
+                                          width: 100,
+                                          padding: const EdgeInsets.symmetric(vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF8AC4FA),
+                                            borderRadius: BorderRadius.circular(5),
+                                          ),
+                                          child: Text(
+                                            catName,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ))
+                                    .toList(),
                               ),
-                            ],
 
                             if(isDestination)
                               Padding(
@@ -516,7 +502,7 @@ class _DetailPageState extends State<DetailPage> {
                                       scrollDirection: Axis.horizontal,
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: destination!.facilities!.map((f) {
+                                        children: destination.facilities!.map((f) {
                                           return Container(
                                             margin: const EdgeInsets.only(right: 15),
                                             child: Column(
@@ -552,7 +538,7 @@ class _DetailPageState extends State<DetailPage> {
                                   children: [
                                     if(isDestination)
                                       Text(
-                                        "Show Tours : ${destination!.operation}", 
+                                        "Show Tours : ${destination.operational}", 
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
@@ -564,7 +550,7 @@ class _DetailPageState extends State<DetailPage> {
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 10),
                                         child: Text(
-                                          "Date Event : ${DateFormat('dd MMMM yyyy', 'en_US').format(event!.date)}",
+                                          "Date Event : ${formatEventDate(event!.startDate, event.endDate)}",
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w500,
@@ -612,71 +598,75 @@ class _DetailPageState extends State<DetailPage> {
                                             mainAxisSpacing: 8,
                                             childAspectRatio: 2.7,
                                             physics: const NeverScrollableScrollPhysics(),
-                                            children: packages.map((pkg) {
-                                              final isSelected = selectedPackage == pkg;
-                                              return GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    selectedPackage = pkg;
-                                                  });
-                                                },
-                                                child: AnimatedContainer(
-                                                  height: 100,
-                                                  duration: const Duration(milliseconds: 200),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius: BorderRadius.circular(5),
-                                                    border: Border.all(
-                                                      color: isSelected ? const Color(0xFF8AC4FA) : Colors.grey.shade300,
-                                                      width: isSelected ? 3 : 1,
-                                                    ),
-                                                  ),
-                                                  child: Stack(
-                                                    children: [
-                                                      Center(
-                                                        child: Wrap(
-                                                          spacing: 6,
-                                                          crossAxisAlignment: WrapCrossAlignment.center,
-                                                          children: [
-                                                            Image.asset(pkg.subPackageId.icon),
-                                                            Text(
-                                                              pkg.subPackageId.name.replaceAll(' ', '\n'),
-                                                              style: const TextStyle(
-                                                                fontWeight: FontWeight.w500,
-                                                                fontSize: 15,
-                                                                color: Colors.black,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
+                                            children: destinationPackages.expand((pkg) => pkg.subPackages.entries.map((entry) {
+                                                final subPkg = entry.key;
+                                                final data = entry.value;
 
-                                                      if (isSelected)
-                                                        Positioned(
-                                                          top: 0,
-                                                          left: 0,
-                                                          child: ClipPath(
-                                                            clipper: TriangleClipper(),
-                                                            child: Container(
-                                                              color: const Color(0xFF8AC4FA),
-                                                              width: 21,
-                                                              height: 21,
-                                                              child: const Align(
-                                                                alignment: Alignment.topLeft,
-                                                                child: Icon(
-                                                                  Icons.check,
-                                                                  color: Colors.white,
-                                                                  size: 14,
+                                                final price = data["price"] as int;
+                                                final includes = List<Map<String, dynamic>>.from(data["include"]);
+
+                                                final isSelected =
+                                                    selectedPackage == pkg && selectedSubPackage == subPkg;
+
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      selectedPackage = pkg;
+                                                      selectedSubPackage = subPkg;
+                                                    });
+                                                  },
+                                                  child: AnimatedContainer(
+                                                    duration: const Duration(milliseconds: 200),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius: BorderRadius.circular(5),
+                                                      border: Border.all(
+                                                        color: isSelected
+                                                            ? const Color(0xFF8AC4FA)
+                                                            : Colors.grey.shade300,
+                                                        width: isSelected ? 3 : 1,
+                                                      ),
+                                                    ),
+                                                    child: Stack(
+                                                      children: [
+                                                        Center(
+                                                          child: Wrap(
+                                                            spacing: 6,
+                                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                                            children: [
+                                                              Image.asset(subPkg.icon),
+                                                              Text(
+                                                                subPkg.name.replaceAll(' ', '\n'),
+                                                                style: const TextStyle(
+                                                                  fontWeight: FontWeight.w500,
+                                                                  fontSize: 15,
                                                                 ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        if (isSelected)
+                                                          Positioned(
+                                                            top: 0,
+                                                            left: 0,
+                                                            child: ClipPath(
+                                                              clipper: TriangleClipper(),
+                                                              child: Container(
+                                                                color: const Color(0xFF8AC4FA),
+                                                                width: 21,
+                                                                height: 21,
+                                                                child: const Icon(Icons.check,
+                                                                    color: Colors.white, size: 14),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
-                                                    ],
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            }).toList(),
+                                                );
+                                              }))
+                                              .toList(),
+
                                           )
                                     : event!.price != null 
                                       ? Container(
@@ -705,7 +695,7 @@ class _DetailPageState extends State<DetailPage> {
                                           )
                                         : _buildFreeEntryBox(),
 
-                                  if (selectedPackage != null)
+                                  if (selectedPackage != null && selectedSubPackage != null)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 20),
                                       child: Container(
@@ -725,8 +715,9 @@ class _DetailPageState extends State<DetailPage> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
+                                            /// 🔹 TITLE (SubPackage name)
                                             Text(
-                                              selectedPackage!.subPackageId.name,
+                                              selectedSubPackage!.name,
                                               style: const TextStyle(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold,
@@ -743,72 +734,38 @@ class _DetailPageState extends State<DetailPage> {
                                               ),
                                             ),
 
-                                            ...selectedPackage!.includes.map((item) => SizedBox(
-                                              width: 300,
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 3),
-                                                child: Row(
-                                                  children: [
-                                                    Image.asset(item["icon"]!, width: 25, height: 25),
-                                                
-                                                    const SizedBox(width: 18,),
-                                                
-                                                    Expanded(
-                                                      child: Text(
-                                                        item["name"]!,
-                                                        style: const TextStyle(color: Color(0xFF919191)),
-                                                      )
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            )),
-                                            
-                                            const Padding(
-                                              padding: EdgeInsets.only(top: 8),
-                                              child: Wrap(
-                                                spacing: 3,
-                                                crossAxisAlignment: WrapCrossAlignment.center,
-                                                children: [
-                                                  Icon(Icons.block, color: Color(0XFFFF8484), size: 15,),
-                                                  Text(
-                                                    "Not Included",
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.w400,
+                                            /// 🔹 INCLUDES
+                                            ...List<Map<String, dynamic>>.from(
+                                              selectedPackage!.subPackages[selectedSubPackage!]!["include"],
+                                            ).map((item) => SizedBox(
+                                                  width: 300,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 3),
+                                                    child: Row(
+                                                      children: [
+                                                        Image.asset(item["image"], width: 25, height: 25),
+                                                        const SizedBox(width: 18),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item["name"],
+                                                            style: const TextStyle(color: Color(0xFF919191)),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-
-                                            ...selectedPackage!.notIncluded.map((item) => SizedBox(
-                                              width: 300,
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 3),
-                                                child: Row(
-                                                  children: [
-                                                    Image.asset(item["icon"]!, width: 25, height: 25),
-                                                
-                                                    const SizedBox(width: 18,),
-                                                
-                                                    Expanded(
-                                                      child: Text(
-                                                        item["name"]!,
-                                                        style: const TextStyle(color: Color(0xFF919191)),
-                                                      )
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            )),
+                                                )),
 
                                             Padding(
                                               padding: const EdgeInsets.only(top: 16, bottom: 10),
                                               child: Divider(color: Colors.grey[300]),
                                             ),
 
+                                            /// 🔹 PRICE
                                             Text(
-                                              currencyFormatter.format(selectedPackage!.price),
+                                              currencyFormatter.format(
+                                                selectedPackage!.subPackages[selectedSubPackage!]!["price"],
+                                              ),
                                               style: const TextStyle(
                                                 color: Colors.orange,
                                                 fontWeight: FontWeight.bold,
@@ -828,9 +785,7 @@ class _DetailPageState extends State<DetailPage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (isDestination &&
-                                      destination?.sosNearby != null &&
-                                      destination!.sosNearby!.isNotEmpty)
+                                  if (isDestination && destination.sos != null)
                                     CompositedTransformTarget(
                                       link: _sosLink,
                                       key: _sosKey,
@@ -850,79 +805,77 @@ class _DetailPageState extends State<DetailPage> {
                                             _overlaySafety = null;
                                             _isDropdownSafety = false;
 
+                                            final sos = destination.sos!;
+
                                             _showDropdown(
                                               link: _sosLink,
                                               keyButton: _sosKey,
-                                              onSaveOverlay: (sos) => _overlaySos = sos,
+                                              onSaveOverlay: (overlay) => _overlaySos = overlay,
                                               onVisibleChange: () =>
                                                   setState(() => _isDropdownSos = true),
                                               content: ConstrainedBox(
-                                                constraints: const BoxConstraints(
-                                                  maxWidth: 200,
-                                                ),
+                                                constraints: const BoxConstraints(maxWidth: 200),
                                                 child: Column(
-                                                  children: destination.sosNearby!.map((sos) {
-                                                    return Column(
-                                                      children: [
-                                                        Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10),
-                                                          child: Wrap(
-                                                            crossAxisAlignment:
-                                                                WrapCrossAlignment.center,
-                                                            spacing: 4,
-                                                            children: [
-                                                              Image.asset(
-                                                                "assets/icons/sos.png",
-                                                                scale: 0.8,
-                                                              ),
-                                                              const Text(
-                                                                "Nearby hospital",
-                                                                style: TextStyle(
-                                                                  fontSize: 19,
-                                                                  fontWeight: FontWeight.w600,
-                                                                ),
-                                                              ),
-                                                            ],
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(bottom: 10),
+                                                      child: Wrap(
+                                                        crossAxisAlignment: WrapCrossAlignment.center,
+                                                        spacing: 4,
+                                                        children: [
+                                                          Image.asset(
+                                                            "assets/icons/sos.png",
+                                                            scale: 0.8,
                                                           ),
-                                                        ),
-                                                        Text(
-                                                          sos.name,
-                                                          style: const TextStyle(
-                                                            fontSize: 20,
-                                                            fontWeight: FontWeight.w600,
+                                                          const Text(
+                                                            "Nearby hospital",
+                                                            style: TextStyle(
+                                                              fontSize: 19,
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
                                                           ),
-                                                        ),
-                                                        Text(
-                                                          textAlign: TextAlign.center,
-                                                          sos.address,
-                                                          style: const TextStyle(
-                                                              fontWeight: FontWeight.w400),
-                                                        ),
-                                                        Padding(
-                                                          padding:const EdgeInsets.symmetric(vertical: 15),
-                                                          child: Row(
-                                                            children: [
-                                                              const Icon(Icons.phone,color: Color(0xFF8AC4FA)),
-                                                              Text(
-                                                                sos.phone,
-                                                                style: const TextStyle(
-                                                                  fontSize: 17,
-                                                                  fontWeight: FontWeight.w400,
-                                                                ),
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        ButtonCostum(
-                                                          height: 48,
-                                                          text: "Call Now",
-                                                          onPressed: () {
-                                                            openWhatsApp(sos.phone);
-                                                          },
-                                                        ),
-                                                      ],
-                                                    );
-                                                  }).toList(),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    Text(
+                                                      sos.name,
+                                                      style: const TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+
+                                                    Text(
+                                                      sos.address,
+                                                      textAlign: TextAlign.center,
+                                                      style: const TextStyle(fontWeight: FontWeight.w400),
+                                                    ),
+
+                                                    Padding(
+                                                      padding: const EdgeInsets.symmetric(vertical: 15),
+                                                      child: Row(
+                                                        children: [
+                                                          const Icon(Icons.phone, color: Color(0xFF8AC4FA)),
+                                                          Text(
+                                                            sos.phone,
+                                                            style: const TextStyle(
+                                                              fontSize: 17,
+                                                              fontWeight: FontWeight.w400,
+                                                            ),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    ButtonCostum(
+                                                      height: 48,
+                                                      text: "Call Now",
+                                                      onPressed: () {
+                                                        openWhatsApp(sos.phone);
+                                                      },
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             );
@@ -932,10 +885,10 @@ class _DetailPageState extends State<DetailPage> {
                                     ),
 
                                   if ((isDestination
-                                          ? destination?.dos?.isNotEmpty ?? false
+                                          ? destination.dos?.isNotEmpty ?? false
                                           : event?.dos?.isNotEmpty ?? false) ||
                                       (isDestination
-                                          ? destination?.donts?.isNotEmpty ?? false
+                                          ? destination.donts?.isNotEmpty ?? false
                                           : event?.donts?.isNotEmpty ?? false))
                                     CompositedTransformTarget(
                                       link: _doDontLink,
@@ -956,10 +909,10 @@ class _DetailPageState extends State<DetailPage> {
                                             _isDropdownSafety = false;
 
                                             final dosList = isDestination
-                                                ? destination!.dos ?? []
+                                                ? destination.dos ?? []
                                                 : event!.dos ?? [];
                                             final dontsList = isDestination
-                                                ? destination!.donts ?? []
+                                                ? destination.donts ?? []
                                                 : event!.donts ?? [];
 
                                             _showDropdown(
@@ -1019,7 +972,7 @@ class _DetailPageState extends State<DetailPage> {
                                     ),
 
                                   if ((isDestination
-                                          ? destination?.safetyGuidelines?.isNotEmpty ?? false
+                                          ? destination.safetyGuidelines?.isNotEmpty ?? false
                                           : event?.safetyGuidelines?.isNotEmpty ?? false))
                                     CompositedTransformTarget(
                                       link: _safetyLink,
@@ -1040,7 +993,7 @@ class _DetailPageState extends State<DetailPage> {
                                             _isDropdownDoDont = false;
 
                                             final safetyList = isDestination
-                                                ? destination!.safetyGuidelines ?? []
+                                                ? destination.safetyGuidelines ?? []
                                                 : event!.safetyGuidelines ?? [];
 
                                             _showDropdown(
@@ -1096,10 +1049,10 @@ class _DetailPageState extends State<DetailPage> {
                                   initialCameraPosition: CameraPosition(
                                     target: LatLng(
                                       isDestination
-                                        ? destination!.latitude
+                                        ? destination.latitude
                                         : event!.latitude,
                                       isDestination
-                                        ? destination!.longitude
+                                        ? destination.longitude
                                         : event!.longitude
                                     ),
                                     zoom: 14,
@@ -1109,10 +1062,10 @@ class _DetailPageState extends State<DetailPage> {
                                       markerId: const MarkerId('destination'),
                                       position: LatLng(
                                         isDestination
-                                          ? destination!.latitude
+                                          ? destination.latitude
                                           : event!.latitude,
                                         isDestination
-                                          ? destination!.longitude
+                                          ? destination.longitude
                                           : event!.longitude
                                       ),
                                     ),
@@ -1124,7 +1077,7 @@ class _DetailPageState extends State<DetailPage> {
                             GestureDetector(
                               onTap: () => _openMap(
                                 isDestination
-                                  ? destination!.maps
+                                  ? destination.maps
                                   : event!.maps,
                               ),
                               child: Container(
@@ -1156,7 +1109,7 @@ class _DetailPageState extends State<DetailPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    reviews.isEmpty
+                                    comments.isEmpty
                                       ? const Padding(
                                           padding: EdgeInsets.only(top: 20),
                                           child: Text("Belum ada ulasan",
@@ -1173,7 +1126,7 @@ class _DetailPageState extends State<DetailPage> {
                                               padding: const EdgeInsets.only(top: 15),
                                               child: Column(
                                                 children: [
-                                                  const Text("Reviews",
+                                                  const Text("comments",
                                                     style: TextStyle(
                                                       fontSize: 22,
                                                       color: Colors.black,
@@ -1195,7 +1148,7 @@ class _DetailPageState extends State<DetailPage> {
                                                   ),
 
                                                   Text(
-                                                    "Based on ${reviews.length} reviews",
+                                                    "Based on ${comments.length} comments",
                                                     style: const TextStyle(
                                                       fontSize: 12,
                                                       color: Colors.black,
@@ -1212,14 +1165,14 @@ class _DetailPageState extends State<DetailPage> {
                                                 color: Colors.white,
                                               ),
                                             ),
-                                            ...reviews.map((rev) {
+                                            ...comments.map((rev) {
                                               return Padding(
                                                 padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 30),
                                                 child: Column(
                                                   crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(rev.userId.userName,
+                                                    Text(rev.userId.username,
                                                       style: const TextStyle(
                                                         fontSize: 18,
                                                         color: Colors.black,
@@ -1260,7 +1213,7 @@ class _DetailPageState extends State<DetailPage> {
                                                     Padding(
                                                       padding: const EdgeInsets.only(top: 5),
                                                       child: Text(
-                                                        rev.review,
+                                                        rev.comment,
                                                         textAlign: TextAlign.justify,
                                                         style: const TextStyle(
                                                           fontSize: 13,
@@ -1278,9 +1231,9 @@ class _DetailPageState extends State<DetailPage> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                                       child: ButtonCostum(
-                                        text: "Write a review", 
+                                        text: "Write a comment", 
                                         onPressed: () {
-                                          showReviewPopup(context);
+                                          showcommentPopup(context);
                                         }
                                       ),
                                     )
@@ -1289,6 +1242,7 @@ class _DetailPageState extends State<DetailPage> {
                               ),
                             ),
                           ],
+                          ]
                         )
                       ),
 
@@ -1326,7 +1280,10 @@ class _DetailPageState extends State<DetailPage> {
                                     title: item.name,
                                     subTitle: item.description,
                                     rating: ratDest,
-                                    category: item.subCategoryId.categoryId.name,
+                                    categories: item.subCategoryId
+                                      .map((sub) => sub.categoryId.name)
+                                      .toSet()
+                                      .toList(),
                                     isDestination: true,
                                     onTap: () {
                                       Navigator.push(
@@ -1345,7 +1302,7 @@ class _DetailPageState extends State<DetailPage> {
                                     padding: const EdgeInsets.only(top: 3),
                                     child: CardItems1(
                                       title: item.name,
-                                      subtitle: item.formattedDate,
+                                      subtitle: formatEventDate(item.startDate, item.endDate),
                                       image: item.imageUrl[0],
                                       onTap: () {
                                         Navigator.push(

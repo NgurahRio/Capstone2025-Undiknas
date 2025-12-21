@@ -8,6 +8,24 @@ class SubPackage {
     required this.name,
     required this.icon
   });
+
+  factory SubPackage.fromJson(Map<String, dynamic> json) {
+    return SubPackage(
+      id_subPackage: json['id_subpackage'],
+      name: json['jenispackage'],
+      icon: json['image'] ?? '',
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SubPackage &&
+          runtimeType == other.runtimeType &&
+          id_subPackage == other.id_subPackage;
+
+  @override
+  int get hashCode => id_subPackage.hashCode;
 }
 
 final List<SubPackage> subPackage = [

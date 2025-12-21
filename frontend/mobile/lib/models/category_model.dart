@@ -2,7 +2,17 @@ class Category {
   final int id_category;
   final String name;
 
-  Category({required this.id_category, required this.name});
+  Category({
+    required this.id_category, 
+    required this.name
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id_category: json['id_categories'],
+      name: json['name'],
+    );
+  }
 }
 
 final List<Category> categories = [

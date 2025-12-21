@@ -289,7 +289,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           Column(
                             children: [
                               Text(
-                                user.userName,
+                                user.username,
                                 style: const TextStyle(
                                   fontSize: 23,
                                   fontWeight: FontWeight.w900,

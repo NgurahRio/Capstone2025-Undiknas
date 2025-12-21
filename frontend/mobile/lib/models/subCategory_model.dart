@@ -10,6 +10,14 @@ class SubCategory {
     required this.name,
     required this.categoryId,
   });
+
+  factory SubCategory.fromJson(Map<String, dynamic> json) {
+    return SubCategory(
+      id_subCategory: json['id_subcategories'],
+      name: json['namesubcategories'],
+      categoryId: Category.fromJson(json['category'])
+    );
+  }
 }
 
 final List<SubCategory> subCategories = [

@@ -3,7 +3,7 @@ import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/destination_model.dart';
-import 'package:mobile/models/rating_model.dart';
+import 'package:mobile/models/review_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class SeeAllPage extends StatefulWidget {
@@ -115,9 +115,11 @@ class _SeeAllPageState extends State<SeeAllPage> {
   @override
   Widget build(BuildContext context) {
 
-    final filteredDestinations = destinations.where(
-      (dest) => widget.appliedSubCategories.contains(dest.subCategoryId.id_subCategory),
-    ).toList();
+    final filteredDestinations = destinations.where((dest) {
+      return dest.subCategoryId.any(
+        (sub) => widget.appliedSubCategories.contains(sub.id_subCategory),
+      );
+    }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),
@@ -233,7 +235,10 @@ class _SeeAllPageState extends State<SeeAllPage> {
                           title: item.name,
                           subTitle: item.description,
                           rating: ratDest,
-                          category: item.subCategoryId.categoryId.name,
+                          categories: item.subCategoryId
+                            .map((sub) => sub.categoryId.name)
+                            .toSet()
+                            .toList(),
                           isDestination: true,
                           onTap: () {
                             Navigator.push(

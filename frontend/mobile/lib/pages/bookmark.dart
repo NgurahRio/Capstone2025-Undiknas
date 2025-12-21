@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/componen/FormateDate.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
@@ -410,9 +411,9 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                   final isEvent = bookM.eventId != null;
                           
                                   final title = isEvent ? bookM.eventId!.name : bookM.destinationId!.name;
-                                  final subtitle = isEvent ? bookM.eventId!.formattedDate : bookM.destinationId!.location;
+                                  final subtitle = isEvent ? formatEventDate(bookM.eventId!.startDate, bookM.eventId!.endDate) : bookM.destinationId!.location;
                                   final image = isEvent ? bookM.eventId!.imageUrl[0] : bookM.destinationId!.imageUrl[0];
-                                  final category = isEvent ? "" : bookM.destinationId!.subCategoryId.categoryId.name;
+                                  final List<String>? category = isEvent ? null : bookM.destinationId!.subCategoryId.map((sub) => sub.categoryId.name).toSet().toList();
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 4),
                                     child: Row(
@@ -451,7 +452,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                             title: title,
                                             image: image,
                                             subtitle: subtitle,
-                                            category: isEvent ? null : category,
+                                            categories: isEvent ? null : category,
                                             isBookmark: true,
                                             onTap: () {
                                               Navigator.push(
