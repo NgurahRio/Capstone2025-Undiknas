@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, MapPin, Trash2 } from 'lucide-react';
-import { api } from '../api'; // Pastikan file api.js aman
 import PlaceCard from '../components/cards/PlaceCard'; 
 
 export default function Bookmark() {
   const navigate = useNavigate();
   
-  // State dengan nilai awal yang aman
   const [user, setUser] = useState(null);
-  const [bookmarks, setBookmarks] = useState([]); // Default array kosong []
+  const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Ambil User dari LocalStorage
+    // 1. Cek User Login (Hanya untuk proteksi halaman)
     const storedUser = localStorage.getItem('travora_user');
     
     if (!storedUser) {
@@ -25,44 +23,38 @@ export default function Bookmark() {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
 
-        // Cari ID yang valid (id_users / id / userId)
-        const validUserId = parsedUser.id_users || parsedUser.id || parsedUser.userId;
-
-        if (!validUserId) {
-            console.error("ID User tidak ditemukan di data login.");
-            setLoading(false);
-            return;
+        // 2. AMBIL DATA DARI LOCAL STORAGE (Bukan API)
+        const savedBookmarks = localStorage.getItem('travora_bookmarks');
+        
+        if (savedBookmarks) {
+            setBookmarks(JSON.parse(savedBookmarks));
+        } else {
+            setBookmarks([]);
         }
 
-        // 2. Fetch Data dari Backend
-        const fetchBookmarks = async () => {
-            try {
-                console.log("Mengambil bookmark untuk User ID:", validUserId);
-                const res = await api.get(`/bookmarks/${validUserId}`);
-                
-                // SAFETY CHECK: Pastikan data yang diterima adalah Array
-                if (Array.isArray(res.data)) {
-                    console.log("Data Bookmark Diterima:", res.data);
-                    setBookmarks(res.data);
-                } else {
-                    console.error("Format data salah (bukan array):", res.data);
-                    setBookmarks([]); // Paksa kosong biar gak error
-                }
-
-            } catch (err) {
-                console.error("Gagal request ke backend:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBookmarks();
+        setLoading(false);
 
     } catch (e) {
         console.error("Error parsing user data:", e);
         setLoading(false);
     }
   }, []);
+
+  // --- FUNGSI HAPUS ---
+  const handleRemove = (e, idToRemove) => {
+    e.stopPropagation(); // Biar gak pindah halaman saat klik tong sampah
+
+    if (window.confirm("Hapus dari bookmark?")) {
+        // Filter data state
+        const updatedBookmarks = bookmarks.filter(item => item.id !== idToRemove);
+        
+        // Update State
+        setBookmarks(updatedBookmarks);
+        
+        // Update Local Storage
+        localStorage.setItem('travora_bookmarks', JSON.stringify(updatedBookmarks));
+    }
+  };
 
   // --- RENDER TAMPILAN ---
 
@@ -132,14 +124,24 @@ export default function Bookmark() {
            // Tampilan Ada Data
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {bookmarks.map((item) => (
-                  <PlaceCard 
-                    key={item.id} 
-                    title={item.title} 
-                    subtitle={item.location}
-                    img={item.img} 
-                    rating="4.9"
-                    onPress={() => navigate(`/destination/${item.id}`)} 
-                  />
+                  <div key={item.id} className="relative group hover:-translate-y-2 transition-transform duration-300">
+                      <PlaceCard 
+                        title={item.title} 
+                        subtitle={item.location}
+                        img={item.img} 
+                        rating={item.rating || "4.9"}
+                        onPress={() => navigate(`/destination/${item.id}`)} 
+                      />
+                      
+                      {/* TOMBOL DELETE (Hanya muncul saat hover) */}
+                      <button 
+                        onClick={(e) => handleRemove(e, item.id)}
+                        className="absolute top-4 right-4 bg-white/90 p-2 rounded-full text-red-400 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
+                        title="Remove"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                  </div>
               ))}
            </div>
         )}

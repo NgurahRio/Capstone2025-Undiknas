@@ -15,43 +15,38 @@ import (
 
 func SetupUserRoutes(r *gin.Engine) {
 
+	// Auth
 	r.POST("/user/register", auth.RegisterUser)
 	r.POST("/user/login", auth.LoginUser)
+
+	r.GET("/destinations", destination.GetAllDestinationsUser)
+	r.GET("/destinations/:id", destination.GetDestinationByIDUser)
+
+	r.GET("/events", event.GetAllEventsUser)
+	r.GET("/events/:id", event.GetEventByIDUser)
+
+	r.GET("/categories", category.GetAllCategoriesUser)
+	r.GET("/categories/:id", category.GetCategoryByIDUser)
+
+	r.GET("/subcategories", subcategory.GetAllSubcategoriesUser)
+	r.GET("/subcategories/:id", subcategory.GetSubcategoryByIDUser)
+
+	r.GET("/review", review.GetReviews)
 
 	user := r.Group("/user",
 		middleware.JWTAuthMiddleware(),
 		middleware.RoleOnly(1),
 	)
 
-	// Favorites
+	user.GET("/profile", auth.GetProfile)
+	user.PUT("/profile", auth.UpdateProfile)
+
 	user.POST("/favorite", userfav.AddFavorite)
 	user.GET("/favorite", userfav.GetUserFavorites)
 	user.DELETE("/favorite/:destinationId", userfav.DeleteFavorite)
 
-	// Profile
-	user.PUT("/profile", auth.UpdateProfile)
-
-	// Logout
-	user.POST("/logout", auth.LogoutUser)
-
-	// Destinations
-	user.GET("/destinations", destination.GetAllDestinationsUser)
-	user.GET("/destinations/:id", destination.GetDestinationByIDUser)
-
-	// Reviews
 	user.POST("/review", review.AddReview)
-	user.GET("/review", review.GetReviews)
 	user.DELETE("/review/:id", review.DeleteReview)
 
-	// Events
-	user.GET("/events", event.GetAllEventsUser)
-	user.GET("/events/:id", event.GetEventByIDUser)
-
-	// Categories
-	user.GET("/categories", category.GetAllCategoriesUser)
-	user.GET("/categories/:id", category.GetCategoryByIDUser)
-
-	// Subcategories
-	user.GET("/subcategories", subcategory.GetAllSubcategoriesUser)
-	user.GET("/subcategories/:id", subcategory.GetSubcategoryByIDUser)
+	user.POST("/logout", auth.LogoutUser)
 }

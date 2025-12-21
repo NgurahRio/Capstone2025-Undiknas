@@ -348,6 +348,6 @@ app.get('/api/bookmarks/check/:userId/:destId', async (req, res) => {
 });
 
 // Start Server
-app.listen(3000, () => {
-    console.log("🚀 Server Travora berjalan di port 3000");
+app.listen(8080, () => {
+    console.log("🚀 Server Travora berjalan");
 });
