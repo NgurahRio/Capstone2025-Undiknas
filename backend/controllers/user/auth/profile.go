@@ -16,6 +16,46 @@ import (
 
 const maxProfileImageSize = 5 * 1024 * 1024
 
+func GetProfile(c *gin.Context) {
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Tidak dapat menemukan informasi pengguna"})
+		return
+	}
+
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID tidak valid"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Pengguna tidak ditemukan"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data pengguna"})
+		return
+	}
+
+	responseUser := gin.H{
+		"id_users": user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"roleId":   user.RoleID,
+	}
+
+	if user.Image != "" {
+		responseUser["image"] = user.Image
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil data profil",
+		"user":    responseUser,
+	})
+}
+
 func UpdateProfile(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
@@ -97,7 +137,8 @@ func UpdateProfile(c *gin.Context) {
 			return
 		}
 
-		user.Image = imgBytes
+		base64Image := base64.StdEncoding.EncodeToString(imgBytes)
+		user.Image = base64Image
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
@@ -105,20 +146,19 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	var imageBase64 string
-	if len(user.Image) > 0 {
-		imageBase64 = base64.StdEncoding.EncodeToString(user.Image)
+	responseUser := gin.H{
+		"id_users": user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"roleId":   user.RoleID,
+	}
+
+	if user.Image != "" {
+		responseUser["image"] = user.Image
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Profil berhasil diperbarui",
-		"user": gin.H{
-			"id_users": user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"roleId":   user.RoleID,
-			"hasImage": len(user.Image) > 0,
-			"image":    imageBase64,
-		},
+		"user":    responseUser,
 	})
 }
