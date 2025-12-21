@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import Navbar from '../components/common/Navbar'; // Pastikan path benar
+import Navbar from '../components/common/Navbar';
 import HeroSection from '../components/sections/HeroSection';
 import PlaceCard from '../components/cards/PlaceCard';
 import PopularPlaces from '../components/sections/PopularPlaces';
@@ -30,16 +30,16 @@ export default function Home() {
     setSearchLoading(true);
 
     try {
-        // PERBAIKAN 1: Gunakan endpoint Go yang benar (/user/destinations)
-        // (pastikan sudah login)
-        const res = await api.get(`/user/destinations?search=${query}`);
+        // --- PERBAIKAN: HAPUS '/user' AGAR SESUAI BACKEND ---
+        // Backend Route: r.GET("/destinations", ...)
+        const res = await api.get(`/destinations?search=${query}`);
         
-        console.log("Hasil Search Mentah:", res.data);
+        console.log("Hasil Search:", res.data);
 
-        // Handle struktur data Go 
+        // Handle struktur data Go (bisa array langsung atau object { data: [] })
         const resultList = Array.isArray(res.data) ? res.data : (res.data.data || []);
         
-        // (Jaga-jaga kalau backend Go Anda belum ada logic search query SQL-nya)
+        // Filter Manual (Opsional, jika backend belum handle ?search=query)
         const filtered = resultList.filter(item => {
              const title = item.NameDestination || item.namedestination || item.title || "";
              return title.toLowerCase().includes(query.toLowerCase());
@@ -49,9 +49,9 @@ export default function Home() {
 
     } catch (err) {
         console.error("Search failed", err);
-        // Jika 401 (Belum Login), redirect
+        // Jika backend public, biasanya tidak return 401, tapi jaga-jaga
         if (err.response?.status === 401) {
-            alert("Silakan login untuk mencari destinasi.");
+            alert("Sesi habis, silakan login ulang.");
             navigate('/auth');
         }
     } finally {
@@ -71,7 +71,7 @@ export default function Home() {
       
       <div className="max-w-7xl mx-auto w-full px-6 flex flex-col gap-24">
         
-        {/* LOGIKA TAMPILAN: SEARCH VS POPULAR */}
+        {/* LOGIKA TAMPILAN: SEARCH VS NORMAL HOME */}
         {isSearching ? (
               <div className="min-h-[400px]">
                   <div className="flex items-center gap-3 mb-8">
@@ -100,8 +100,8 @@ export default function Home() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                           {searchResults.map((item) => (
                               <PlaceCard 
-                                  // Handle beda nama field (ID vs id, NameDestination vs title)
                                   key={item.ID || item.id}
+                                  // Mapping Field Backend Golang (Biasanya Kapital)
                                   title={item.NameDestination || item.namedestination || item.title}
                                   subtitle={item.Location || item.location}
                                   img={item.Image || (Array.isArray(item.images) ? item.images[0] : null) || 'https://via.placeholder.com/300'}
@@ -113,12 +113,11 @@ export default function Home() {
                   )}
               </div>
           ) : (
-            // Jika TIDAK sedang mencari, tampilkan halaman normal
+            // TAMPILAN HOME NORMAL
             <>
-                {/* INI BAGIAN PENTING: POPULAR PLACES */}
                 <PopularPlaces />
                 
-                {/* Explore Ubud (Static) */}
+                {/* Static Section: Explore Ubud */}
                 <div className="bg-[#F2F7FB] -mx-6 lg:-mx-20 px-6 lg:px-20 py-24 rounded-[40px]">
                     <div className="max-w-7xl mx-auto">
                       <h2 className="text-4xl font-bold text-center mb-12 text-gray-900">Explore Ubud</h2>
@@ -137,16 +136,17 @@ export default function Home() {
                     </div>
                 </div>
 
+                {/* Travel Style */}
                 <div className="flex flex-col gap-10">
                     <div className="flex items-center gap-4">
-                       <div className="w-2 h-10 bg-black rounded-full"></div>
-                       <h2 className="text-4xl font-bold text-gray-900">Travel Style</h2>
+                        <div className="w-2 h-10 bg-black rounded-full"></div>
+                        <h2 className="text-4xl font-bold text-gray-900">Travel Style</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                       <StyleCard title="Culture" desc="Heritage sites." img="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2" onPress={() => navigate('/')} />
-                       <StyleCard title="Nature" desc="Forest & Trek." img="https://images.unsplash.com/photo-1544644181-1484b3fdfc62" onPress={() => navigate('/')} />
-                       <StyleCard title="Culinary" desc="Best local food." img="https://images.unsplash.com/photo-1555400038-63f5ba517a47" onPress={() => navigate('/')} />
-                       <StyleCard title="Art" desc="Museums & Art." img="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1" onPress={() => navigate('/')} />
+                        <StyleCard title="Culture" desc="Heritage sites." img="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2" onPress={() => navigate('/')} />
+                        <StyleCard title="Nature" desc="Forest & Trek." img="https://images.unsplash.com/photo-1544644181-1484b3fdfc62" onPress={() => navigate('/')} />
+                        <StyleCard title="Culinary" desc="Best local food." img="https://images.unsplash.com/photo-1555400038-63f5ba517a47" onPress={() => navigate('/')} />
+                        <StyleCard title="Art" desc="Museums & Art." img="https://images.unsplash.com/photo-1537953773345-d172ccf13cf1" onPress={() => navigate('/')} />
                     </div>
                 </div>
 
