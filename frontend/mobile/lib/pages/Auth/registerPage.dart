@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/textField.dart';
+import 'package:mobile/models/user_model.dart';
+import 'package:mobile/pages/Auth/auth_service.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -15,6 +17,57 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confPasswordController = TextEditingController();
+
+  void _showSnackBar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
+
+Future<void> handleRegister() async {
+  final name = nameController.text.trim();
+  final email = emailController.text.trim();
+  final password = passwordController.text;
+  final confirmPassword = confPasswordController.text;
+
+  if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    _showSnackBar('Semua field harus diisi');
+    return;
+  }
+
+  if (password.length < 6) {
+    _showSnackBar('Password minimal 6 karakter');
+    return;
+  }
+
+  if (password != confirmPassword) {
+    _showSnackBar('Password dan konfirmasi tidak sama');
+    return;
+  }
+
+  try {
+    // ignore: unused_local_variable
+    final User user = await AuthService.register(
+      username: name,
+      email: email,
+      password: password,
+    );
+
+    _showSnackBar('Registrasi berhasil, silakan login');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LoginPage(),
+      ),
+    );
+  } catch (e) {
+    _showSnackBar(e.toString().replaceAll('Exception: ', ''));
+  }
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.only(top: 50, bottom: 15),
                   child: ButtonCostum(
                     text: "Sign Up", 
-                    onPressed: () {}
+                    onPressed: handleRegister
                   )
                 ),
           
