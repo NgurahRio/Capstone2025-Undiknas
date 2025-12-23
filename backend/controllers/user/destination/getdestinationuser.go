@@ -12,12 +12,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type destinationImages struct {
-	Image string `json:"image"`
+func normalizeImages(data string) []string {
+	if data == "" {
+		return []string{}
+	}
+
+	var images []string
+
+	if err := json.Unmarshal([]byte(data), &images); err == nil {
+		return images
+	}
+
+	raw := strings.Split(data, ",")
+	for _, item := range raw {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			images = append(images, item)
+		}
+	}
+
+	return images
 }
 
 func GetAllDestinationsUser(c *gin.Context) {
-
 	var destinations []models.Destination
 	if err := config.DB.Preload("Sos").Find(&destinations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -29,9 +46,7 @@ func GetAllDestinationsUser(c *gin.Context) {
 	var response []gin.H
 
 	for _, d := range destinations {
-
-		var images []destinationImages
-		_ = json.Unmarshal([]byte(d.Imagedata), &images)
+		images := normalizeImages(d.Imagedata)
 
 		var subcategories []models.Subcategory
 		var subResp []gin.H
@@ -45,13 +60,17 @@ func GetAllDestinationsUser(c *gin.Context) {
 				}
 			}
 
-			config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+			config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 			for _, s := range subcategories {
 				subResp = append(subResp, gin.H{
-					"id_subcategory":   s.ID,
-					"name_subcategory": s.Name,
-					"category_id":      s.CategoryID,
+					"id_subcategories":  s.ID,
+					"namesubcategories": s.Name,
+					"categoriesId":      s.CategoryID,
+					"category": gin.H{
+						"id_categories": s.Category.ID,
+						"name":          s.Category.Name,
+					},
 				})
 			}
 		}
@@ -90,6 +109,7 @@ func GetAllDestinationsUser(c *gin.Context) {
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
@@ -122,8 +142,7 @@ func GetDestinationByIDUser(c *gin.Context) {
 		return
 	}
 
-	var images []destinationImages
-	_ = json.Unmarshal([]byte(d.Imagedata), &images)
+	images := normalizeImages(d.Imagedata)
 
 	var subcategories []models.Subcategory
 	var subResp []gin.H
@@ -137,13 +156,17 @@ func GetDestinationByIDUser(c *gin.Context) {
 			}
 		}
 
-		config.DB.Where("id_subcategories IN ?", intIDs).Find(&subcategories)
+		config.DB.Preload("Category").Where("id_subcategories IN ?", intIDs).Find(&subcategories)
 
 		for _, s := range subcategories {
 			subResp = append(subResp, gin.H{
-				"id_subcategory":   s.ID,
-				"name_subcategory": s.Name,
-				"category_id":      s.CategoryID,
+				"id_subcategories":  s.ID,
+				"namesubcategories": s.Name,
+				"categoriesId":      s.CategoryID,
+				"category": gin.H{
+					"id_categories": s.Category.ID,
+					"name":          s.Category.Name,
+				},
 			})
 		}
 	}
@@ -184,6 +207,7 @@ func GetDestinationByIDUser(c *gin.Context) {
 			"do":              d.Do,
 			"dont":            d.Dont,
 			"safety":          d.Safety,
+			"operational":     d.Operational,
 			"maps":            d.Maps,
 			"longitude":       d.Longitude,
 			"latitude":        d.Latitude,
