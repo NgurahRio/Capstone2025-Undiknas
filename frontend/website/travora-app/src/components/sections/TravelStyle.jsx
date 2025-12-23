@@ -3,137 +3,264 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import PlaceCard from '../cards/PlaceCard';
 
-export default function TravelStyle() {
+export default function TravelStyle({ initialShowAll = false, hideViewMore = false, onViewMore }) {
   const navigate = useNavigate();
-  
-  // State Data
+
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [destinations, setDestinations] = useState([]);
   const [filteredDestinations, setFilteredDestinations] = useState([]);
-  
-  // State UI
-  const [activeCategory, setActiveCategory] = useState(null); // Menyimpan ID Kategori yang aktif
+
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeSubcategory, setActiveSubcategory] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAll, setShowAll] = useState(initialShowAll);
+
   const [loading, setLoading] = useState(true);
 
-  // 1. FETCH CATEGORIES & DESTINATIONS
+  // Helpers
+  const getSubcategoryId = (sub) => sub?.id_subcategories || sub?.id;
+  const getSubcategoryCategoryId = (sub) =>
+    sub?.categoriesId || sub?.categoryId || sub?.id_categories || sub?.category?.id_categories || sub?.category?.id;
+
+  const getDestinationSubIds = (item) => {
+    if (Array.isArray(item.subcategory)) {
+      return item.subcategory.map((s) => getSubcategoryId(s)).filter(Boolean);
+    }
+    if (item.subcategoryId) {
+      return String(item.subcategoryId)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  // Fetch categories, subcategories, destinations
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const [resCat, resSub, resDest] = await Promise.all([
+          api.get('/categories'),
+          api.get('/subcategories'),
+          api.get('/destinations'),
+        ]);
 
-        // A. Ambil Categories
-        const resCat = await api.get('/categories');
-        const catData = Array.isArray(resCat.data) ? resCat.data : (resCat.data.data || []);
-        
-        // B. Ambil All Destinations
-        const resDest = await api.get('/destinations');
-        const destData = Array.isArray(resDest.data) ? resDest.data : (resDest.data.data || []);
+        const catData = Array.isArray(resCat.data) ? resCat.data : resCat.data.data || [];
+        const subData = Array.isArray(resSub.data) ? resSub.data : resSub.data.data || [];
+        const destData = Array.isArray(resDest.data) ? resDest.data : resDest.data.data || [];
 
         setCategories(catData);
+        setSubcategories(subData);
         setDestinations(destData);
 
-        // Set Default Active Category (Ambil yang pertama, misal: Adventure/Culture)
         if (catData.length > 0) {
-            setActiveCategory(catData[0].id_categories || catData[0].id);
+          setActiveCategory(catData[0].id_categories || catData[0].id);
         }
-
       } catch (err) {
-        console.error("Gagal load data Travel Style:", err);
+        console.error('Gagal load Travel Style:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // 2. FILTER LOGIC (Setiap kali activeCategory atau destinations berubah)
+  // Set default subcategory when category changes
   useEffect(() => {
-    if (!activeCategory || destinations.length === 0) return;
+    if (!activeCategory) return;
+    const subs = subcategories.filter(
+      (s) => String(getSubcategoryCategoryId(s)) === String(activeCategory)
+    );
+    if (subs.length > 0) {
+      const firstId = getSubcategoryId(subs[0]);
+      setActiveSubcategory((prev) =>
+        subs.some((s) => String(getSubcategoryId(s)) === String(prev)) ? prev : firstId
+      );
+    } else {
+      setActiveSubcategory(null);
+    }
+    setCurrentIndex(0);
+  }, [activeCategory, subcategories]);
 
-    // Filter destinasi yang punya categoryId sama dengan activeCategory
-    // PENTING: Pastikan backend mengirim field 'categoryId' atau 'category_id' di object destination
-    // Jika struktur DB Anda pakai 'subcategoryId', sesuaikan logika ini.
-    
-    const filtered = destinations.filter(item => {
-        // Cek variasi penulisan field dari Backend Go/SQL
-        const itemCatId = item.categoryId || item.category_id || item.roleId; // Sesuaikan dengan JSON backend
-        
-        // Konversi ke string untuk perbandingan aman
-        return String(itemCatId) === String(activeCategory);
+  // Filter destinations by category and subcategory
+  useEffect(() => {
+    if (!activeCategory) return;
+
+    const subMap = new Map(
+      subcategories.map((s) => [String(getSubcategoryId(s)), s])
+    );
+
+    const filtered = destinations.filter((item) => {
+      const ids = getDestinationSubIds(item);
+      if (ids.length === 0) return false;
+
+      const hasCategory = ids.some((id) => {
+        const sub = subMap.get(String(id));
+        const catId = getSubcategoryCategoryId(sub);
+        return String(catId) === String(activeCategory);
+      });
+      if (!hasCategory) return false;
+
+      if (activeSubcategory) {
+        return ids.some((id) => String(id) === String(activeSubcategory));
+      }
+      return true;
     });
 
     setFilteredDestinations(filtered);
-
-  }, [activeCategory, destinations]);
-
+    setCurrentIndex(0);
+  }, [activeCategory, activeSubcategory, destinations, subcategories]);
 
   if (loading) return <div className="h-[300px] w-full bg-gray-100 rounded-[32px] animate-pulse"></div>;
   if (categories.length === 0) return null;
 
+  const itemsPerPage = showAll ? 12 : 4;
+  const canPrev = currentIndex > 0;
+  const canNext = currentIndex + itemsPerPage < filteredDestinations.length;
+  const visibleItems = filteredDestinations.slice(currentIndex, currentIndex + itemsPerPage);
+
+  const subByCategory = subcategories.filter(
+    (s) => String(getSubcategoryCategoryId(s)) === String(activeCategory)
+  );
+  const activeSubName = subByCategory.find(
+    (s) => String(getSubcategoryId(s)) === String(activeSubcategory)
+  )?.namesubcategories;
+
   return (
-    <div className="flex flex-col gap-8 w-full">
-      
-      {/* --- HEADER: JUDUL & MENU KATEGORI --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        
-        {/* Judul */}
+    <div className="flex flex-col gap-8 w-full bg-[#F7FBFF] rounded-[28px] px-4 py-8 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-            <div className="w-1.5 h-8 bg-[#5E9BF5] rounded-full"></div>
-            <h2 className="text-4xl font-bold text-gray-900">Travel Style</h2>
+          <div className="w-1.5 h-8 bg-[#5E9BF5] rounded-full"></div>
+          <h2 className="text-3xl font-bold text-gray-900">Travel Style</h2>
         </div>
-
-        {/* Menu Tab / Pills (Horizontal Scroll di Mobile) */}
-        <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-            {categories.map((cat) => {
-                const isActive = (cat.id_categories || cat.id) === activeCategory;
-                return (
-                    <button
-                        key={cat.id_categories || cat.id}
-                        onClick={() => setActiveCategory(cat.id_categories || cat.id)}
-                        className={`
-                            px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border
-                            ${isActive 
-                                ? 'bg-[#5E9BF5] text-white border-[#5E9BF5] shadow-lg shadow-blue-200' 
-                                : 'bg-white text-gray-500 border-gray-200 hover:border-[#5E9BF5] hover:text-[#5E9BF5]'}
-                        `}
-                    >
-                        {cat.name}
-                    </button>
-                );
-            })}
-        </div>
+        {!hideViewMore && (
+          <button
+            onClick={() => { onViewMore ? onViewMore() : (setShowAll((prev) => !prev), setCurrentIndex(0)); }}
+            className="bg-[#7FB4FF] text-white px-5 py-2 rounded-full font-semibold text-sm shadow-md hover:bg-[#6aa7ff] transition"
+          >
+            {showAll ? 'View Less' : 'View More'}
+          </button>
+        )}
       </div>
 
-      {/* --- RESULT GRID (MUNCUL DI BAWAH MENU) --- */}
+      {/* Category Pills */}
+      <div className="flex flex-wrap gap-3">
+        {categories.map((cat) => {
+          const isActive = (cat.id_categories || cat.id) === activeCategory;
+          return (
+            <button
+              key={cat.id_categories || cat.id}
+              onClick={() => setActiveCategory(cat.id_categories || cat.id)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                isActive
+                  ? 'bg-[#E9F2FF] text-[#5E9BF5] border-[#5E9BF5]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#5E9BF5]'
+              }`}
+            >
+              {cat.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Subcategory Pills */}
+      {subByCategory.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {subByCategory.map((sub) => {
+            const subId = getSubcategoryId(sub);
+            const isActiveSub = String(subId) === String(activeSubcategory);
+            return (
+              <button
+                key={subId}
+                onClick={() => {
+                  setActiveSubcategory(subId);
+                  setCurrentIndex(0);
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                  isActiveSub
+                    ? 'bg-white text-[#5E9BF5] border-[#5E9BF5]'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#5E9BF5]'
+                }`}
+              >
+                {sub.namesubcategories || sub.name || 'Subcategory'}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="h-[1px] w-full bg-gray-200"></div>
+
+      {/* Grid */}
       <div className="w-full min-h-[300px]">
-          {filteredDestinations.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in">
-                  {filteredDestinations.slice(0, 4).map((item) => {
-                      // Helper Image (Sama seperti sebelumnya)
-                      let img = item.Image || (Array.isArray(item.images) ? item.images[0] : null);
-                      if (!img) img = 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62';
+        {visibleItems.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+            {visibleItems.map((item) => {
+              let img =
+                Array.isArray(item.images) && item.images.length > 0
+                  ? item.images[0]
+                  : item.Image || null;
+              if (img && !img.startsWith('http') && !img.startsWith('data:')) {
+                img = `data:image/jpeg;base64,${img}`;
+              }
+              if (!img) img = 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62';
 
-                      return (
-                          <PlaceCard 
-                              key={item.ID || item.id_destination}
-                              title={item.NameDestination || item.namedestination || item.title}
-                              subtitle={item.Location || item.location}
-                              img={img}
-                              rating="4.8"
-                              onPress={() => navigate(`/destination/${item.ID || item.id_destination}`)}
-                          />
-                      );
-                  })}
-              </div>
-          ) : (
-              // Tampilan Kosong Jika Tidak Ada Destinasi di Kategori Ini
-              <div className="flex flex-col items-center justify-center h-[300px] bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
-                  <p className="text-gray-400 font-medium">No destinations found for this category.</p>
-              </div>
-          )}
+              return (
+                <PlaceCard
+                  key={item.ID || item.id_destination}
+                  title={item.NameDestination || item.namedestination || item.title}
+                  subtitle={item.Location || item.location}
+                  description={item.description}
+                  tag={activeSubName}
+                  img={img}
+                  rating={item.rating || '4.9'}
+                  onPress={() => navigate(`/destination/${item.ID || item.id_destination}`)}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[300px] bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
+            <p className="text-gray-400 font-medium">Destinasi belum tersedia untuk pilihan ini.</p>
+          </div>
+        )}
       </div>
 
+      {filteredDestinations.length > itemsPerPage && (
+        <div className="flex items-center justify-center gap-6 pt-2">
+          <button
+            onClick={() => canPrev && setCurrentIndex((prev) => Math.max(prev - itemsPerPage, 0))}
+            disabled={!canPrev}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${
+              canPrev
+                ? 'bg-white text-gray-700 border-gray-200 hover:border-[#5E9BF5]'
+                : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed'
+            }`}
+          >
+            <span className="w-8 h-8 rounded-full border flex items-center justify-center border-[#5E9BF5] text-[#5E9BF5]">
+              ←
+            </span>
+            Back
+          </button>
+          <button
+            onClick={() => canNext && setCurrentIndex((prev) => prev + itemsPerPage)}
+            disabled={!canNext}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${
+              canNext
+                ? 'bg-white text-gray-700 border-gray-200 hover:border-[#5E9BF5]'
+                : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed'
+            }`}
+          >
+            Next
+            <span className="w-8 h-8 rounded-full border flex items-center justify-center border-[#5E9BF5] text-[#5E9BF5]">
+              →
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
