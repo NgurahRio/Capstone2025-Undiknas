@@ -22,21 +22,21 @@ export default function PopularPlaces() {
         // B. Ambil Review secara Paralel
         const dataWithRating = await Promise.all(rawData.map(async (item) => {
             const destId = item.id_destination || item.id;
-            let ratingValue = "New"; 
-
+            let ratingValue = 0;
             try {
-                const resRev = await api.get(`/reviews/${destId}`);
+                const resRev = await api.get('/review', { params: { destinationId: destId } });
                 const reviews = resRev.data.data || resRev.data;
                 if (Array.isArray(reviews) && reviews.length > 0) {
                     const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0), 0);
-                    ratingValue = (total / reviews.length).toFixed(1);
+                    ratingValue = total / reviews.length;
                 }
             } catch (err) {}
 
             return { ...item, calculatedRating: ratingValue };
         }));
 
-        setDestinations(dataWithRating);
+        const sorted = dataWithRating.sort((a, b) => (b.calculatedRating || 0) - (a.calculatedRating || 0));
+        setDestinations(sorted);
 
       } catch (err) {
         console.error("Error loading popular places:", err);
@@ -62,8 +62,17 @@ export default function PopularPlaces() {
 
   const processImage = (item) => {
     const fallback = "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=600&q=80";
-    let raw = item?.imagedata || item?.Image || item?.image; 
     
+    // Prioritas: field "images" dari backend user/destination
+    if (Array.isArray(item?.images) && item.images.length > 0) {
+      const first = item.images[0];
+      if (first && !first.startsWith('http') && !first.startsWith('data:')) {
+        return `data:image/jpeg;base64,${first}`;
+      }
+      return first || fallback;
+    }
+
+    let raw = item?.imagedata || item?.Image || item?.image; 
     if (typeof raw === 'string' && (raw.startsWith('[') || raw.startsWith('{'))) {
         try {
             const parsed = JSON.parse(raw);
@@ -126,7 +135,7 @@ export default function PopularPlaces() {
                 const imageUrl = processImage(item);
                 const title = item.namedestination || item.NameDestination || "Unknown";
                 const location = item.location || "Bali";
-                const rating = item.calculatedRating; 
+                const rating = item.calculatedRating > 0 ? item.calculatedRating.toFixed(1) : "New"; 
                 const keyId = item.id_destination || index;
 
                 return (
