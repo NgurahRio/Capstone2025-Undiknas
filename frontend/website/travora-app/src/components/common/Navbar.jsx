@@ -73,9 +73,14 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-            <button className="bg-[#576D85] text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-[#4a5e73] transition shadow-md shadow-gray-200 text-sm font-semibold">
+            <a
+              href="https://wa.me/6285166189866"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-[#576D85] text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-[#4a5e73] transition shadow-md shadow-gray-200 text-sm font-semibold"
+            >
                 <MessageCircle size={18} /> Chat
-            </button>
+            </a>
             
             {/* LOGIKA LOGIN / PROFILE */}
             {user ? (
