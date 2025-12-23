@@ -6,7 +6,9 @@ import (
 	"backend/controllers/user/destination"
 	"backend/controllers/user/event"
 	"backend/controllers/user/favorite"
+	"backend/controllers/user/packages"
 	"backend/controllers/user/review"
+	"backend/controllers/user/subpackage"
 	"backend/controllers/user/subcategory"
 	"backend/middleware"
 
@@ -30,6 +32,12 @@ func SetupUserRoutes(r *gin.Engine) {
 
 	r.GET("/subcategories", subcategory.GetAllSubcategoriesUser)
 	r.GET("/subcategories/:id", subcategory.GetSubcategoryByIDUser)
+
+	r.GET("/packages", packages.GetAllPackagesUser)
+	r.GET("/packages/:destinationId", packages.GetPackageByDestinationIDUser)
+
+	r.GET("/subpackage", subpackage.GetAllSubpackagesUser)
+	r.GET("/subpackage/:id", subpackage.GetSubpackageByIDUser)
 
 	r.GET("/review", review.GetReviews)
 
