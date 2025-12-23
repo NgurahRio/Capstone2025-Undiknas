@@ -46,8 +46,8 @@ func GetProfile(c *gin.Context) {
 		"roleId":   user.RoleID,
 	}
 
-	if user.Image != "" {
-		responseUser["image"] = user.Image
+	if user.Image != nil && *user.Image != "" {
+		responseUser["image"] = *user.Image
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -138,7 +138,7 @@ func UpdateProfile(c *gin.Context) {
 		}
 
 		base64Image := base64.StdEncoding.EncodeToString(imgBytes)
-		user.Image = base64Image
+		user.Image = &base64Image
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
@@ -153,8 +153,8 @@ func UpdateProfile(c *gin.Context) {
 		"roleId":   user.RoleID,
 	}
 
-	if user.Image != "" {
-		responseUser["image"] = user.Image
+	if user.Image != nil && *user.Image != "" {
+		responseUser["image"] = *user.Image
 	}
 
 	c.JSON(http.StatusOK, gin.H{
