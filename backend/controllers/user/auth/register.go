@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// RegisterUser menangani pendaftaran pengguna baru.
 func RegisterUser(c *gin.Context) {
 	var input struct {
 		Username string `json:"username" binding:"required"`
@@ -18,13 +17,11 @@ func RegisterUser(c *gin.Context) {
 		Password string `json:"password" binding:"required,min=6"`
 	}
 
-	// Validasi input
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Permintaan tidak valid. Pastikan username, email, dan password (minimal 6 karakter) terisi."})
 		return
 	}
 
-	// 1. Cek apakah username atau email sudah terdaftar
 	var existingUser models.User
 	if err := config.DB.Where("username = ? OR email = ?", input.Username, input.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Username atau email sudah terdaftar"})
@@ -34,15 +31,12 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// 2. Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengenkripsi password"})
 		return
 	}
 
-	// 3. Buat objek User baru
-	// RoleID: 1 diasumsikan untuk pengguna biasa (regular user)
 	newUser := models.User{
 		Username: input.Username,
 		Email:    input.Email,
@@ -50,7 +44,6 @@ func RegisterUser(c *gin.Context) {
 		RoleID:   1, 
 	}
 
-	// 4. Simpan ke database
 	if err := config.DB.Create(&newUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mendaftarkan pengguna"})
 		return
