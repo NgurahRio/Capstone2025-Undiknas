@@ -7,7 +7,7 @@ ImageProvider formatImage(String image) {
     return NetworkImage(image);
   }
 
-  if (image.startsWith('data:image') || image.length > 100) {
+  if (image.startsWith('data:image') || image.length > 200 || image.startsWith("iVBOR") ) {
     final base64Str = image.startsWith('data:image')
         ? image.split(',').last
         : image;

@@ -32,10 +32,24 @@ class _DashboardState extends State<Dashboard> {
   List<dynamic> selectedSubCategories = [];
   List<dynamic> appliedSubCategories = [];
   List<dynamic> searchedDestinations = [];
-
+  List<Destination> destinations = [];
+  List<Event> events = [];
   bool _isSearchActive = false;
-
   bool selectStyle = true;
+
+  Future<void> loadData() async {
+    try {
+      final dest = await getDestinations();
+      final evt = await getEvents();
+      if (!mounted) return;
+      setState(() {
+        destinations = dest;
+        events = evt;
+      });
+    } catch (e) {
+      debugPrint("LOAD ERROR: $e");
+    }
+  }
 
   void _performSearch(String query) {
     setState(() {
@@ -135,6 +149,7 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
+    loadData();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
@@ -468,7 +483,7 @@ class _DashboardState extends State<Dashboard> {
                                   final ratDest = averageRatingForDestination(item.id_destination);
           
                                   return CardItems2(
-                                    image: item.imageUrl[0],
+                                    image: item.imageUrl.first,
                                     title: item.name,
                                     subTitle: item.description,
                                     rating: ratDest,
@@ -549,7 +564,7 @@ class _DashboardState extends State<Dashboard> {
                                 final item = filteredDestinations[index];
                                 final ratDest = averageRatingForDestination(item.id_destination);
                                 return CardItems2(
-                                  image: item.imageUrl[0], 
+                                  image: item.imageUrl.first, 
                                   title: item.name, 
                                   subTitle: item.description,
                                   rating: ratDest,
@@ -582,7 +597,7 @@ class _DashboardState extends State<Dashboard> {
                           final item = topRatedDestinations[index];
                           final ratDest = averageRatingForDestination(item.id_destination);
                           return CardItems1(
-                            image: item.imageUrl[0],
+                            image: item.imageUrl.first,
                             rating: ratDest,
                             title: item.name,
                             subtitle: item.location,
@@ -639,7 +654,7 @@ class _DashboardState extends State<Dashboard> {
                               itemBuilder: (context, index) {
                                 final item = todayEvents[index];
                                 return CardItems2(
-                                  image: item.imageUrl[0], 
+                                  image: item.imageUrl.first, 
                                   title: item.name, 
                                   location: item.location, 
                                   subTitle: formatEventDate(item.startDate, item.endDate),
@@ -666,7 +681,7 @@ class _DashboardState extends State<Dashboard> {
                           final item = destinations[index];
                           final ratDest = averageRatingForDestination(item.id_destination);
                           return CardItems2(
-                            image: item.imageUrl[0], 
+                            image: item.imageUrl.first, 
                             title: item.name, 
                             subTitle: item.description,
                             rating: ratDest,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/user_model.dart';
+import 'package:mobile/pages/Auth/auth_service.dart';
 import 'package:mobile/pages/LandingPage/firstPage.dart';
 import 'package:mobile/pages/bottonNavigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -75,25 +75,20 @@ class _AnimationFirstState extends State<AnimationFirst>
     });
 
     Future.delayed(const Duration(milliseconds: 5700), () async {
-      _changesPages.forward();
-
       final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('user_id');
+      final token = prefs.getString('token');
 
-      if (!mounted) return;
+      if (token != null) {
+        await AuthService.loadUserFromStorage();
 
-      if (userId != null) {
-        try {
-          final user = users.firstWhere((u) => u.id_user == userId);
-          User.currentUser = user;
-          Navigator.of(context).pushReplacement(_createSmoothFadeRoute(
-            BottonNavigation(currentUser: user,)
-          ));
-        } catch (_) {
-          Navigator.of(context).pushReplacement(_createSmoothFadeRoute(const FirstPage()));
-        }
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          _createSmoothFadeRoute(const BottonNavigation()),
+        );
       } else {
-        Navigator.of(context).pushReplacement(_createSmoothFadeRoute(const FirstPage()));
+        Navigator.of(context).pushReplacement(
+          _createSmoothFadeRoute(const FirstPage()),
+        );
       }
     });
   }

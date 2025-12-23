@@ -28,8 +28,12 @@ class AuthService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 201) {
+      final prefs = await SharedPreferences.getInstance();
+
       final userJson = data['user'];
       userJson['image'] = "";
+
+      await prefs.setString('user', jsonEncode(userJson));
 
       final user = User.fromJson(userJson);
       User.currentUser = user;
@@ -67,11 +71,13 @@ class AuthService {
     if (response.statusCode == 200) {
       final prefs = await SharedPreferences.getInstance();
 
-      // simpan JWT
       await prefs.setString('token', data['token']);
 
       final userJson = data['user'];
       userJson['image'] = "";
+
+      // ⬇️ SIMPAN USER
+      await prefs.setString('user', jsonEncode(userJson));
 
       final user = User.fromJson(userJson);
       User.currentUser = user;
@@ -79,7 +85,7 @@ class AuthService {
       await prefs.setInt('user_id', user.id_user);
 
       return user;
-    } 
+    }
     else if (response.statusCode == 401) {
       throw Exception('Username/email atau password salah');
     } 
@@ -116,8 +122,16 @@ class AuthService {
     }
   }
 
-  static Future<bool> isLoggedIn() async {
+  static Future<User?> loadUserFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('token');
+    final userString = prefs.getString('user');
+
+    if (userString == null) return null;
+
+    final userJson = jsonDecode(userString);
+    final user = User.fromJson(userJson);
+    User.currentUser = user;
+
+    return user;
   }
 }

@@ -1,5 +1,8 @@
+import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:mobile/api.dart';
 import 'package:mobile/models/destination_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<String> _parseList(dynamic value) {
   if (value == null) return [];
@@ -96,6 +99,29 @@ class Event {
       safetyGuidelines: _parseList(json['safety']),
     );
   }
+}
+
+Future<List<Event>> getEvents() async {
+  final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Token tidak ditemukan');
+    }
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/events'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil event');
+  }
+  final decoded = jsonDecode(response.body);
+  final List list = decoded['data'];
+  return list.map((e) => Event.fromJson(e)).toList();
 }
 
 final List<Event> events = [
