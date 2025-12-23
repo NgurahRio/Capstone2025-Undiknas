@@ -9,6 +9,7 @@ import Destination from './pages/Destination';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import Bookmark from './pages/Bookmark'; // <--- PASTIKAN INI ADA!
+import TravelStylePage from './pages/TravelStylePage';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
 
                             <Route path="/destination/:id" element={<Destination />} />
                             <Route path="/profile" element={<Profile />} />
+                            <Route path="/travel-style" element={<TravelStylePage />} />
                             
                             {/* Halaman 404 jika rute ngawur */}
                             <Route path="*" element={
