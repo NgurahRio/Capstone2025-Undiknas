@@ -43,27 +43,25 @@ export default function ExploreUbud() {
   const processImage = (item) => {
     if (!item) return "";
 
-    // Ambil kolom 'imagedata' (sesuai SQL) atau 'Image'
-    let raw = item.imagedata || item.Image;
-    
-    // Jika kosong, kembalikan string kosong (akan blank/broken image, sesuai request tanpa backup)
+  
+    let raw = Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : null;
+
+
+    if (!raw) raw = item.imagedata || item.Image || item.image;
+
     if (!raw) return "";
 
     try {
-      // SQL Anda menyimpan array JSON: '["/9j/4AAQ..."]'
-      // Kita perlu parse string JSON ini menjadi Array sungguhan
       if (typeof raw === 'string' && raw.trim().startsWith('[')) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          raw = parsed[0]; // Ambil elemen pertama
+          raw = parsed[0];
         }
       }
     } catch (e) {
       console.log("JSON Parse error for image, using raw string");
     }
 
-    // SQL menyimpan Base64 murni tanpa prefix "data:image..."
-    // Kita cek, jika bukan URL http dan belum ada prefix, kita tambahkan header JPG Base64
     if (raw && !raw.startsWith('http') && !raw.startsWith('data:')) {
       return `data:image/jpeg;base64,${raw}`;
     }
@@ -105,18 +103,8 @@ export default function ExploreUbud() {
                 </div>
             )}
 
-            {/* OVERLAY */}
+            {/* OVERLAY TIPIS */}
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition"></div>
-
-            {/* TEXT CONTENT */}
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-                <h3 className="font-bold text-lg leading-tight drop-shadow-md shadow-black">
-                    {item.namedestination || item.name}
-                </h3>
-                <div className="flex items-center gap-1 text-xs font-light text-gray-100 mt-1">
-                     <MapPin size={12} /> <span className="truncate">{item.location}</span>
-                </div>
-            </div>
         </div>
     );
   };
