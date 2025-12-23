@@ -135,7 +135,14 @@ void _showDestination({
 
 Future<Map<String, dynamic>> getEventAndDestination(int id) async {
   final event = await getEventById(id);
-  final destination = await getDestinationById(event.destinationId!.id_destination);
+
+  Destination? destination;
+
+  if (event.destinationId != null) {
+    destination = await getDestinationById(
+      event.destinationId!.id_destination
+    );
+  }
 
   return {
     'event': event,
@@ -180,9 +187,9 @@ void showDetailEvent(
                 }
 
                 final evt = snapshot.data![ 'event' ] as Event;
-                final dest = snapshot.data!['destination'] as Destination;
+                final Destination? dest = snapshot.data!['destination'] as Destination?;
 
-                final String imageDest = dest.imageUrl.isNotEmpty ? dest.imageUrl.first : '';
+                final String imageDest = dest != null && dest.imageUrl.isNotEmpty ? dest.imageUrl.first : '';
 
                 return SingleChildScrollView(
                   child: Stack(

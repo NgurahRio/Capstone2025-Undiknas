@@ -13,7 +13,7 @@ List<String> _parseList(dynamic value) {
   }
   if (value is String) {
     return value
-        .split(RegExp(r'[,\n]'))
+        .split('\n')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();

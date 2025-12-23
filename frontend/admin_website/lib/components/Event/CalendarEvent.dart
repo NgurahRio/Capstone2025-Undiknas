@@ -119,7 +119,7 @@ class _CalenderStyleState extends State<CalenderStyle> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                onTap: () => Navigator.pop(context, month),
+                onTap: () => Navigator.pop(dialogContext, month),
               );
             },
           ),
@@ -157,7 +157,9 @@ class _CalenderStyleState extends State<CalenderStyle> {
               firstDate: DateTime(2020),
               lastDate: DateTime(2030),
               selectedDate: DateTime(_focusedDay.year),
-              onChanged: (date) => Navigator.pop(context, date.year),
+              onChanged: (date) {
+                Navigator.pop(dialogContext, date.year);
+              },
             ),
           ),
         )
