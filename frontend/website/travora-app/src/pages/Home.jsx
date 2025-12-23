@@ -64,7 +64,7 @@ export default function Home() {
 
                 {/* 3. Travel Style (MENU TAB DYNAMIC) */}
                 {/* GANTI STYLECARD MANUAL DENGAN COMPONENT INI */}
-                <TravelStyle />
+                <TravelStyle onViewMore={() => navigate('/travel-style')} />
 
                 {/* 4. Events */}
                 <div id="events-section">
