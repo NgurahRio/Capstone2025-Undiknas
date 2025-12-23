@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { 
-  ArrowLeft, ArrowRight, MapPin, Heart, Star, 
-  Camera, Square, User, ShoppingBag, Utensils, 
-  Clock, ShieldAlert, CheckCircle, XCircle, Info, Ticket, Send, ChevronLeft, ChevronRight 
+  MapPin, Heart, Star, Camera, Square, User, Users, ShoppingBag, Utensils, 
+  ShieldAlert, CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon
 } from 'lucide-react';
 
 export default function Destination() {
@@ -25,19 +24,23 @@ export default function Destination() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // --- 1. HELPER IMAGE ---
-  const getImageArray = (sourceData) => {
-      const target = sourceData || data;
-      if (!target) return ['https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80'];
-      
-      let raw = target.imagedata || target.Image || target.image;
-      if (typeof raw === 'string' && (raw.startsWith('[') || raw.startsWith('{'))) {
-          try {
-              const parsed = JSON.parse(raw);
-              return Array.isArray(parsed) && parsed.length > 0 ? parsed : [raw];
-          } catch(e) { return [raw]; }
+  // --- 1. HELPER IMAGE SCANNER ---
+  const findAllImagesInObject = (obj) => {
+      if (!obj) return [];
+      const stringifiedData = JSON.stringify(obj);
+      const regexBase64 = /\/9j\/[A-Za-z0-9+/=]+/g;
+      const foundBase64 = stringifiedData.match(regexBase64);
+      let results = [];
+      if (foundBase64 && foundBase64.length > 0) {
+          const base64Images = foundBase64.map(str => `data:image/jpeg;base64,${str}`);
+          results = [...results, ...base64Images];
       }
-      return [raw || 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80']; 
+      const regexUrl = /https?:\/\/[^"\s\\]+/g;
+      const foundUrl = stringifiedData.match(regexUrl);
+      if (foundUrl && foundUrl.length > 0) {
+           results = [...results, ...foundUrl];
+      }
+      return [...new Set(results)];
   };
 
   const parseList = (text) => {
@@ -46,87 +49,95 @@ export default function Destination() {
     return text.split(/\r?\n|,/).filter(item => item.trim() !== "");
   };
 
-  const getFacilities = (idsString) => {
-    if (!idsString) return [];
-    const ids = String(idsString).split(',').map(s => s.trim());
-    const facilityDict = {
-        '1': { name: 'Parking', icon: <Square size={24}/> },
-        '2': { name: 'Toilet', icon: <Info size={24}/> },
-        '3': { name: 'Musholla', icon: <User size={24}/> },
-        '4': { name: 'Resto', icon: <Utensils size={24}/> },
-        '5': { name: 'Shop', icon: <ShoppingBag size={24}/> },
-        '11': { name: 'Photo Spot', icon: <Camera size={24}/> },
-        '12': { name: 'WiFi', icon: <Info size={24}/> },
-        '13': { name: 'Guide', icon: <User size={24}/> },
-        '14': { name: 'Ticket', icon: <Ticket size={24}/> },
-    };
-    return ids.map(id => facilityDict[id] || { name: 'Facility', icon: <Info size={24}/> });
+  // --- 2. FACILITY LOGIC (PURE DATABASE) ---
+  
+  // A. Mapping Visual Saja (Nama Fasilitas DB -> Ikon Lucide)
+  // Kita TIDAK memetakan ID lagi, hanya mencocokkan teks nama fasilitas ke Ikon biar cantik.
+  const getFacilityIcon = (dbName) => {
+      if (!dbName) return <CheckCircle size={24}/>;
+      const lower = dbName.toLowerCase();
+
+      // Logika pencocokan kata kunci
+      if (lower.includes('park')) return <Car size={24}/>;
+      if (lower.includes('toilet') || lower.includes('wc') || lower.includes('kamar mandi')) return <Info size={24}/>;
+      if (lower.includes('musholla') || lower.includes('prayer') || lower.includes('masjid')) return <Moon size={24}/>;
+      if (lower.includes('resto') || lower.includes('makan') || lower.includes('warung') || lower.includes('food')) return <Utensils size={24}/>;
+      if (lower.includes('shop') || lower.includes('toko') || lower.includes('souvenir') || lower.includes('oleh')) return <ShoppingBag size={24}/>;
+      if (lower.includes('photo') || lower.includes('foto') || lower.includes('spot')) return <Camera size={24}/>;
+      if (lower.includes('wifi') || lower.includes('internet')) return <Wifi size={24}/>;
+      if (lower.includes('guide') || lower.includes('pemandu')) return <Users size={24}/>;
+      if (lower.includes('ticket') || lower.includes('tiket') || lower.includes('loket')) return <Ticket size={24}/>;
+      
+      return <CheckCircle size={24}/>; // Ikon default kalau nama fasilitas tidak dikenali
   };
 
-  // --- 2. HELPER RATING REAL ---
+  // B. Fungsi Utama: HANYA MENGAMBIL DARI ARRAY FACILITIES
+  const getFacilities = (sourceData) => {
+    if (!sourceData) return [];
+
+    // Cek apakah Backend mengirim array 'facilities' (Hasil Preload/Join)
+    if (sourceData.facilities && Array.isArray(sourceData.facilities) && sourceData.facilities.length > 0) {
+        return sourceData.facilities.map(fac => {
+            // Ambil nama dari berbagai kemungkinan key JSON backend (jaga-jaga)
+            const realName = fac.namefacility || fac.name_facility || fac.Name || fac.name || "Unknown Facility";
+            
+            return {
+                name: realName, 
+                icon: getFacilityIcon(realName)
+            };
+        });
+    }
+
+    // Jika tidak ada data array facilities dari DB, kembalikan kosong.
+    // TIDAK ADA LAGI MANUAL MAP DISINI.
+    return [];
+  };
+
   const averageRating = () => {
       if (!reviews || reviews.length === 0) return 0;
       const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0), 0);
-      const avg = total / reviews.length;
-      return avg % 1 === 0 ? avg : avg.toFixed(1);
+      return (total / reviews.length).toFixed(1);
   };
 
-  // Helper Display Nama
-  const getReviewerName = (rev) => {
-      // Prioritas: Username langsung > User object > "Traveler"
-      return rev.username || rev.User?.username || rev.user?.username || "Traveler";
+  const getReviewerName = (rev) => rev.username || rev.User?.username || "Traveler";
+
+  const cleanText = (text) => {
+      if (!text || typeof text !== 'string') return text;
+      return text.replace(/â€™/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"');
   };
 
-  // --- 3. FETCH DATA ---
+  // --- FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // A. DESTINASI
         const resDetail = await api.get(`/destinations/${id}`);
+        
+        // Debugging: Cek di console apakah 'facilities' array masuk
+        console.log("DATA DB:", resDetail.data);
+
         const destData = resDetail.data.data || resDetail.data; 
         const finalData = Array.isArray(destData) ? destData[0] : destData;
+        
         if (!finalData) throw new Error("Data kosong");
         setData(finalData);
 
-        // B. REVIEW (STRATEGI HYBRID: API + LOCALSTORAGE)
-        let allReviews = [];
-        
-        // 1. Ambil dari API (Data Real tapi mungkin tanpa Nama)
         try {
             const resRev = await api.get(`/review`, { params: { destination_id: id } });
             const apiReviews = resRev.data.data || resRev.data;
             if (Array.isArray(apiReviews)) {
-                // Filter hanya untuk destinasi ini
-                allReviews = apiReviews.filter(r => String(r.destinationId || r.destination_id) === String(id));
+                setReviews(apiReviews.filter(r => String(r.destinationId || r.destination_id) === String(id)));
             }
-        } catch (error) {
-            console.log("API Review skip/error");
-        }
+        } catch (error) {}
 
-        // 2. Ambil dari LocalStorage (Data Lengkap dengan Nama - Demo Mode)
         const localReviews = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
-        
-        // 3. Gabungkan (Prioritas LocalStorage agar nama muncul)
-        // Kita pakai Map untuk menghilangkan duplikat berdasarkan ID (jika ada)
-        const mergedReviews = [...localReviews, ...allReviews];
-        
-        // Hapus duplikat sederhana (opsional, jika ID review bisa tabrakan)
-        // Disini kita langsung set saja
-        setReviews(mergedReviews);
+        setReviews(prev => [...localReviews, ...prev]);
 
-        // C. CEK USER LOGIN (FIXED KEY: 'travora_user')
         const userStr = localStorage.getItem('travora_user'); 
-        if (userStr) {
-            console.log("User Loaded:", JSON.parse(userStr));
-            setCurrentUser(JSON.parse(userStr));
-        }
+        if (userStr) setCurrentUser(JSON.parse(userStr));
 
-        // D. BOOKMARK
         const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
-        const isSaved = savedBookmarks.some(item => String(item.id) === String(id));
-        setIsBookmarked(isSaved);
+        setIsBookmarked(savedBookmarks.some(item => String(item.id) === String(id)));
 
       } catch (err) {
         console.error("Error:", err);
@@ -137,94 +148,66 @@ export default function Destination() {
     fetchData();
   }, [id]);
 
-  // --- 4. SUBMIT REVIEW ---
+  // --- ACTIONS ---
   const handleSubmitReview = async (e) => {
       e.preventDefault();
-      if (!currentUser) {
-          alert("Silakan Login untuk memberi review.");
-          navigate('/auth');
-          return;
-      }
+      if (!currentUser) { navigate('/auth'); return; }
       if (userRating === 0) return alert("Pilih bintang 1-5.");
 
+      const hasReviewed = reviews.some(r => String(r.userId) === String(currentUser.id || currentUser.id_user));
+      if (hasReviewed) return alert("Anda sudah mereview tempat ini.");
+
       setIsSubmitting(true);
-      
-      // Buat Object Review Lengkap (dengan Nama)
-      const newReview = {
-          id_review: Date.now(), // ID Unik Sementara
-          userId: currentUser.id || currentUser.id_user,
-          // Ambil nama dari data user yang login
-          username: currentUser.username || currentUser.name || "Anda", 
-          rating: parseInt(userRating),
-          comment: userComment,
-          created_at: new Date().toISOString(),
-          destinationId: id
+      const newReview = { 
+          id_review: Date.now(), 
+          userId: currentUser.id || currentUser.id_user, 
+          username: currentUser.username || currentUser.name || "User", 
+          rating: parseInt(userRating), 
+          comment: userComment, 
+          created_at: new Date().toISOString(), 
+          destinationId: id 
       };
 
-      try {
-          // 1. Coba kirim ke API (Wajib, agar masuk DB)
-          await api.post('/user/review', {
-              destinationId: parseInt(id),
-              userId: parseInt(currentUser.id || currentUser.id_user),
-              rating: parseInt(userRating),
-              comment: userComment
-          });
-          console.log("Review sent to API");
-      } catch (error) {
-          console.warn("API Error (Demo Mode Active):", error);
-      }
-
-      // 2. SIMPAN JUGA KE LOCALSTORAGE (Agar nama user tetap muncul saat refresh)
-      // Ini trik agar data nama tidak hilang karena backend tidak menyimpannya
-      const existingLocal = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
-      const updatedLocal = [newReview, ...existingLocal];
+      try { await api.post('/user/review', { destinationId: parseInt(id), userId: parseInt(currentUser.id || currentUser.id_user), rating: parseInt(userRating), comment: userComment }); } catch (error) {}
+      
+      const updatedLocal = [newReview, ...JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]')];
       localStorage.setItem(`travora_reviews_${id}`, JSON.stringify(updatedLocal));
-
-      // 3. Update UI
       setReviews([newReview, ...reviews]);
-      setUserRating(0);
-      setUserComment("");
-      setIsSubmitting(false);
+      setUserRating(0); setUserComment(""); setIsSubmitting(false);
       alert("Review berhasil dikirim!");
   };
 
   const handleBookmark = () => {
-    const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
+    const saved = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
     if (isBookmarked) {
-        const newBookmarks = savedBookmarks.filter(item => String(item.id) !== String(id));
-        localStorage.setItem('travora_bookmarks', JSON.stringify(newBookmarks));
+        localStorage.setItem('travora_bookmarks', JSON.stringify(saved.filter(i => String(i.id) !== String(id))));
         setIsBookmarked(false);
     } else {
-        const imgs = getImageArray(data);
-        savedBookmarks.push({
-            id: String(id),
-            title: data.namedestination,
-            location: data.location,
-            img: imgs[0],
-            rating: averageRating() || "New"
-        });
-        localStorage.setItem('travora_bookmarks', JSON.stringify(savedBookmarks));
+        const imgs = findAllImagesInObject(data);
+        saved.push({ id: String(id), title: cleanText(data.namedestination), location: cleanText(data.location), img: imgs[0], rating: averageRating() });
+        localStorage.setItem('travora_bookmarks', JSON.stringify(saved));
         setIsBookmarked(true);
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><div className="animate-pulse font-bold text-gray-400">Loading...</div></div>;
+  if (loading) return <div className="h-screen flex items-center justify-center font-bold text-gray-400">Loading...</div>;
   if (!data) return <div className="h-screen flex items-center justify-center">Data Not Found</div>;
 
-  const images = getImageArray(data);
-  const title = data.namedestination || data.NameDestination;
-  const location = data.location;
-  const description = data.description;
-  const operational = data.operational;
+  // --- VARIABLES ---
+  const images = findAllImagesInObject(data);
+  const title = cleanText(data.namedestination || data.NameDestination);
+  const location = cleanText(data.location);
+  const description = cleanText(data.description);
   const mapsLink = data.maps;
-  const doList = parseList(data.do);
-  const dontList = parseList(data.dont);
-  const safety = data.safety;
-  const facilities = getFacilities(data.facilityId);
+  const doList = parseList(data.do).map(cleanText);
+  const dontList = parseList(data.dont).map(cleanText);
+  const safety = cleanText(data.safety);
+  
+  // Panggil Facility Logic (Strict Database)
+  const facilities = getFacilities(data); 
+  
   const price = data.price;
-
-  const currentImg = images[imgIndex] && !images[imgIndex].startsWith('http') && !images[imgIndex].startsWith('data:') 
-      ? `data:image/jpeg;base64,${images[imgIndex]}` : (images[imgIndex] || 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80');
+  const currentImg = images.length > 0 ? images[imgIndex] : null;
   const nextImage = () => setImgIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   const prevImage = () => setImgIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
 
@@ -233,26 +216,42 @@ export default function Destination() {
       
       {/* HEADER */}
       <div className="w-full h-[350px] relative flex items-center justify-center bg-gray-900 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1920&q=80" alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+          {currentImg ? (
+             <img src={currentImg} alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm scale-105" />
+          ) : (
+             <div className="absolute inset-0 bg-gray-800 opacity-90"></div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent"></div>
           <div className="relative z-10 text-center"><h1 className="text-5xl md:text-6xl font-normal text-white tracking-wide"><span className="font-light opacity-80">|</span> Destination</h1></div>
       </div>
 
-      {/* SLIDER */}
+      {/* GAMBAR UTAMA & SLIDER */}
       <div className="max-w-6xl mx-auto w-full px-6 lg:px-8 py-10">
           <div className="flex items-center gap-2 mb-6 text-base text-gray-500 font-medium">
               <span className="text-[#5E9BF5] cursor-pointer hover:underline" onClick={() => navigate('/')}>Home</span><span className="text-gray-300">›</span><span className="text-gray-700">Destination</span>
           </div>
-          <div className="w-full h-[400px] md:h-[550px] rounded-[40px] overflow-hidden relative shadow-2xl mb-8 group">
-              <img src={currentImg} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={title} />
+          
+          <div className="w-full h-[400px] md:h-[550px] rounded-[40px] overflow-hidden relative shadow-2xl mb-8 group bg-gray-100 border border-gray-200">
+              {currentImg ? (
+                  <img src={currentImg} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={title} />
+              ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                     <Camera size={64} className="opacity-50"/>
+                     <span className="font-medium text-lg">No Image Available</span>
+                  </div>
+              )}
           </div>
-          <div className="flex justify-center items-center gap-12 text-gray-500 font-medium text-lg">
-              <button onClick={prevImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group disabled:opacity-50" disabled={images.length <= 1}>
-                  <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronLeft size={24} className="group-hover:text-[#5E9BF5]" /></div> Back
-              </button>
-              <button onClick={nextImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group disabled:opacity-50" disabled={images.length <= 1}>
-                  Next <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronRight size={24} className="group-hover:text-[#5E9BF5]" /></div>
-              </button>
-          </div>
+          
+          {images.length > 1 && (
+            <div className="flex justify-center items-center gap-12 text-gray-500 font-medium text-lg">
+                <button onClick={prevImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group cursor-pointer select-none">
+                    <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronLeft size={24} className="group-hover:text-[#5E9BF5]" /></div> Back
+                </button>
+                <button onClick={nextImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group cursor-pointer select-none">
+                    Next <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronRight size={24} className="group-hover:text-[#5E9BF5]" /></div>
+                </button>
+            </div>
+          )}
       </div>
 
       {/* DETAIL */}
@@ -268,16 +267,24 @@ export default function Destination() {
                     <button onClick={handleBookmark} className="mt-1"><Heart size={40} className={`transition duration-300 drop-shadow-sm ${isBookmarked ? 'fill-[#5E9BF5] text-[#5E9BF5]' : 'text-gray-300 hover:text-[#5E9BF5]'}`} /></button>
                 </div>
                 <p className="text-gray-600 text-lg leading-relaxed text-justify whitespace-pre-line">{description || "No description available."}</p>
+                
+                {/* FACILITIES DYNAMIC RENDER */}
                 <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-6">Facilities</h3>
                     {facilities.length > 0 ? (
                         <div className="flex flex-wrap gap-8">
                             {facilities.map((fac, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-2 group"><div className="p-4 bg-white border border-gray-200 rounded-2xl group-hover:border-[#5E9BF5] transition duration-300 shadow-sm"><div className="text-gray-800">{fac.icon}</div></div><span className="text-sm font-medium text-gray-500">{fac.name}</span></div>
+                                <div key={idx} className="flex flex-col items-center gap-2 group cursor-default">
+                                    <div className="p-4 bg-white border border-gray-200 rounded-2xl group-hover:border-[#5E9BF5] group-hover:text-[#5E9BF5] transition duration-300 shadow-sm text-gray-600">
+                                        {fac.icon}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-500">{fac.name}</span>
+                                </div>
                             ))}
                         </div>
-                    ) : <p className="text-gray-400">Facilities info not available.</p>}
+                    ) : <p className="text-gray-400 italic">No facilities information available in database.</p>}
                 </div>
+
                 <div className="mt-4">
                     <h3 className="text-2xl font-bold text-gray-900 mb-6">Available Ticket</h3>
                     <div className="flex flex-wrap gap-4 mb-6">
@@ -302,62 +309,41 @@ export default function Destination() {
             </div>
 
             <div className="lg:w-1/3 flex flex-col gap-8">
-                {/* MAPS (Fixed Logic) */}
+                {/* MAPS */}
                 <div className="bg-white p-4 rounded-[32px] shadow-lg border border-gray-100">
-                    <div className="w-full h-[200px] bg-gray-200 rounded-2xl overflow-hidden relative group">
+                    <div className="w-full h-[250px] bg-gray-200 rounded-2xl overflow-hidden relative group">
                         {mapsLink && mapsLink.includes('<iframe') ? (
                             <div dangerouslySetInnerHTML={{ __html: mapsLink.replace(/width="\d+"/g, 'width="100%"').replace(/height="\d+"/g, 'height="100%"') }} className="w-full h-full" />
                         ) : (
-                            <div onClick={() => window.open(mapsLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title + " " + location)}`, '_blank')} className="w-full h-full cursor-pointer relative">
-                                <img src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-700" alt="Map Location" />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 group-hover:bg-black/20 transition"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg animate-bounce"><MapPin size={24} className="text-[#5E9BF5]" /></div><span className="text-white text-xs font-bold mt-2 shadow-sm drop-shadow-md">Click to view map</span></div>
-                            </div>
+                            <iframe title="Map Location" width="100%" height="100%" style={{ border: 0 }} loading="lazy" allowFullScreen src={`https://maps.google.com/maps?q=${encodeURIComponent(location || title)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}></iframe>
                         )}
                     </div>
-                    <a href={mapsLink && !mapsLink.includes('<iframe') ? mapsLink : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title + " " + location)}`} target="_blank" rel="noreferrer" className="w-full mt-4 bg-gray-100 hover:bg-[#EBC136] hover:text-white text-gray-700 font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition duration-300"><MapPin size={18} /> View on Google Maps</a>
+                    <a href={mapsLink && !mapsLink.includes('<iframe') ? mapsLink : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || title)}`} target="_blank" rel="noreferrer" className="w-full mt-4 bg-gray-100 hover:bg-[#EBC136] hover:text-white text-gray-700 font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition duration-300">
+                        <MapPin size={18} /> Open in Google Maps
+                    </a>
                 </div>
 
-                {/* REVIEWS CARD */}
+                {/* REVIEWS */}
                 <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100 text-center">
                     <h3 className="text-2xl font-bold text-gray-900 mb-1">Reviews</h3>
                     <div className="text-5xl font-extrabold text-[#EBC136] mb-2">{averageRating()}</div>
-                    <div className="flex justify-center gap-1 mb-2">
-                        {[1,2,3,4,5].map(i => <Star key={i} size={20} fill={i <= Math.round(parseFloat(averageRating())) ? "#EBC136" : "#E5E7EB"} stroke="none" />)}
-                    </div>
+                    <div className="flex justify-center gap-1 mb-2">{[1,2,3,4,5].map(i => <Star key={i} size={20} fill={i <= Math.round(parseFloat(averageRating())) ? "#EBC136" : "#E5E7EB"} stroke="none" />)}</div>
                     <p className="text-xs text-gray-400 mb-6">Based on {reviews.length} reviews</p>
 
-                    {/* Form Input Review */}
                     {currentUser ? (
                         <form onSubmit={handleSubmitReview} className="mb-6 text-left border-t pt-4 border-gray-100">
-                            <label className="text-xs font-bold text-gray-500 mb-2 block">Rate & Review:</label>
-                            <div className="flex gap-2 mb-3 justify-center">
-                                {[1,2,3,4,5].map((star) => (
-                                    <Star key={star} size={28} className={`cursor-pointer transition hover:scale-110 ${star <= userRating ? 'fill-[#EBC136] text-[#EBC136]' : 'text-gray-300'}`} onClick={() => setUserRating(star)} />
-                                ))}
-                            </div>
+                            <div className="flex gap-2 mb-3 justify-center">{[1,2,3,4,5].map((star) => (<Star key={star} size={28} className={`cursor-pointer transition hover:scale-110 ${star <= userRating ? 'fill-[#EBC136] text-[#EBC136]' : 'text-gray-300'}`} onClick={() => setUserRating(star)} />))}</div>
                             <textarea className="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E9BF5] resize-none bg-gray-50" rows="2" placeholder="Write a review..." value={userComment} onChange={(e) => setUserComment(e.target.value)}></textarea>
-                            <button type="submit" disabled={isSubmitting} className="w-full mt-2 bg-[#5E9BF5] text-white py-2 rounded-xl font-bold hover:bg-[#4a90e2] flex justify-center items-center gap-2 transition">
-                                {isSubmitting ? 'Sending...' : 'Kirim'}
-                            </button>
+                            <button type="submit" disabled={isSubmitting} className="w-full mt-2 bg-[#5E9BF5] text-white py-2 rounded-xl font-bold hover:bg-[#4a90e2] flex justify-center items-center gap-2 transition">{isSubmitting ? 'Sending...' : 'Kirim'}</button>
                         </form>
-                    ) : (
-                         <div className="mb-6 bg-blue-50 p-3 rounded-xl text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => navigate('/auth')}>Login to write a review</div>
-                    )}
+                    ) : ( <div className="mb-6 bg-blue-50 p-3 rounded-xl text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => navigate('/auth')}>Login to write a review</div> )}
 
-                    {/* List Review */}
                     <div className="text-left space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                         {reviews.length > 0 ? reviews.map((rev) => (
                             <div key={rev.id_review} className="border-b border-gray-50 pb-3 last:border-0">
-                                <div className="flex justify-between mb-1">
-                                    <h5 className="font-bold text-gray-900 text-sm">{getReviewerName(rev)}</h5>
-                                    <span className="text-[10px] text-gray-400">{rev.created_at ? new Date(rev.created_at).toLocaleDateString() : "Just now"}</span>
-                                </div>
-                                <div className="flex gap-0.5 mb-1">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} size={10} fill={i < rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>
-                                    ))}
-                                </div>
-                                <p className="text-xs text-gray-500 line-clamp-2">{rev.comment}</p>
+                                <div className="flex justify-between mb-1"><h5 className="font-bold text-gray-900 text-sm">{getReviewerName(rev)}</h5><span className="text-[10px] text-gray-400">{rev.created_at ? new Date(rev.created_at).toLocaleDateString() : "Just now"}</span></div>
+                                <div className="flex gap-0.5 mb-1">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>)}</div>
+                                <p className="text-xs text-gray-500 line-clamp-2">{cleanText(rev.comment)}</p>
                             </div>
                         )) : <p className="text-xs text-gray-400 italic text-center py-4">No reviews yet.</p>}
                     </div>
