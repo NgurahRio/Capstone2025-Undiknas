@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetUserFavorites mengembalikan daftar favorite (destinasi) milik user yang terautentikasi.
 func GetUserFavorites(c *gin.Context) {
 	uidVal, exists := c.Get("user_id")
 	if !exists {
@@ -36,19 +35,46 @@ func GetUserFavorites(c *gin.Context) {
 		return
 	}
 
-	// Kumpulkan destination IDs
-	var destIDs []uint
+	destSet := make(map[uint]struct{})
+	eventSet := make(map[uint]struct{})
+
 	for _, f := range favorites {
-		destIDs = append(destIDs, f.DestinationID)
+		if f.DestinationID != nil {
+			destSet[*f.DestinationID] = struct{}{}
+		}
+		if f.EventID != nil {
+			eventSet[*f.EventID] = struct{}{}
+		}
+	}
+
+	destIDs := make([]uint, 0, len(destSet))
+	for id := range destSet {
+		destIDs = append(destIDs, id)
+	}
+
+	eventIDs := make([]uint, 0, len(eventSet))
+	for id := range eventSet {
+		eventIDs = append(eventIDs, id)
 	}
 
 	var destinations []models.Destination
 	if len(destIDs) > 0 {
 		if err := config.DB.Where("id_destination IN ?", destIDs).Find(&destinations).Error; err != nil {
-			// jangan gagal total jika gagal mengambil destinasi, kembalikan favorites saja
 			fmt.Println("warning: gagal mengambil detail destinasi:", err)
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"favorites": favorites, "destinations": destinations})
+	var events []models.Event
+	if len(eventIDs) > 0 {
+		if err := config.DB.Where("id_event IN ?", eventIDs).Find(&events).Error; err != nil {
+			fmt.Println("warning: gagal mengambil detail event:", err)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"favorites":     favorites,
+		"destinations":  destinations,
+		"events":        events,
+		"totalFavorite": len(favorites),
+	})
 }
