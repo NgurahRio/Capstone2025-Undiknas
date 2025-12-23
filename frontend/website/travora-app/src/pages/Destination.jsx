@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { 
-  MapPin, Heart, Star, Camera, Square, User, Users, ShoppingBag, Utensils, 
+  MapPin, Bookmark, Star, Camera, Square, User, Users, ShoppingBag, Utensils, 
   ShieldAlert, CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon, Tag, Clock, FileText
 } from 'lucide-react';
 
@@ -13,6 +13,7 @@ export default function Destination() {
   // --- STATE ---
   const [data, setData] = useState(null);
   const [packages, setPackages] = useState([]); // State untuk Package
+  const [otherDest, setOtherDest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imgIndex, setImgIndex] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -42,6 +43,15 @@ export default function Destination() {
            results = [...results, ...foundUrl];
       }
       return [...new Set(results)];
+  };
+
+  const pickRandom = (arr, limit) => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, limit);
   };
 
   const parseList = (text) => {
@@ -77,7 +87,17 @@ export default function Destination() {
     if (sourceData.facilities && Array.isArray(sourceData.facilities) && sourceData.facilities.length > 0) {
         return sourceData.facilities.map(fac => {
             const realName = fac.namefacility || fac.name_facility || fac.Name || fac.name || "Facility";
-            return { name: realName, icon: getFacilityIcon(realName) };
+            const rawIcon = fac.icon || fac.Icon || "";
+            let iconEl = null;
+            if (rawIcon && typeof rawIcon === 'string') {
+              const src = rawIcon.startsWith('http') || rawIcon.startsWith('data:')
+                ? rawIcon
+                : `data:image/png;base64,${rawIcon}`;
+              iconEl = <img src={src} alt={realName} className="w-6 h-6 object-contain" />;
+            } else {
+              iconEl = getFacilityIcon(realName);
+            }
+            return { name: realName, icon: iconEl };
         });
     }
     return [];
@@ -89,11 +109,24 @@ export default function Destination() {
       return (total / reviews.length).toFixed(1);
   };
 
+  const formatRating = (val) => {
+    const num = parseFloat(val);
+    return Number.isFinite(num) && num > 0 ? num.toFixed(1) : 'New';
+  };
+
   const getReviewerName = (rev) => rev.user?.username || rev.User?.username || rev.username || "Traveler";
+  const getReviewerAvatar = (rev) => {
+    const img = rev.user?.image || rev.User?.image || "";
+    if (!img) return `https://ui-avatars.com/api/?name=${encodeURIComponent(getReviewerName(rev))}&background=5E9BF5&color=fff`;
+    if (typeof img === 'string' && !img.startsWith('http') && !img.startsWith('data:')) {
+      return `data:image/jpeg;base64,${img}`;
+    }
+    return img;
+  };
 
   const cleanText = (text) => {
       if (!text || typeof text !== 'string') return text;
-      return text.replace(/â€™/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"');
+      return text.replace(/Ã¢â‚¬â„¢/g, "'").replace(/Ã¢â‚¬Å“/g, '"').replace(/Ã¢â‚¬/g, '"');
   };
 
   // --- FETCH DATA ---
@@ -128,22 +161,63 @@ export default function Destination() {
 
         // 3. GET REVIEWS
         try {
-            const resRev = await api.get(`/review`, { params: { destination_id: id } });
+            const resRev = await api.get(`/review`, { params: { destinationId: id } });
             const apiReviews = resRev.data.data || resRev.data;
             if (Array.isArray(apiReviews)) {
                 setReviews(apiReviews.filter(r => String(r.destinationId || r.destination_id) === String(id)));
             }
-        } catch (error) {}
-
-        // 4. LOCAL DATA
-        const localReviews = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
-        setReviews(prev => [...localReviews, ...prev]);
+        } catch (error) {
+            console.warn("Review fetch error:", error);
+        }
 
         const userStr = localStorage.getItem('travora_user'); 
         if (userStr) setCurrentUser(JSON.parse(userStr));
 
-        const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
-        setIsBookmarked(savedBookmarks.some(item => String(item.id) === String(id)));
+        // cek bookmark dari backend
+        const token = localStorage.getItem('travora_token');
+        if (token) {
+          try {
+            const favRes = await api.get('/user/favorite');
+            const favs = favRes.data?.favorites || [];
+            const found = favs.some((f) => String(f.destinationId || f.destination_id) === String(id));
+            setIsBookmarked(found);
+          } catch (favErr) {
+            console.warn('Gagal cek favorite backend:', favErr);
+          }
+        } else {
+          // fallback: local storage (mode lama)
+          const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
+          setIsBookmarked(savedBookmarks.some(item => String(item.id) === String(id)));
+        }
+
+        // 6. DESTINATION LAIN (acak rekomendasi maks 8 + rating backend)
+        try {
+          const resAll = await api.get('/destinations');
+          const all = Array.isArray(resAll.data) ? resAll.data : resAll.data.data || [];
+          const filtered = all.filter((d) => String(d.id_destination || d.id || d.ID) !== String(id));
+
+          const withRating = await Promise.all(
+            filtered.map(async (dest) => {
+              const destId = dest.id_destination || dest.id || dest.ID;
+              let calculatedRating = 0;
+              try {
+                const resRev = await api.get('/review', { params: { destinationId: destId } });
+                const reviews = resRev.data.data || resRev.data;
+                if (Array.isArray(reviews) && reviews.length > 0) {
+                  const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0), 0);
+                  calculatedRating = total / reviews.length;
+                }
+              } catch (revErr) {
+                console.warn('Gagal ambil rating rekomendasi:', revErr);
+              }
+              return { ...dest, calculatedRating };
+            })
+          );
+
+          setOtherDest(pickRandom(withRating, 8));
+        } catch (errAll) {
+          console.warn('Gagal load destinasi lain:', errAll);
+        }
 
       } catch (err) {
         console.error("Error:", err);
@@ -160,34 +234,46 @@ export default function Destination() {
       if (!currentUser) { navigate('/auth'); return; }
       if (userRating === 0) return alert("Pilih bintang dulu.");
       
-      const hasReviewed = reviews.some(r => String(r.userId) === String(currentUser.id || currentUser.id_user));
-      if (hasReviewed) return alert("Anda sudah mereview tempat ini.");
-
       setIsSubmitting(true);
-      const newReview = { 
-          id_review: Date.now(), userId: currentUser.id || currentUser.id_user, 
-          username: currentUser.username || "User", rating: parseInt(userRating), 
-          comment: userComment, created_at: new Date().toISOString(), destinationId: id 
-      };
-      try { await api.post('/user/review', { destinationId: parseInt(id), userId: parseInt(currentUser.id || currentUser.id_user), rating: parseInt(userRating), comment: userComment }); } catch (error) {}
-      
-      const updatedLocal = [newReview, ...JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]')];
-      localStorage.setItem(`travora_reviews_${id}`, JSON.stringify(updatedLocal));
-      setReviews([newReview, ...reviews]);
-      setUserRating(0); setUserComment(""); setIsSubmitting(false);
-      alert("Review berhasil dikirim!");
+      try { 
+        await api.post('/user/review', { destinationId: parseInt(id), rating: parseInt(userRating), comment: userComment }); 
+        // refresh reviews from backend
+        const resRev = await api.get(`/review`, { params: { destinationId: id } });
+        const apiReviews = resRev.data.data || resRev.data;
+        if (Array.isArray(apiReviews)) {
+            setReviews(apiReviews.filter(r => String(r.destinationId || r.destination_id) === String(id)));
+        }
+        setUserRating(0); 
+        setUserComment(""); 
+        alert("Review berhasil dikirim!");
+      } catch (error) {
+        console.error("Review submit error:", error);
+        const msg = error?.response?.data?.error || "Gagal mengirim review.";
+        alert(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
   };
 
-  const handleBookmark = () => {
-    const saved = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
-    if (isBookmarked) {
-        localStorage.setItem('travora_bookmarks', JSON.stringify(saved.filter(i => String(i.id) !== String(id))));
+  const handleBookmark = async () => {
+    const token = localStorage.getItem('travora_token');
+    if (!currentUser || !token) {
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      if (isBookmarked) {
+        await api.delete(`/user/favorite/${id}`);
         setIsBookmarked(false);
-    } else {
-        const imgs = findAllImagesInObject(data);
-        saved.push({ id: String(id), title: cleanText(data.namedestination), location: cleanText(data.location), img: imgs[0], rating: averageRating() });
-        localStorage.setItem('travora_bookmarks', JSON.stringify(saved));
+      } else {
+        await api.post('/user/favorite', { destinationId: Number(id) });
         setIsBookmarked(true);
+      }
+    } catch (err) {
+      console.error('Bookmark action failed:', err?.response?.data || err);
+      const msg = err?.response?.data?.error || 'Gagal memperbarui bookmark. Pastikan sudah login.';
+      alert(msg);
     }
   };
 
@@ -195,7 +281,14 @@ export default function Destination() {
   if (!data) return <div className="h-screen flex items-center justify-center">Data Not Found</div>;
 
   // --- VARS ---
+  const placeholderImg = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80';
   const images = findAllImagesInObject(data);
+  const displayImages = (() => {
+    const filtered = images.filter(
+      (img) => typeof img === 'string' && (img.startsWith('http') || img.startsWith('data:'))
+    );
+    return filtered.length > 0 ? filtered : [placeholderImg];
+  })();
   const title = cleanText(data.namedestination || data.NameDestination);
   const location = cleanText(data.location);
   const description = cleanText(data.description);
@@ -206,9 +299,9 @@ export default function Destination() {
   const safety = cleanText(data.safety);
   const facilities = getFacilities(data);
 
-  const currentImg = images.length > 0 ? images[imgIndex] : null;
-  const nextImage = () => setImgIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  const prevImage = () => setImgIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  const currentImg = displayImages[imgIndex] || placeholderImg;
+  const nextImage = () => setImgIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+  const prevImage = () => setImgIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
 
   return (
     <div className="w-full pb-20 bg-white min-h-screen font-sans text-[#1F2937]">
@@ -222,16 +315,26 @@ export default function Destination() {
 
       {/* SLIDER */}
       <div className="max-w-6xl mx-auto w-full px-6 lg:px-8 py-10">
-          <div className="flex items-center gap-2 mb-6 text-base text-gray-500 font-medium"><span className="text-[#5E9BF5] cursor-pointer hover:underline" onClick={() => navigate('/')}>Home</span><span className="text-gray-300">›</span><span className="text-gray-700">Destination</span></div>
-          <div className="w-full h-[400px] md:h-[550px] rounded-[40px] overflow-hidden relative shadow-2xl mb-8 group bg-gray-100 border border-gray-200">
-              {currentImg ? <img src={currentImg} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={title} /> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2"><Camera size={64} className="opacity-50"/><span className="font-medium text-lg">No Image Available</span></div>}
+          <div className="flex items-center gap-2 mb-6 text-base text-gray-500 font-medium">
+            <span className="text-[#5E9BF5] cursor-pointer hover:underline" onClick={() => navigate('/')}>Home</span>
+            <span className="text-gray-300">›</span>
+            <span className="text-gray-700">Destination</span>
           </div>
-          {images.length > 1 && (
-            <div className="flex justify-center items-center gap-12 text-gray-500 font-medium text-lg">
-                <button onClick={prevImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group cursor-pointer select-none"><div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronLeft size={24} className="group-hover:text-[#5E9BF5]" /></div> Back</button>
-                <button onClick={nextImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group cursor-pointer select-none">Next <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#5E9BF5] transition"><ChevronRight size={24} className="group-hover:text-[#5E9BF5]" /></div></button>
-            </div>
-          )}
+          <div className="w-full h-[400px] md:h-[550px] rounded-[40px] overflow-hidden relative shadow-2xl mb-6 group bg-gray-100 border border-gray-200">
+              <img src={currentImg} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={title} onError={(e)=>{e.currentTarget.src=placeholderImg;}} />
+
+              {displayImages.length > 1 && (
+                <>
+                  <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/85 backdrop-blur border border-gray-200 shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-[#5E9BF5] transition">
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/85 backdrop-blur border border-gray-200 shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-[#5E9BF5] transition">
+                    <ChevronRight size={24} />
+                  </button>
+
+                </>
+              )}
+          </div>
       </div>
 
       {/* DETAIL */}
@@ -240,7 +343,16 @@ export default function Destination() {
             <div className="lg:w-2/3 space-y-10">
                 <div className="flex justify-between items-start">
                     <div><h2 className="text-4xl font-extrabold text-gray-900 mb-2">{title}</h2><div className="flex items-center gap-2 text-gray-500 text-lg"><MapPin size={22} className="text-gray-800" /><span>{location}</span></div></div>
-                    <button onClick={handleBookmark} className="mt-1"><Heart size={40} className={`transition duration-300 drop-shadow-sm ${isBookmarked ? 'fill-[#5E9BF5] text-[#5E9BF5]' : 'text-gray-300 hover:text-[#5E9BF5]'}`} /></button>
+                    <button onClick={handleBookmark} className="mt-1">
+                      <Bookmark
+                        size={40}
+                        className={`transition duration-300 drop-shadow-sm ${
+                          isBookmarked
+                            ? 'fill-[#5E9BF5] text-[#5E9BF5]'
+                            : 'text-gray-300 hover:text-[#5E9BF5]'
+                        }`}
+                      />
+                    </button>
                 </div>
                 <p className="text-gray-600 text-lg leading-relaxed text-justify whitespace-pre-line">{description || "No description available."}</p>
                 
@@ -342,10 +454,18 @@ export default function Destination() {
 
                     <div className="text-left space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                         {reviews.length > 0 ? reviews.map((rev) => (
-                            <div key={rev.id_review} className="border-b border-gray-50 pb-3 last:border-0">
-                                <div className="flex justify-between mb-1"><h5 className="font-bold text-gray-900 text-sm">{getReviewerName(rev)}</h5><span className="text-[10px] text-gray-400">{rev.created_at ? new Date(rev.created_at).toLocaleDateString() : "Just now"}</span></div>
-                                <div className="flex gap-0.5 mb-1">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>)}</div>
-                                <p className="text-xs text-gray-500 line-clamp-2">{cleanText(rev.comment)}</p>
+                            <div key={rev.id_review} className="border-b border-gray-50 pb-3 last:border-0 flex gap-3">
+                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                    <img src={getReviewerAvatar(rev)} alt={getReviewerName(rev)} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between mb-1">
+                                        <h5 className="font-bold text-gray-900 text-sm">{getReviewerName(rev)}</h5>
+                                        <span className="text-[10px] text-gray-400">{rev.created_at ? new Date(rev.created_at).toLocaleDateString() : "Just now"}</span>
+                                    </div>
+                                    <div className="flex gap-0.5 mb-1">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < rev.rating ? "#EBC136" : "#E5E7EB"} stroke="none"/>)}</div>
+                                    <p className="text-xs text-gray-500 line-clamp-2">{cleanText(rev.comment)}</p>
+                                </div>
                             </div>
                         )) : <p className="text-xs text-gray-400 italic text-center py-4">No reviews yet.</p>}
                     </div>
@@ -353,6 +473,48 @@ export default function Destination() {
             </div>
         </div>
       </div>
+
+      {/* ALL DESTINATION */}
+      {otherDest.length > 0 && (
+        <div className="max-w-7xl mx-auto w-full px-6 lg:px-10 py-10">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Destination Recommendations</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {otherDest.map((item) => {
+              const imgs = findAllImagesInObject(item);
+              const img = imgs[0] || placeholderImg;
+              const rating = formatRating(item.rating || item.calculatedRating);
+              const tag = (item.subcategory && item.subcategory[0]?.namesubcategories) || item.category || 'Recommended';
+              const desc = item.description || 'Discover this amazing destination.';
+              return (
+                <div
+                  key={item.id_destination || item.id || item.ID}
+                  onClick={() => navigate(`/destination/${item.id_destination || item.id || item.ID}`)}
+                  className="rounded-[18px] overflow-hidden shadow-md border border-gray-100 bg-white hover:-translate-y-1 transition cursor-pointer flex flex-col"
+                >
+                  <div className="h-36 w-full overflow-hidden">
+                    <img src={img} alt={item.namedestination} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-4 flex flex-col gap-2 flex-1">
+                    <div className="flex items-center justify-between text-sm font-semibold text-gray-700">
+                      <div className="flex items-center gap-2">
+                        <Star size={16} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
+                        <span>{rating}</span>
+                      </div>
+                      <span className="text-[11px] font-semibold text-[#2f5aa5] bg-[#E9F2FF] px-3 py-1 rounded-full">
+                        {tag}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-gray-900 text-base leading-tight line-clamp-2">{item.namedestination || item.NameDestination}</h4>
+                    <p className="text-sm text-gray-500 leading-snug line-clamp-2">{desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+
