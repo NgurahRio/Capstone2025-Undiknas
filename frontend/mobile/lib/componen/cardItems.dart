@@ -83,31 +83,28 @@ class CardItems1 extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8, bottom: 8),
-                          child: Text(
-                            subtitle,
-                            style: TextStyle(
-                              fontSize: isBookmark == true ? 14 : 12,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.white,
-                              shadows: const [
-                                Shadow(
-                                  offset: Offset(0, 1.5),
-                                  blurRadius: 6,
-                                  color: Colors.black54, 
-                                ),
-                              ],
-                            ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: isBookmark == true ? 14 : 12,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(
+                            offset: Offset(0, 1.5),
+                            blurRadius: 6,
+                            color: Colors.black54, 
                           ),
-                        ) 
+                        ],
                       ),
-      
-                      if (categories != null && categories!.isNotEmpty)
+                    ),
+                  ),
+                  if (categories != null && categories!.isNotEmpty)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
                         Padding(
                           padding: const EdgeInsets.all(5),
                           child: Wrap(
@@ -141,9 +138,9 @@ class CardItems1 extends StatelessWidget {
                                     ))
                                 .toList(),
                           ),
-                        )
-                    ],
-                  ),
+                        ),
+                      ],
+                    )
                 ],
               )
             ],

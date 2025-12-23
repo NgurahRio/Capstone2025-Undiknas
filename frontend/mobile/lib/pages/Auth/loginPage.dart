@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/textField.dart';
-import 'package:mobile/models/user_model.dart';
+import 'package:mobile/pages/Auth/auth_service.dart';
 import 'package:mobile/pages/Auth/forgetPassword.dart';
 import 'package:mobile/pages/Auth/registerPage.dart';
 import 'package:mobile/pages/bottonNavigation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -59,25 +58,6 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  Future<void> _saveLogin(User user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('user_id', user.id_user);
-    User.currentUser = user;
-  }
-
-  // simple local authentication using the `users` list below
-  User? _authenticate(String email, String password) {
-    try {
-      return users.firstWhere(
-        (u) =>
-          u.email.trim().toLowerCase() == email.trim().toLowerCase() &&
-          u.password == password,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
   void _showSnackBar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -85,40 +65,39 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  void _onLoginPressed() async {
+  void handleLogin() async {
     FocusScope.of(context).unfocus();
 
     if (_isAuthenticating) return;
 
-    final email = emailController.text;
-    final pass = passwordController.text;
+    final identifier = emailController.text.trim();
+    final password = passwordController.text;
 
-    if (email.isEmpty || pass.isEmpty) {
-      _showSnackBar('Email dan password harus diisi.');
+    if (identifier.isEmpty || password.isEmpty) {
+      _showSnackBar('Email/Username dan password harus diisi.');
       return;
     }
 
     setState(() => _isAuthenticating = true);
 
-    final user = _authenticate(email, pass);
-
-    if (user == null) {
-      setState(() => _isAuthenticating = false);
-      _showSnackBar('Email atau password salah.');
-      return;
-    }
-
     try {
-      await _controller.forward();
+      final user = await AuthService.login(
+        identifier: identifier,
+        password: password,
+      );
 
-      await _saveLogin(user);
+      await _controller.forward();
 
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => BottonNavigation(currentUser: user,)),
+          MaterialPageRoute(
+            builder: (_) => BottonNavigation(currentUser: user),
+          ),
         );
       }
+    } catch (e) {
+      _showSnackBar(e.toString().replaceAll('Exception: ', ''));
     } finally {
       _controller.reset();
       if (mounted) setState(() => _isAuthenticating = false);
@@ -220,7 +199,7 @@ class _LoginPageState extends State<LoginPage>
                             padding: const EdgeInsets.only(top: 20, bottom: 15),
                             child: ButtonCostum(
                               text: "Login",
-                              onPressed: _onLoginPressed,
+                              onPressed: handleLogin,
                             ),
                           ),
                           ButtonCostum(

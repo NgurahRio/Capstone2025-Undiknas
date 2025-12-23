@@ -3,8 +3,8 @@ import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/formateImage.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/user_model.dart';
+import 'package:mobile/pages/Auth/auth_service.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
@@ -263,8 +263,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  
-
   Widget _buttonEdit({
     required IconData icon,
     required String title,
@@ -341,15 +339,20 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void _handleLogout() async{
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_id');
-    User.currentUser = null;
+  void handleLogout(BuildContext context) async {
+    try {
+      await AuthService.logout();
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   void _handleChangePassword() {
@@ -568,7 +571,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     borderRadius: BorderRadius.circular(50),
                                   ),
                                 ),
-                                onPressed: _handleLogout,
+                                onPressed: () => handleLogout(context),
                                 child: const Wrap(
                                   spacing: 5,
                                   crossAxisAlignment: WrapCrossAlignment.center,

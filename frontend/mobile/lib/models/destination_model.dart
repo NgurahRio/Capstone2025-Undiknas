@@ -1,7 +1,10 @@
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:mobile/api.dart';
 import 'package:mobile/models/facility_model.dart';
 import 'package:mobile/models/sos_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<String> _parseList(dynamic value) {
   if (value == null) return [];
@@ -12,7 +15,7 @@ List<String> _parseList(dynamic value) {
 
   if (value is String) {
     return value
-        .split(RegExp(r'[,\n]')) // support koma & newline
+        .split(RegExp(r'[,\n]'))
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
@@ -87,6 +90,33 @@ class Destination {
           : null,
     );
   }
+}
+
+Future<List<Destination>> getDestinations() async {
+  final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Token tidak ditemukan');
+    }
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/destinations'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  print('RAW RESPONSE BODY:');
+  print(response.body);
+  
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil destination');
+  }
+  final decoded = jsonDecode(response.body);
+  final List list = decoded['data'];
+  return list.map((e) => Destination.fromJson(e)).toList();
 }
 
 List<SubCategory> getSubCategory(List<int> idSubc) {

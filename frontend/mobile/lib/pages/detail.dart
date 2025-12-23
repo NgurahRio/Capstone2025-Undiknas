@@ -826,7 +826,9 @@ class _DetailPageState extends State<DetailPage> {
                                                 final subPkg = entry.key;
                                                 final data = entry.value;
 
+                                                // ignore: unused_local_variable
                                                 final price = data["price"] as int;
+                                                // ignore: unused_local_variable
                                                 final includes = List<Map<String, dynamic>>.from(data["include"]);
 
                                                 final isSelected =

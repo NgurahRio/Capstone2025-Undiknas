@@ -22,6 +22,18 @@ class EventPage extends StatefulWidget {
 class _EventPageState extends State<EventPage> {
 
   DateTime? _selectedDate;
+  List<Event> events = [];
+
+  Future<void> loadEvents() async {
+    try {
+      final data = await getEvents();
+      setState(() {
+        events = data;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
 
   List<Event> get _filteredData {
     if (_selectedDate == null) return events;
@@ -48,6 +60,12 @@ class _EventPageState extends State<EventPage> {
         return false;
       }
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadEvents();
   }
   
   @override
