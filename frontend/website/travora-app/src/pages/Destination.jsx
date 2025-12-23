@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { 
-  MapPin, Heart, Star, Camera, Square, User, ShoppingBag, Utensils, 
-  ShieldAlert, CheckCircle, Info, Ticket, ChevronLeft, ChevronRight 
+  MapPin, Heart, Star, Camera, Square, User, Users, ShoppingBag, Utensils, 
+  ShieldAlert, CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon
 } from 'lucide-react';
 
 export default function Destination() {
@@ -13,7 +13,7 @@ export default function Destination() {
   // --- STATE ---
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [imgIndex, setImgIndex] = useState(0); // State untuk geser gambar
+  const [imgIndex, setImgIndex] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [activeTab, setActiveTab] = useState('ticket');
 
@@ -24,36 +24,22 @@ export default function Destination() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // --- 1. HELPER IMAGE SCANNER (MULTI-IMAGE SUPPORT) ---
+  // --- 1. HELPER IMAGE SCANNER ---
   const findAllImagesInObject = (obj) => {
       if (!obj) return [];
-
-      // 1. Ubah seluruh object data menjadi string raksasa
       const stringifiedData = JSON.stringify(obj);
-
-      // 2. Cari semua pola "/9j/..." (Base64 JPG)
       const regexBase64 = /\/9j\/[A-Za-z0-9+/=]+/g;
       const foundBase64 = stringifiedData.match(regexBase64);
-
       let results = [];
-
       if (foundBase64 && foundBase64.length > 0) {
-          // Tambahkan header ke setiap gambar yang ditemukan
           const base64Images = foundBase64.map(str => `data:image/jpeg;base64,${str}`);
           results = [...results, ...base64Images];
       }
-
-      // 3. Cari juga URL biasa (jaga-jaga campuran)
-      // Mencari string yang diawali http/https dan diakhiri tanda kutip
       const regexUrl = /https?:\/\/[^"\s\\]+/g;
       const foundUrl = stringifiedData.match(regexUrl);
-
       if (foundUrl && foundUrl.length > 0) {
-           // Filter URL valid gambar (opsional, tapi aman diambil semua dulu)
            results = [...results, ...foundUrl];
       }
-
-      // Hapus duplikat jika ada
       return [...new Set(results)];
   };
 
@@ -63,21 +49,48 @@ export default function Destination() {
     return text.split(/\r?\n|,/).filter(item => item.trim() !== "");
   };
 
-  const getFacilities = (idsString) => {
-    if (!idsString) return [];
-    const ids = String(idsString).split(',').map(s => s.trim());
-    const facilityDict = {
-        '1': { name: 'Parking', icon: <Square size={24}/> },
-        '2': { name: 'Toilet', icon: <Info size={24}/> },
-        '3': { name: 'Musholla', icon: <User size={24}/> },
-        '4': { name: 'Resto', icon: <Utensils size={24}/> },
-        '5': { name: 'Shop', icon: <ShoppingBag size={24}/> },
-        '11': { name: 'Photo Spot', icon: <Camera size={24}/> },
-        '12': { name: 'WiFi', icon: <Info size={24}/> },
-        '13': { name: 'Guide', icon: <User size={24}/> },
-        '14': { name: 'Ticket', icon: <Ticket size={24}/> },
-    };
-    return ids.map(id => facilityDict[id] || { name: 'Facility', icon: <Info size={24}/> });
+  // --- 2. FACILITY LOGIC (PURE DATABASE) ---
+  
+  // A. Mapping Visual Saja (Nama Fasilitas DB -> Ikon Lucide)
+  // Kita TIDAK memetakan ID lagi, hanya mencocokkan teks nama fasilitas ke Ikon biar cantik.
+  const getFacilityIcon = (dbName) => {
+      if (!dbName) return <CheckCircle size={24}/>;
+      const lower = dbName.toLowerCase();
+
+      // Logika pencocokan kata kunci
+      if (lower.includes('park')) return <Car size={24}/>;
+      if (lower.includes('toilet') || lower.includes('wc') || lower.includes('kamar mandi')) return <Info size={24}/>;
+      if (lower.includes('musholla') || lower.includes('prayer') || lower.includes('masjid')) return <Moon size={24}/>;
+      if (lower.includes('resto') || lower.includes('makan') || lower.includes('warung') || lower.includes('food')) return <Utensils size={24}/>;
+      if (lower.includes('shop') || lower.includes('toko') || lower.includes('souvenir') || lower.includes('oleh')) return <ShoppingBag size={24}/>;
+      if (lower.includes('photo') || lower.includes('foto') || lower.includes('spot')) return <Camera size={24}/>;
+      if (lower.includes('wifi') || lower.includes('internet')) return <Wifi size={24}/>;
+      if (lower.includes('guide') || lower.includes('pemandu')) return <Users size={24}/>;
+      if (lower.includes('ticket') || lower.includes('tiket') || lower.includes('loket')) return <Ticket size={24}/>;
+      
+      return <CheckCircle size={24}/>; // Ikon default kalau nama fasilitas tidak dikenali
+  };
+
+  // B. Fungsi Utama: HANYA MENGAMBIL DARI ARRAY FACILITIES
+  const getFacilities = (sourceData) => {
+    if (!sourceData) return [];
+
+    // Cek apakah Backend mengirim array 'facilities' (Hasil Preload/Join)
+    if (sourceData.facilities && Array.isArray(sourceData.facilities) && sourceData.facilities.length > 0) {
+        return sourceData.facilities.map(fac => {
+            // Ambil nama dari berbagai kemungkinan key JSON backend (jaga-jaga)
+            const realName = fac.namefacility || fac.name_facility || fac.Name || fac.name || "Unknown Facility";
+            
+            return {
+                name: realName, 
+                icon: getFacilityIcon(realName)
+            };
+        });
+    }
+
+    // Jika tidak ada data array facilities dari DB, kembalikan kosong.
+    // TIDAK ADA LAGI MANUAL MAP DISINI.
+    return [];
   };
 
   const averageRating = () => {
@@ -93,21 +106,22 @@ export default function Destination() {
       return text.replace(/â€™/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"');
   };
 
-  // --- 2. FETCH DATA ---
+  // --- FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // A. DESTINASI
         const resDetail = await api.get(`/destinations/${id}`);
+        
+        // Debugging: Cek di console apakah 'facilities' array masuk
+        console.log("DATA DB:", resDetail.data);
+
         const destData = resDetail.data.data || resDetail.data; 
         const finalData = Array.isArray(destData) ? destData[0] : destData;
         
         if (!finalData) throw new Error("Data kosong");
         setData(finalData);
 
-        // B. REVIEW
         try {
             const resRev = await api.get(`/review`, { params: { destination_id: id } });
             const apiReviews = resRev.data.data || resRev.data;
@@ -119,11 +133,9 @@ export default function Destination() {
         const localReviews = JSON.parse(localStorage.getItem(`travora_reviews_${id}`) || '[]');
         setReviews(prev => [...localReviews, ...prev]);
 
-        // C. USER
         const userStr = localStorage.getItem('travora_user'); 
         if (userStr) setCurrentUser(JSON.parse(userStr));
 
-        // D. BOOKMARK
         const savedBookmarks = JSON.parse(localStorage.getItem('travora_bookmarks') || '[]');
         setIsBookmarked(savedBookmarks.some(item => String(item.id) === String(id)));
 
@@ -136,7 +148,7 @@ export default function Destination() {
     fetchData();
   }, [id]);
 
-  // --- 3. SUBMIT REVIEW ---
+  // --- ACTIONS ---
   const handleSubmitReview = async (e) => {
       e.preventDefault();
       if (!currentUser) { navigate('/auth'); return; }
@@ -146,7 +158,6 @@ export default function Destination() {
       if (hasReviewed) return alert("Anda sudah mereview tempat ini.");
 
       setIsSubmitting(true);
-      
       const newReview = { 
           id_review: Date.now(), 
           userId: currentUser.id || currentUser.id_user, 
@@ -183,7 +194,7 @@ export default function Destination() {
   if (!data) return <div className="h-screen flex items-center justify-center">Data Not Found</div>;
 
   // --- VARIABLES ---
-  const images = findAllImagesInObject(data); // <-- MENGAMBIL SEMUA GAMBAR
+  const images = findAllImagesInObject(data);
   const title = cleanText(data.namedestination || data.NameDestination);
   const location = cleanText(data.location);
   const description = cleanText(data.description);
@@ -191,10 +202,11 @@ export default function Destination() {
   const doList = parseList(data.do).map(cleanText);
   const dontList = parseList(data.dont).map(cleanText);
   const safety = cleanText(data.safety);
-  const facilities = getFacilities(data.facilityId);
+  
+  // Panggil Facility Logic (Strict Database)
+  const facilities = getFacilities(data); 
+  
   const price = data.price;
-
-  // Logic Slider
   const currentImg = images.length > 0 ? images[imgIndex] : null;
   const nextImage = () => setImgIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   const prevImage = () => setImgIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -221,11 +233,7 @@ export default function Destination() {
           
           <div className="w-full h-[400px] md:h-[550px] rounded-[40px] overflow-hidden relative shadow-2xl mb-8 group bg-gray-100 border border-gray-200">
               {currentImg ? (
-                  <img 
-                    src={currentImg} 
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" 
-                    alt={title} 
-                  />
+                  <img src={currentImg} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={title} />
               ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
                      <Camera size={64} className="opacity-50"/>
@@ -234,7 +242,6 @@ export default function Destination() {
               )}
           </div>
           
-          {/* TOMBOL SLIDER (Hanya muncul jika gambar > 1) */}
           {images.length > 1 && (
             <div className="flex justify-center items-center gap-12 text-gray-500 font-medium text-lg">
                 <button onClick={prevImage} className="flex items-center gap-3 hover:text-[#5E9BF5] transition group cursor-pointer select-none">
@@ -261,15 +268,21 @@ export default function Destination() {
                 </div>
                 <p className="text-gray-600 text-lg leading-relaxed text-justify whitespace-pre-line">{description || "No description available."}</p>
                 
+                {/* FACILITIES DYNAMIC RENDER */}
                 <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-6">Facilities</h3>
                     {facilities.length > 0 ? (
                         <div className="flex flex-wrap gap-8">
                             {facilities.map((fac, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-2 group"><div className="p-4 bg-white border border-gray-200 rounded-2xl group-hover:border-[#5E9BF5] transition duration-300 shadow-sm"><div className="text-gray-800">{fac.icon}</div></div><span className="text-sm font-medium text-gray-500">{fac.name}</span></div>
+                                <div key={idx} className="flex flex-col items-center gap-2 group cursor-default">
+                                    <div className="p-4 bg-white border border-gray-200 rounded-2xl group-hover:border-[#5E9BF5] group-hover:text-[#5E9BF5] transition duration-300 shadow-sm text-gray-600">
+                                        {fac.icon}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-500">{fac.name}</span>
+                                </div>
                             ))}
                         </div>
-                    ) : <p className="text-gray-400">Facilities info not available.</p>}
+                    ) : <p className="text-gray-400 italic">No facilities information available in database.</p>}
                 </div>
 
                 <div className="mt-4">
@@ -296,7 +309,6 @@ export default function Destination() {
             </div>
 
             <div className="lg:w-1/3 flex flex-col gap-8">
-                
                 {/* MAPS */}
                 <div className="bg-white p-4 rounded-[32px] shadow-lg border border-gray-100">
                     <div className="w-full h-[250px] bg-gray-200 rounded-2xl overflow-hidden relative group">
