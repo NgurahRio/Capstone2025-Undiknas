@@ -26,80 +26,39 @@ const EventCardList = ({ item, onPress }) => {
     return img || fallback;
   };
 
-  const getDateParts = (dateStr) => {
-    if (!dateStr) return { day: '??', month: 'TBA' };
-    const d = new Date(dateStr);
-    return {
-        day: d.getDate(),
-        month: d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()
-    };
+  const priceLabel = () => {
+    if (!item.price || parseFloat(item.price) <= 0) return "FREE ACCESS";
+    const val = parseFloat(item.price);
+    return `IDR ${Math.round(val).toLocaleString('id-ID')}`;
   };
-
-  const { day, month } = getDateParts(item.start_date);
 
   return (
     <div 
       onClick={onPress}
-      className="group cursor-pointer bg-white rounded-[20px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
+      className="group cursor-pointer bg-white rounded-[18px] border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
     >
-        {/* --- BAGIAN ATAS: GAMBAR (LEBIH PENDEK 140px) --- */}
-        <div className="h-[140px] w-full relative overflow-hidden">
+        {/* Gambar */}
+        <div className="h-[150px] w-full overflow-hidden">
             <img 
                 src={processImage(item.image_event)} 
                 alt={item.nameevent} 
                 className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
             />
-            
-            {/* Overlay */}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
-
-            {/* BADGE TANGGAL KECIL */}
-            <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-md rounded-[12px] w-[40px] h-[45px] flex flex-col items-center justify-center shadow-md">
-                <span className="text-[9px] font-bold text-gray-400 tracking-wider uppercase leading-none mb-0.5">{month}</span>
-                <span className="text-lg font-black text-[#5E9BF5] leading-none">{day}</span>
-            </div>
-
-            {/* BADGE HARGA KECIL */}
-            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
-                <span className="text-[10px] font-bold text-white tracking-wide">
-                    {item.price && parseFloat(item.price) > 0 
-                        ? `IDR ${parseInt(item.price / 1000)}K` 
-                        : "FREE"
-                    }
-                </span>
-            </div>
         </div>
 
-        {/* --- BAGIAN BAWAH: DESKRIPSI COMPACT --- */}
-        <div className="p-3 flex flex-col gap-2 flex-1">
-            
-            {/* Judul & Lokasi */}
-            <div>
-                <h3 className="text-base font-bold text-gray-900 mb-1 leading-tight group-hover:text-[#5E9BF5] transition line-clamp-2">
-                    {item.nameevent || "Event"}
-                </h3>
-                
-                <div className="flex items-center gap-1.5 text-gray-500 text-[11px] font-medium">
-                    <MapPin size={12} className="text-[#5E9BF5] flex-shrink-0" />
-                    <span className="truncate">{item.location || "Bali"}</span>
-                </div>
+        {/* Konten */}
+        <div className="p-4 flex flex-col gap-2 flex-1">
+            <h3 className="text-base font-bold text-gray-900 leading-tight">{item.nameevent || "Event"}</h3>
+            <div className="flex items-center gap-1.5 text-gray-500 text-[12px] font-medium">
+                <MapPin size={12} className="text-[#5E9BF5] flex-shrink-0" />
+                <span className="truncate">{item.location || "Bali"}</span>
             </div>
+            <p className="text-sm text-gray-500 leading-snug line-clamp-2">{item.description || "Exciting experience awaits you."}</p>
 
-            {/* Garis */}
-            <div className="w-full h-[1px] bg-gray-100 my-1"></div>
-
-            {/* Waktu & Tombol */}
-            <div className="flex items-center justify-between mt-auto">
-                {item.start_time ? (
-                    <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold bg-gray-50 px-2 py-1 rounded-full">
-                        <Clock size={10} />
-                        <span>{item.start_time.slice(0, 5)}</span>
-                    </div>
-                ) : <div></div>}
-
-                <div className="w-7 h-7 rounded-full bg-[#5E9BF5] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
-                    <ArrowRight size={14} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
-                </div>
+            <div className="mt-auto flex justify-end">
+              <span className="text-[11px] font-bold text-white bg-[#82B1FF] px-3 py-2 rounded-md shadow-sm">
+                {priceLabel()}
+              </span>
             </div>
         </div>
     </div>
@@ -189,7 +148,7 @@ export default function EventSection() {
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
          <div className="w-1.5 h-8 bg-[#5E9BF5] rounded-full"></div>
-         <h2 className="text-4xl font-bold text-gray-900">Today's Event</h2>
+         <h2 className="text-4xl font-bold text-gray-900">Event Today</h2>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -205,12 +164,12 @@ export default function EventSection() {
                     <div className="flex items-center justify-between px-1 mb-3">
                         <p className="text-xs text-gray-500">
                            {isDateInRange(toDBFormat(selectedDate), filteredEvents[0].start_date, filteredEvents[0].end_date)
-                             ? <span>On: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('en-GB')}</span></span>
-                             : <span>Showing: <span className="font-bold text-[#5E9BF5]">Suggestions</span></span>
+                            ? <span>On: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('en-GB')}</span></span>
+                             : <span>Menampilkan: <span className="font-bold text-[#5E9BF5]">Rekomendasi</span></span>
                            }
                         </p>
                         <button onClick={handleReset} className="text-[10px] text-[#5E9BF5] font-bold flex items-center gap-1 hover:underline">
-                            <RefreshCw size={10} /> Show All
+                            <RefreshCw size={10} /> Tampilkan Semua
                         </button>
                     </div>
                     
@@ -227,8 +186,8 @@ export default function EventSection() {
                 </>
             ) : (
                 <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-[32px] border border-dashed border-gray-200 py-12">
-                    <p className="text-gray-500 font-bold mb-1 text-sm">No events.</p>
-                    <button onClick={handleReset} className="mt-2 px-4 py-1.5 bg-[#5E9BF5] text-white rounded-full font-bold text-xs">Show All</button>
+                    <p className="text-gray-500 font-bold mb-1 text-sm">Tidak ada acara.</p>
+                    <button onClick={handleReset} className="mt-2 px-4 py-1.5 bg-[#5E9BF5] text-white rounded-full font-bold text-xs">Tampilkan Semua</button>
                 </div>
             )}
         </div>
@@ -239,7 +198,7 @@ export default function EventSection() {
               <Calendar 
                 onChange={handleDateChange} 
                 value={selectedDate} 
-                locale="en-US" 
+                locale="id-ID" 
                 prev2Label={null} 
                 next2Label={null}
                 tileContent={tileContent} 
@@ -247,10 +206,10 @@ export default function EventSection() {
               <div className="mt-4 pt-3 border-t border-gray-100">
                   <div className="flex items-center gap-2 mb-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#5E9BF5]"></div>
-                      <span className="text-[10px] text-gray-500 font-bold">Active Event</span>
+                      <span className="text-[10px] text-gray-500 font-bold">Acara Aktif</span>
                   </div>
                   <div className="text-[10px] text-gray-400 leading-relaxed">
-                      Select marked dates to see details.
+                      Pilih tanggal bertanda untuk melihat detail.
                   </div>
               </div>
            </div>
