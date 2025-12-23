@@ -56,7 +56,6 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// 5. Respon sukses
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Pendaftaran berhasil",
 		"user": gin.H{
