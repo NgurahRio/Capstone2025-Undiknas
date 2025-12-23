@@ -5,7 +5,7 @@ import (
 	"backend/controllers/user/category"
 	"backend/controllers/user/destination"
 	"backend/controllers/user/event"
-	userfav "backend/controllers/user/favorite"
+	"backend/controllers/user/favorite"
 	"backend/controllers/user/review"
 	"backend/controllers/user/subcategory"
 	"backend/middleware"
@@ -41,9 +41,9 @@ func SetupUserRoutes(r *gin.Engine) {
 	user.GET("/profile", auth.GetProfile)
 	user.PUT("/profile", auth.UpdateProfile)
 
-	user.POST("/favorite", userfav.AddFavorite)
-	user.GET("/favorite", userfav.GetUserFavorites)
-	user.DELETE("/favorite/:destinationId", userfav.DeleteFavorite)
+	user.POST("/favorite", favorite.AddFavorite)
+	user.GET("/favorite", favorite.GetUserFavorites)
+	user.DELETE("/favorite/:destinationId", favorite.DeleteFavorite)
 
 	user.POST("/review", review.AddReview)
 	user.DELETE("/review/:id", review.DeleteReview)
