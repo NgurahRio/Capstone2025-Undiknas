@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import PlaceCard from '../cards/PlaceCard';
 
+const formatRating = (item) => {
+  const calc = parseFloat(item?.calculatedRating);
+  if (Number.isFinite(calc) && calc > 0) return calc.toFixed(1);
+
+  const raw = parseFloat(item?.rating);
+  if (Number.isFinite(raw) && raw > 0) return raw.toFixed(1);
+
+  return 'New';
+};
+
 export default function TravelStyle({ initialShowAll = false, hideViewMore = false, onViewMore }) {
   const navigate = useNavigate();
 
@@ -51,9 +61,32 @@ export default function TravelStyle({ initialShowAll = false, hideViewMore = fal
         const subData = Array.isArray(resSub.data) ? resSub.data : resSub.data.data || [];
         const destData = Array.isArray(resDest.data) ? resDest.data : resDest.data.data || [];
 
+        const destWithRating = await Promise.all(
+          destData.map(async (item) => {
+            const destId = item.id_destination || item.id || item.ID;
+            let ratingValue = 0;
+
+            if (destId) {
+              try {
+                const resRev = await api.get('/review', { params: { destinationId: destId } });
+                const reviews = resRev.data?.data || resRev.data;
+
+                if (Array.isArray(reviews) && reviews.length > 0) {
+                  const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0, 10), 0);
+                  ratingValue = total / reviews.length;
+                }
+              } catch (err) {
+                console.warn('Gagal ambil rating destinasi:', err);
+              }
+            }
+
+            return { ...item, calculatedRating: ratingValue };
+          })
+        );
+
         setCategories(catData);
         setSubcategories(subData);
-        setDestinations(destData);
+        setDestinations(destWithRating);
 
         if (catData.length > 0) {
           setActiveCategory(catData[0].id_categories || catData[0].id);
@@ -129,7 +162,7 @@ export default function TravelStyle({ initialShowAll = false, hideViewMore = fal
   )?.namesubcategories;
 
   return (
-    <div className="flex flex-col gap-8 w-full bg-[#F7FBFF] rounded-[28px] px-4 py-8 lg:px-8">
+    <div className="flex flex-col gap-8 w-full bg-[#EEF3FF] rounded-[28px] px-4 py-8 lg:px-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -216,7 +249,7 @@ export default function TravelStyle({ initialShowAll = false, hideViewMore = fal
                   description={item.description}
                   tag={activeSubName}
                   img={img}
-                  rating={item.rating || '4.9'}
+                  rating={formatRating(item)}
                   onPress={() => navigate(`/destination/${item.ID || item.id_destination}`)}
                 />
               );
