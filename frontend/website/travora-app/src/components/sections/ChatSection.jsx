@@ -3,7 +3,7 @@ import { MessageCircle } from 'lucide-react';
 
 export default function ChatSection() {
     return (
-        <div className="bg-[#F2F7FB] -mx-6 lg:-mx-20 px-6 lg:px-20 py-24 rounded-[40px] flex flex-col lg:flex-row gap-16 items-center">
+        <div className="bg-[#EAF2FF] -mx-6 lg:-mx-20 px-6 lg:px-20 py-24 rounded-[40px] flex flex-col lg:flex-row gap-16 items-center">
             <div className="lg:w-1/2 space-y-8">
                 <h2 className="text-5xl font-bold text-gray-900 leading-tight">Need quick answers?</h2>
                 <p className="text-xl text-gray-600 leading-relaxed font-light">🚀 Travora is here for your journey!</p>
