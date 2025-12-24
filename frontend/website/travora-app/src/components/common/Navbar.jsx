@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, MessageCircle, User } from 'lucide-react';
+import { MapPin, MessageCircle } from 'lucide-react';
+import api from '../../api';
 
 export default function Navbar() {
   const location = useLocation();
@@ -29,16 +30,8 @@ export default function Navbar() {
 
   const handleNav = (menu) => {
     if (menu === 'Event') {
-        if (location.pathname === '/') {
-            const eventSection = document.getElementById('events-section');
-            if (eventSection) eventSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-            navigate('/');
-            setTimeout(() => {
-                const eventSection = document.getElementById('events-section');
-                if (eventSection) eventSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        }
+        navigate('/events');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (menu === 'Home') {
         navigate('/');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -46,6 +39,37 @@ export default function Navbar() {
         navigate(`/${menu.toLowerCase()}`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const getAvatarUrl = () => {
+    const img =
+      user?.image ||
+      user?.image_user ||
+      user?.imageUser ||
+      user?.image_profile ||
+      user?.profile_image ||
+      user?.profileImage ||
+      user?.avatar ||
+      user?.photo ||
+      user?.picture;
+
+    if (!img) {
+      const name = user?.username || 'Traveler';
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5E9BF5&color=fff`;
+    }
+
+    if (typeof img === 'string') {
+      if (img.startsWith('http') || img.startsWith('data:')) return img;
+      // Jika string mengandung base64 atau cukup panjang, anggap base64
+      const maybeBase64 = img.includes('base64') || img.length > 100;
+      if (maybeBase64) return `data:image/jpeg;base64,${img}`;
+      // Jika backend mengembalikan path relatif, gabungkan dengan baseURL
+      const base = api.defaults.baseURL?.replace(/\/$/, '') || '';
+      const path = img.startsWith('/') ? img : `/${img}`;
+      return `${base}${path}`;
+    }
+
+    return img;
   };
 
   return (
@@ -62,7 +86,8 @@ export default function Navbar() {
                 key={item} 
                 onClick={() => handleNav(item)}
                 className={`text-base capitalize transition-all duration-300 ${
-                    (item !== 'Event' && isActive(item === 'Home' ? '/' : `/${item.toLowerCase()}`)) 
+                    ((item === 'Event' && location.pathname.startsWith('/events')) ||
+                    (item !== 'Event' && isActive(item === 'Home' ? '/' : `/${item.toLowerCase()}`))) 
                     ? 'font-bold text-black border-b-2 border-black pb-1' 
                     : 'font-medium text-gray-400 hover:text-[#5E9BF5]'
                 }`}
@@ -84,11 +109,16 @@ export default function Navbar() {
             
             {/* LOGIKA LOGIN / PROFILE */}
             {user ? (
-                <button onClick={() => navigate('/profile')} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition">
-                    <div className="w-6 h-6 bg-[#5E9BF5] rounded-full flex items-center justify-center text-white text-xs">
-                        <User size={14} />
-                    </div>
-                    <span className="text-sm max-w-[100px] truncate">{user.username}</span>
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="flex items-center gap-1.5 text-gray-800 font-semibold hover:text-[#5E9BF5] transition"
+                >
+                    <img
+                      src={getAvatarUrl()}
+                      alt={user.username || 'Profile'}
+                      className="w-8 h-8 rounded-full object-cover border border-gray-700"
+                    />
+                    <span className="text-sm max-w-[140px] truncate">{user.username}</span>
                 </button>
             ) : (
                 <button onClick={() => navigate('/auth')} className="bg-[#82B1FF] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#6fa5ff] transition shadow-md text-sm">

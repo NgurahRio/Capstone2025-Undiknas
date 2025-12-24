@@ -10,6 +10,8 @@ import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import Bookmark from './pages/Bookmark'; // <--- PASTIKAN INI ADA!
 import TravelStylePage from './pages/TravelStylePage';
+import Events from './pages/Events';
+import EventDetail from './pages/EventDetail';
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
                             <Route path="/bookmark" element={<Bookmark />} />
                             {/* ---------------------------------- */}
 
+                            <Route path="/events" element={<Events />} />
+                            <Route path="/events/:id" element={<EventDetail />} />
                             <Route path="/destination/:id" element={<Destination />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/travel-style" element={<TravelStylePage />} />
