@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
-import { MapPin, ArrowRight, Clock, RefreshCw } from 'lucide-react';
+import { MapPin, ArrowRight, Clock, RefreshCw, Star } from 'lucide-react';
 import { api } from '../../api';
 
 import 'react-calendar/dist/Calendar.css';
@@ -32,18 +32,29 @@ const EventCardList = ({ item, onPress }) => {
     return `IDR ${Math.round(val).toLocaleString('id-ID')}`;
   };
 
+  const ratingLabel = () => {
+    const val = parseFloat(item?.rating);
+    if (Number.isFinite(val) && val > 0) return val.toFixed(1);
+    if (Number.isFinite(item?.calculatedRating) && item.calculatedRating > 0) return item.calculatedRating.toFixed(1);
+    return "New";
+  };
+
   return (
     <div 
       onClick={onPress}
       className="group cursor-pointer bg-white rounded-[18px] border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
     >
         {/* Gambar */}
-        <div className="h-[150px] w-full overflow-hidden">
+        <div className="relative h-[150px] w-full overflow-hidden">
             <img 
                 src={processImage(item.image_event)} 
                 alt={item.nameevent} 
                 className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
             />
+            <div className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1">
+              <Star size={12} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
+              <span>{ratingLabel()}</span>
+            </div>
         </div>
 
         {/* Konten */}
@@ -142,7 +153,7 @@ export default function EventSection() {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-[#EEF3FF] rounded-[28px] px-4 py-8 lg:px-8">
       <style>{calendarStyles}</style>
 
       {/* HEADER */}
@@ -165,7 +176,7 @@ export default function EventSection() {
                         <p className="text-xs text-gray-500">
                            {isDateInRange(toDBFormat(selectedDate), filteredEvents[0].start_date, filteredEvents[0].end_date)
                             ? <span>On: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('en-GB')}</span></span>
-                             : <span>Menampilkan: <span className="font-bold text-[#5E9BF5]">Rekomendasi</span></span>
+                             : <span>displays for: <span className="font-bold text-[#5E9BF5]">All Upcoming Events</span></span>
                            }
                         </p>
                         <button onClick={handleReset} className="text-[10px] text-[#5E9BF5] font-bold flex items-center gap-1 hover:underline">
@@ -179,7 +190,7 @@ export default function EventSection() {
                             <EventCardList 
                                 key={item.id_event || item.id}
                                 item={item}
-                                onPress={() => navigate(`/events/${item.id_event}`)}
+                                onPress={() => navigate(`/events/${item.id_event || item.id}`)}
                             />
                         ))}
                     </div>
