@@ -10,6 +10,12 @@ import EventSection from '../components/sections/EventSection';
 import ChatSection from '../components/sections/ChatSection';
 
 export default function Home() {
+  const SectionFrame = ({ children, className = '' }) => (
+    <div className={`rounded-[28px] border border-white/60 bg-white/50 shadow-sm backdrop-blur p-6 md:p-10 ${className}`}>
+      {children}
+    </div>
+  );
+
   const navigate = useNavigate();
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -41,7 +47,7 @@ export default function Home() {
         
         {isSearching ? (
              /* TAMPILAN SEARCH RESULTS (Tetap sama) */
-              <div className="min-h-[400px]">
+              <SectionFrame className="min-h-[400px]">
                   {/* ... Kode search result sebelumnya ... */}
                   <div className="flex items-center gap-3 mb-8">
                        <button onClick={clearSearch} className="font-bold text-gray-400">Home</button>
@@ -52,12 +58,14 @@ export default function Home() {
                           <PlaceCard key={item.id_destination} title={item.namedestination} subtitle={item.location} img={item.imagedata} onPress={() => navigate(`/destination/${item.id_destination}`)} />
                       ))}
                   </div>
-              </div>
+              </SectionFrame>
           ) : (
             // === TAMPILAN HOME NORMAL ===
             <>
                 {/* 1. Popular Places */}
-                <PopularPlaces />
+                <SectionFrame>
+                  <PopularPlaces />
+                </SectionFrame>
                 
                 {/* 2. Explore Ubud */}
                 <ExploreUbud />
