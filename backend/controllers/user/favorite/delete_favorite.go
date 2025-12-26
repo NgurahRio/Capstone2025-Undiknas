@@ -9,21 +9,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DeleteFavorite menghapus favorite berdasarkan destinationId untuk user yang terautentikasi.
 func DeleteFavorite(c *gin.Context) {
-	// Ambil destinationId dari parameter path
-	destIdStr := c.Param("destinationId")
-	if destIdStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "destinationId diperlukan"})
+	// Ambil ID dari path; gunakan query ?type=event untuk hapus event bookmark, default: destination
+	idStr := c.Param("destinationId")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID bookmark diperlukan"})
 		return
 	}
 
-	d, err := strconv.ParseUint(destIdStr, 10, 64)
+	idVal, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "destinationId tidak valid"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
 		return
 	}
-	destID := uint(d)
+	targetID := uint(idVal)
+
+	kind := c.DefaultQuery("type", "destination")
 
 	uidVal, exists := c.Get("user_id")
 	if !exists {
@@ -44,8 +45,15 @@ func DeleteFavorite(c *gin.Context) {
 		return
 	}
 
-	// Hapus record favorite
-	if err := config.DB.Where("userId = ? AND destinationId = ?", userID, destID).Delete(&models.Favorite{}).Error; err != nil {
+	// Hapus record favorite sesuai jenis
+	db := config.DB.Where("userId = ?", userID)
+	if kind == "event" {
+		db = db.Where("eventId = ?", targetID)
+	} else {
+		db = db.Where("destinationId = ?", targetID)
+	}
+
+	if err := db.Delete(&models.Favorite{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus favorite"})
 		return
 	}
