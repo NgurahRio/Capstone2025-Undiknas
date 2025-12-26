@@ -30,9 +30,23 @@ func GetUserFavorites(c *gin.Context) {
 	}
 
 	favorites := make([]models.Favorite, 0)
-	if err := config.DB.Preload("Destination").Preload("Event").Where("userId = ?", userID).Find(&favorites).Error; err != nil {
+	if err := config.DB.Preload("User").Preload("Destination").Preload("Event").Where("userId = ?", userID).Find(&favorites).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil favorites"})
 		return
+	}
+
+	// Sanitasi data user agar password tidak ikut terbawa ke response
+	for i := range favorites {
+		if favorites[i].User != nil {
+			orig := favorites[i].User
+			// Buat salinan tanpa field sensitif
+			favorites[i].User = &models.User{
+				ID:       orig.ID,
+				Username: orig.Username,
+				RoleID:   orig.RoleID,
+				Image:    orig.Image,
+			}
+		}
 	}
 
 	destSet := make(map[uint]struct{})

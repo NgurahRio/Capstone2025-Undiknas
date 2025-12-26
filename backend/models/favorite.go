@@ -7,6 +7,7 @@ type Favorite struct {
 	EventID       *uint `gorm:"column:eventId" json:"eventId,omitempty"`
 
 	// Relations
+	User        *User        `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	Destination *Destination `gorm:"foreignKey:DestinationID;references:ID" json:"destination,omitempty"`
 	Event       *Event       `gorm:"foreignKey:EventID;references:ID" json:"event,omitempty"`
 }
