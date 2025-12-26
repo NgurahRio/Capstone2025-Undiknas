@@ -1,3 +1,7 @@
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:mobile/api.dart';
+
 class Category {
   final int id_category;
   final String name;
@@ -14,6 +18,22 @@ class Category {
     );
   }
 }
+
+Future<List<Category>> getCategories() async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/categories'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  );
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil category');
+  }
+  final decoded = jsonDecode(response.body);
+  final List list = decoded['data'];
+  return list.map((e) => Category.fromJson(e)).toList();
+}
+
 
 final List<Category> categories = [
   Category(id_category: 1, name: "Adventure"),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/componen/FormateDate.dart';
+import 'package:mobile/componen/formatDate.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
@@ -9,9 +9,8 @@ import 'package:mobile/pages/Auth/loginPage.dart';
 import 'package:mobile/pages/detail.dart';
 
 class BookmarkPage extends StatefulWidget {
-  final User? currentUser; 
 
-  const BookmarkPage({super.key, required this.currentUser});
+  const BookmarkPage({super.key});
 
   @override
   State<BookmarkPage> createState() => _BookmarkPageState();
@@ -204,7 +203,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
   @override
   Widget build(BuildContext context) {
     List<Bookmark> filteredItems = bookmarks.where((item) {
-      if (item.userId.id_user != widget.currentUser?.id_user) return false;
+      if (item.userId.id_user != User.currentUser?.id_user) return false;
 
       if (selectedType == "ALL") return true;
       if (selectedType == "Event" && item.eventId != null) return true;
@@ -225,7 +224,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
             child: Column(
               children: [
                 
-                widget.currentUser == null 
+                User.currentUser == null 
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 25),
@@ -460,7 +459,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                                 MaterialPageRoute(builder: (context) => DetailPage(
                                                   destination: isEvent ? null : bookM.destinationId, 
                                                   event: isEvent ? bookM.eventId : null,
-                                                  currentUser: widget.currentUser!,
                                                 )),
                                               );
 

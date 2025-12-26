@@ -14,6 +14,19 @@ class Bookmark {
     this.eventId,
     this.destinationId,
   });
+
+  factory Bookmark.fromJson(Map<String, dynamic> json) {
+    return Bookmark(
+      id_bookmark: json['id_bookmark'],
+      userId: User.fromJson(json['userId']),
+      destinationId: json['destinationId'] != null
+          ? Destination.fromJson(json['destinationId'])
+          : null,
+      eventId: json['eventId'] != null
+          ? Event.fromJson(json['eventId'])
+          : null,
+    );
+  }
 }
 
 bool isBookmarked({
@@ -32,7 +45,6 @@ bool isBookmarked({
           ? b.destinationId?.id_destination == destination.id_destination
           : b.eventId?.id_event == event!.id_event));
 }
-
 
 
 final List<Bookmark> bookmarks = [

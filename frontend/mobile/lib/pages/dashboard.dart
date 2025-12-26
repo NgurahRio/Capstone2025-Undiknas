@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/componen/FormateDate.dart';
+import 'package:mobile/componen/formatDate.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
@@ -8,17 +8,11 @@ import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subCategory_model.dart';
-import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 import 'package:mobile/pages/seeAll.dart';
 
 class Dashboard extends StatefulWidget {
-  final User? currentUser;
-
-  const Dashboard({
-    super.key,
-    required this.currentUser
-  });
+  const Dashboard({super.key});
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -34,6 +28,9 @@ class _DashboardState extends State<Dashboard> {
   List<dynamic> searchedDestinations = [];
   List<Destination> destinations = [];
   List<Event> events = [];
+  List<Category> categories = [];
+  List<SubCategory> subCategories = [];
+  List<Review> reviews = [];
   bool _isSearchActive = false;
   bool selectStyle = true;
 
@@ -41,10 +38,14 @@ class _DashboardState extends State<Dashboard> {
     try {
       final dest = await getDestinations();
       final evt = await getEvents();
+      final cat = await getCategories();
+      final subCat = await getSubCategories(cat);
       if (!mounted) return;
       setState(() {
         destinations = dest;
         events = evt;
+        categories = cat;
+        subCategories = subCat;
       });
     } catch (e) {
       debugPrint("LOAD ERROR: $e");
@@ -268,7 +269,7 @@ class _DashboardState extends State<Dashboard> {
 
     final ratings = {
       for (var dest in destinations)
-        dest.id_destination: averageRatingForDestination(dest.id_destination)
+        dest.id_destination: averageRatingForDestination(dest.id_destination, reviews),
     };
 
     final topRatedDestinations = destinations.where((d) => ratings[d.id_destination]! >= 4).toList();
@@ -480,7 +481,7 @@ class _DashboardState extends State<Dashboard> {
                                 itemCount: searchedDestinations.length,
                                 itemBuilder: (context, index) {
                                   final item = searchedDestinations[index];
-                                  final ratDest = averageRatingForDestination(item.id_destination);
+                                  final ratDest = averageRatingForDestination(item.id_destination, reviews);
           
                                   return CardItems2(
                                     image: item.imageUrl.first,
@@ -496,7 +497,6 @@ class _DashboardState extends State<Dashboard> {
                                       DetailPage(
                                         destination: item, 
                                         event: null,
-                                        currentUser: widget.currentUser!,
                                       )
                                     ),
                                   );
@@ -520,7 +520,6 @@ class _DashboardState extends State<Dashboard> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => SeeAllPage(
-                                      currentUser: widget.currentUser,
                                       selectedCategories: selectedCategory,
                                       selectedSubCategories: selectedSubCategories,
                                       appliedSubCategories: appliedSubCategories,
@@ -562,7 +561,7 @@ class _DashboardState extends State<Dashboard> {
                               itemCount: filteredDestinations.length, 
                               itemBuilder: (context, index) {
                                 final item = filteredDestinations[index];
-                                final ratDest = averageRatingForDestination(item.id_destination);
+                                final ratDest = averageRatingForDestination(item.id_destination, reviews);
                                 return CardItems2(
                                   image: item.imageUrl.first, 
                                   title: item.name, 
@@ -577,7 +576,6 @@ class _DashboardState extends State<Dashboard> {
                                     DetailPage(
                                       destination: item, 
                                       event: null,
-                                      currentUser: widget.currentUser!,
                                     )
                                   )
                                 );
@@ -595,7 +593,7 @@ class _DashboardState extends State<Dashboard> {
                         itemCount: topRatedDestinations.length, 
                         itemBuilder: (context, index) {
                           final item = topRatedDestinations[index];
-                          final ratDest = averageRatingForDestination(item.id_destination);
+                          final ratDest = averageRatingForDestination(item.id_destination, reviews);
                           return CardItems1(
                             image: item.imageUrl.first,
                             rating: ratDest,
@@ -609,7 +607,6 @@ class _DashboardState extends State<Dashboard> {
                               DetailPage(
                                 destination: item, 
                                 event: null,
-                                currentUser: widget.currentUser!,
                               )),
                           );
                         },
@@ -663,7 +660,6 @@ class _DashboardState extends State<Dashboard> {
                                     DetailPage(
                                       destination: null, 
                                       event: item,
-                                      currentUser: widget.currentUser!,
                                     )
                                   )
                                 );
@@ -679,7 +675,7 @@ class _DashboardState extends State<Dashboard> {
                         itemCount: destinations.length, 
                         itemBuilder: (context, index) {
                           final item = destinations[index];
-                          final ratDest = averageRatingForDestination(item.id_destination);
+                          final ratDest = averageRatingForDestination(item.id_destination, reviews);
                           return CardItems2(
                             image: item.imageUrl.first, 
                             title: item.name, 
@@ -690,13 +686,16 @@ class _DashboardState extends State<Dashboard> {
                               .toSet()
                               .toList(),
                             isDestination: true,
-                            onTap: () => _navigateTo(
-                              DetailPage(
-                                destination: item, 
-                                event: null,
-                                currentUser: widget.currentUser!,
-                              )
-                            )
+                            onTap: () async {
+                              final dest = await getDestinationById(item.id_destination);
+
+                               _navigateTo(
+                                DetailPage(
+                                  destination: dest, 
+                                  event: null,
+                                )
+                              );
+                            }
                           );
                         }
                       )

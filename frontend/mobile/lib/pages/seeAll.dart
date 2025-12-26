@@ -4,7 +4,6 @@ import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/review_model.dart';
-import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class SeeAllPage extends StatefulWidget {
@@ -12,7 +11,6 @@ class SeeAllPage extends StatefulWidget {
   final List<dynamic> selectedSubCategories;
   final List<dynamic> appliedSubCategories;
   final void Function(List<dynamic> cats, List<dynamic> subs, List<dynamic> applied) onSaveStyle;
-  final User? currentUser;
 
   const SeeAllPage({
     super.key,
@@ -20,7 +18,6 @@ class SeeAllPage extends StatefulWidget {
     required this.selectedSubCategories,
     required this.appliedSubCategories,
     required this.onSaveStyle,
-    required this.currentUser
   });
 
   @override
@@ -33,6 +30,8 @@ class _SeeAllPageState extends State<SeeAllPage> {
   final GlobalKey _editKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   bool _isDropdownVisible = false;
+
+  List<Review> reviews = [];
 
   void _toggleDropdown() {
     if (_isDropdownVisible) {
@@ -230,7 +229,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
                     spacing: 1,
                     runSpacing: 1,
                     children: filteredDestinations.map((item) {
-                      final ratDest = averageRatingForDestination(item.id_destination);
+                      final ratDest = averageRatingForDestination(item.id_destination, reviews);
                       return SizedBox(
                         width: (MediaQuery.of(context).size.width - 30) / 2,
                         child: CardItems2(
@@ -250,7 +249,6 @@ class _SeeAllPageState extends State<SeeAllPage> {
                                 builder: (context) => DetailPage(
                                   destination: item, 
                                   event: null,
-                                  currentUser: widget.currentUser!,
                                 ),
                               ),
                             );

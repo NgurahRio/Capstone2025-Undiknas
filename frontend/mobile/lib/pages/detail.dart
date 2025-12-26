@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile/componen/FormateDate.dart';
+import 'package:mobile/componen/Detail/FacilitySection.dart';
+import 'package:mobile/componen/Detail/ReviewSection.dart';
+import 'package:mobile/componen/formatDate.dart';
 import 'package:mobile/componen/WhatsApp.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
-import 'package:mobile/componen/formateImage.dart';
+import 'package:mobile/componen/formatImage.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/bookmark_model.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
-import 'package:mobile/models/package.dart';
+import 'package:mobile/models/package_model.dart';
 import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subPackage.dart';
 import 'package:mobile/models/user_model.dart';
@@ -22,14 +24,12 @@ class DetailPage extends StatefulWidget {
   final Destination? destination;
   final Event? event;
   final int? idFavorite;
-  final User currentUser;
 
   const DetailPage({
     super.key,
     this.destination,
     this.event,
     this.idFavorite,
-    required this.currentUser
   });
 
   @override
@@ -56,6 +56,27 @@ class _DetailPageState extends State<DetailPage> {
 
   Package? selectedPackage;
   SubPackage? selectedSubPackage;
+  List<Destination> destinations = [];
+  List<Event> events = [];
+  List<Package> packages = [];
+  List<Review> reviews = [];
+
+  Future<void> loadData() async {
+    try {
+      final dest = await getDestinations();
+      final evt = await getEvents();
+      final pkg = await getPackages();
+      final rev = await getReviews();
+      setState(() {
+        destinations = dest;
+        events = evt;
+        packages = pkg;
+        reviews = rev;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
 
   Future<void> _openMap(String query) async {
     final Uri url = Uri.parse(query);
@@ -85,9 +106,10 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
+    loadData();
 
     _isfavorites = isBookmarked(
-      userId: widget.currentUser.id_user,
+      userId: User.currentUser!.id_user,
       destination: widget.destination,
       event: widget.event,
     );
@@ -174,131 +196,6 @@ class _DetailPageState extends State<DetailPage> {
     overlay.insert(overlayEntry);
     onSaveOverlay(overlayEntry);
     onVisibleChange();
-  }
-
-  void showcommentPopup(BuildContext context) {
-    double rating = 0.0;
-    TextEditingController commentController = TextEditingController();
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Write your comment",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
-                        child: TextField(
-                          controller: commentController,
-                          maxLength: 300,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            hintText: "What did you like about this trip?",
-                            hintStyle: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w400
-                            ),
-                            filled: true,
-                            fillColor: Color.fromARGB(255, 235, 244, 251),
-                            contentPadding: EdgeInsets.all(8),
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            counterText: "",
-                          ),
-                        ),
-                      ),
-
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            "300 characters letf",
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.only(top: 15, bottom: 25),
-                        child: Column(
-                          children: [
-                            const Text(
-                              "Give Stars",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w300,
-                                fontSize: 16,
-                              ),
-                            ),
-                        
-                            StarRating(
-                              rating: rating,
-                              starCount: 5,
-                              size: 30,
-                              color: Colors.amber,
-                              borderColor: Colors.amber,
-                              onRatingChanged: (value) {
-                                setState(() {
-                                  rating = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      ButtonCostum(
-                        text: "Submit comment", 
-                        height: 50,
-                        onPressed: () {
-                          if (commentController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Please write your comment first!"),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-                            return;
-                          }
-
-                          print("Rating: $rating");
-                          print("comment: ${commentController.text}");
-
-                          Navigator.pop(context);
-                        },
-                      )
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
   }
 
   void showAllReviews(BuildContext context) {
@@ -398,7 +295,7 @@ class _DetailPageState extends State<DetailPage> {
                                               )
                                             ),
                                     
-                                            if(rev.userId.id_user == widget.currentUser.id_user)
+                                            if(rev.userId.id_user == User.currentUser!.id_user)
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 7),
                                                 child: Text(
@@ -542,13 +439,13 @@ class _DetailPageState extends State<DetailPage> {
     final images = isDestination ? destination!.imageUrl : event!.imageUrl;
 
     final avarageRating = isDestination
-      ? averageRatingForDestination(destination!.id_destination)
-      : averageRatingForEvent(event!.id_event);
+      ? averageRatingForDestination(destination!.id_destination, reviews)
+      : averageRatingForEvent(event!.id_event, reviews);
 
     final comments = (isDestination
       ? reviews.where((rat) => rat.destinationId?.id_destination == destination!.id_destination)
       : reviews.where((rat) => rat.eventId?.id_event == event!.id_event)
-    ).toList().reversed.take(5).toList();
+    ).toList();
 
     final destinationPackages = packages.where(
       (pkg) => pkg.destinationId.id_destination == destination?.id_destination
@@ -573,13 +470,9 @@ class _DetailPageState extends State<DetailPage> {
                 child: PageView.builder(
                   itemCount: images.length,
                   itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: formatImage(images[index]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                    return Image(
+                      image: formatImage(images[index]),
+                      fit: BoxFit.cover,
                     );
                   },
                 ),
@@ -614,11 +507,11 @@ class _DetailPageState extends State<DetailPage> {
                                         ? destination!.name
                                         : event!.name,
                                     style: const TextStyle(
+                                      height: 1.2,
                                       fontSize: 25,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.black,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 IconButton(
@@ -633,13 +526,13 @@ class _DetailPageState extends State<DetailPage> {
 
                                     setState(() {
                                       toggleBookmark(
-                                        user: widget.currentUser,
+                                        user: User.currentUser!,
                                         destination: widget.destination,
                                         event: widget.event,
                                       );
 
                                       _isfavorites = isBookmarked(
-                                        userId: widget.currentUser.id_user,
+                                        userId: User.currentUser!.id_user,
                                         destination: widget.destination,
                                         event: widget.event,
                                       );
@@ -649,21 +542,35 @@ class _DetailPageState extends State<DetailPage> {
                               ],
                             ),
 
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  size: 18,
-                                  color: Color(0xAC000000),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  isDestination
-                                    ? destination!.location
-                                    : event!.location,
-                                  style: const TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w300),
-                                ),
-                              ],
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      size: 18,
+                                      color: Color(0xAC000000),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      isDestination
+                                          ? destination?.location ?? '-'
+                                          : event?.destinationId?.location ??
+                                            event?.location ??
+                                            '-',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
 
                             Padding(
@@ -705,55 +612,8 @@ class _DetailPageState extends State<DetailPage> {
                                     .toList(),
                               ),
 
-                            if(isDestination)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 20, bottom: 15),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(bottom: 10),
-                                      child: Text(
-                                        "Facilities", 
-                                        style: TextStyle(
-                                          fontSize: 20, 
-                                          fontWeight: FontWeight.w500, 
-                                          color: Colors.black
-                                        )
-                                      ),
-                                    ),
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: destination.facilities!.map((f) {
-                                          return Container(
-                                            margin: const EdgeInsets.only(right: 15),
-                                            child: Column(
-                                              children: [
-                                                Image(
-                                                  image: formatImage(f.icon),
-                                                  width: 30,
-                                                  height: 30,
-                                                  color: Colors.black,
-                                                ),
-                                                Text(
-                                                  f.name.replaceAll(' ', '\n'),
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.w300,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              ),
+                            if(isDestination && destination.facilities != null)
+                              FacilitySection(facilities: destination.facilities!),
 
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 25),
@@ -815,84 +675,88 @@ class _DetailPageState extends State<DetailPage> {
                                   isDestination 
                                     ? destinationPackages.isEmpty
                                         ? _buildFreeEntryBox()
-                                        : GridView.count(
-                                            crossAxisCount: 2,
-                                            shrinkWrap: true,
-                                            crossAxisSpacing: 8,
-                                            mainAxisSpacing: 8,
-                                            childAspectRatio: 2.7,
-                                            physics: const NeverScrollableScrollPhysics(),
-                                            children: destinationPackages.expand((pkg) => pkg.subPackages.entries.map((entry) {
-                                                final subPkg = entry.key;
-                                                final data = entry.value;
-
-                                                // ignore: unused_local_variable
-                                                final price = data["price"] as int;
-                                                // ignore: unused_local_variable
-                                                final includes = List<Map<String, dynamic>>.from(data["include"]);
-
-                                                final isSelected =
-                                                    selectedPackage == pkg && selectedSubPackage == subPkg;
-
-                                                return GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      selectedPackage = pkg;
-                                                      selectedSubPackage = subPkg;
-                                                    });
-                                                  },
-                                                  child: AnimatedContainer(
-                                                    duration: const Duration(milliseconds: 200),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius: BorderRadius.circular(5),
-                                                      border: Border.all(
-                                                        color: isSelected
-                                                            ? const Color(0xFF8AC4FA)
-                                                            : Colors.grey.shade300,
-                                                        width: isSelected ? 3 : 1,
-                                                      ),
-                                                    ),
-                                                    child: Stack(
-                                                      children: [
-                                                        Center(
-                                                          child: Wrap(
-                                                            spacing: 6,
-                                                            crossAxisAlignment: WrapCrossAlignment.center,
-                                                            children: [
-                                                              Image.asset(subPkg.icon),
-                                                              Text(
-                                                                subPkg.name.replaceAll(' ', '\n'),
-                                                                style: const TextStyle(
-                                                                  fontWeight: FontWeight.w500,
-                                                                  fontSize: 15,
-                                                                ),
-                                                              ),
-                                                            ],
+                                        : StatefulBuilder(
+                                          builder: (context, setLocalState) {
+                                            return GridView.count(
+                                                crossAxisCount: 2,
+                                                shrinkWrap: true,
+                                                crossAxisSpacing: 8,
+                                                mainAxisSpacing: 8,
+                                                childAspectRatio: 2.7,
+                                                physics: const NeverScrollableScrollPhysics(),
+                                                children: destinationPackages.expand((pkg) => pkg.subPackages.entries.map((entry) {
+                                                    final subPkg = entry.key;
+                                                    final data = entry.value;
+                                            
+                                                    // ignore: unused_local_variable
+                                                    final price = data["price"] as int;
+                                                    // ignore: unused_local_variable
+                                                    final includes = List<Map<String, dynamic>>.from(data["include"]);
+                                            
+                                                    final isSelected =
+                                                        selectedPackage == pkg && selectedSubPackage == subPkg;
+                                            
+                                                    return GestureDetector(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          selectedPackage = pkg;
+                                                          selectedSubPackage = subPkg;
+                                                        });
+                                                      },
+                                                      child: AnimatedContainer(
+                                                        duration: const Duration(milliseconds: 200),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius: BorderRadius.circular(5),
+                                                          border: Border.all(
+                                                            color: isSelected
+                                                                ? const Color(0xFF8AC4FA)
+                                                                : Colors.grey.shade300,
+                                                            width: isSelected ? 3 : 1,
                                                           ),
                                                         ),
-                                                        if (isSelected)
-                                                          Positioned(
-                                                            top: 0,
-                                                            left: 0,
-                                                            child: ClipPath(
-                                                              clipper: TriangleClipper(),
-                                                              child: Container(
-                                                                color: const Color(0xFF8AC4FA),
-                                                                width: 21,
-                                                                height: 21,
-                                                                child: const Icon(Icons.check,
-                                                                    color: Colors.white, size: 14),
+                                                        child: Stack(
+                                                          children: [
+                                                            Center(
+                                                              child: Wrap(
+                                                                spacing: 6,
+                                                                crossAxisAlignment: WrapCrossAlignment.center,
+                                                                children: [
+                                                                  Image(
+                                                                    image: formatImage(subPkg.icon)
+                                                                  ),
+                                                                  Text(
+                                                                    subPkg.name.replaceAll(' ', '\n'),
+                                                                    style: const TextStyle(
+                                                                      fontWeight: FontWeight.w500,
+                                                                      fontSize: 15,
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                            if (isSelected)
+                                                              Positioned(
+                                                                top: 0,
+                                                                left: 0,
+                                                                child: ClipPath(
+                                                                  clipper: TriangleClipper(),
+                                                                  child: Container(
+                                                                    alignment: Alignment.topLeft,
+                                                                    color: const Color(0xFF8AC4FA),
+                                                                    width: 21,
+                                                                    height: 21,
+                                                                    child: const Icon(Icons.check, color: Colors.white, size: 14),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  })).toList(),
                                                 );
-                                              }))
-                                              .toList(),
-
+                                            }
                                           )
                                     : event!.price != null 
                                       ? Container(
@@ -922,82 +786,83 @@ class _DetailPageState extends State<DetailPage> {
                                         : _buildFreeEntryBox(),
 
                                   if (selectedPackage != null && selectedSubPackage != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 20),
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[50],
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: const [
-                                            BoxShadow(
-                                              color: Color(0x17000000),
-                                              blurRadius: 10,
-                                              offset: Offset(0, 10),
+                                    Container(
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.only(top: 20),
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x17000000),
+                                            blurRadius: 10,
+                                            offset: Offset(0, 10),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            selectedSubPackage!.name,
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                          ],
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              selectedSubPackage!.name,
-                                              style: const TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
+                                          ),
+                                    
+                                          const Padding(
+                                            padding: EdgeInsets.only(top: 6),
+                                            child: Text(
+                                              "Includes:",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w400,
                                               ),
                                             ),
-
-                                            const Padding(
-                                              padding: EdgeInsets.only(top: 6),
-                                              child: Text(
-                                                "Includes:",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                              ),
-                                            ),
-
-                                            ...List<Map<String, dynamic>>.from(
-                                              selectedPackage!.subPackages[selectedSubPackage!]!["include"],
-                                            ).map((item) => SizedBox(
-                                                  width: 300,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.symmetric(vertical: 3),
-                                                    child: Row(
-                                                      children: [
-                                                        Image.asset(item["image"], width: 25, height: 25),
-                                                        const SizedBox(width: 18),
-                                                        Expanded(
-                                                          child: Text(
-                                                            item["name"],
-                                                            style: const TextStyle(color: Color(0xFF919191)),
-                                                          ),
+                                          ),
+                                    
+                                          ...List<Map<String, dynamic>>.from(
+                                            selectedPackage!.subPackages[selectedSubPackage!]!["include"],
+                                          ).map((item) => SizedBox(
+                                                width: 300,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 3),
+                                                  child: Row(
+                                                    children: [
+                                                      Image(
+                                                        image: formatImage(item["image"]),
+                                                        width: 25,
+                                                        height: 25,
+                                                      ),
+                                                      const SizedBox(width: 18),
+                                                      Expanded(
+                                                        child: Text(
+                                                          item["name"],
+                                                          style: const TextStyle(color: Color(0xFF919191)),
                                                         ),
-                                                      ],
-                                                    ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                )),
-
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 16, bottom: 10),
-                                              child: Divider(color: Colors.grey[300]),
+                                                ),
+                                              )),
+                                    
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 16, bottom: 10),
+                                            child: Divider(color: Colors.grey[300]),
+                                          ),
+                                    
+                                          Text(
+                                            currencyFormatter.format(
+                                              selectedPackage!.subPackages[selectedSubPackage!]!["price"],
                                             ),
-
-                                            /// 🔹 PRICE
-                                            Text(
-                                              currencyFormatter.format(
-                                                selectedPackage!.subPackages[selectedSubPackage!]!["price"],
-                                              ),
-                                              style: const TextStyle(
-                                                color: Colors.orange,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18,
-                                              ),
+                                            style: const TextStyle(
+                                              color: Colors.orange,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                 ],
@@ -1020,7 +885,7 @@ class _DetailPageState extends State<DetailPage> {
                                           if (_isDropdownSos) {
                                             _overlaySos?.remove();
                                             _overlaySos = null;
-                                            setState(() => _isDropdownSos = false);
+                                            _isDropdownSos = false;
                                           } else {
                                             _overlayDoDont?.remove();
                                             _overlayDoDont = null;
@@ -1035,8 +900,9 @@ class _DetailPageState extends State<DetailPage> {
                                               link: _sosLink,
                                               keyButton: _sosKey,
                                               onSaveOverlay: (overlay) => _overlaySos = overlay,
-                                              onVisibleChange: () =>
-                                                  setState(() => _isDropdownSos = true),
+                                              onVisibleChange: () {
+                                                _isDropdownSos = true;
+                                              },
                                               content: ConstrainedBox(
                                                 constraints: const BoxConstraints(maxWidth: 200),
                                                 child: Column(
@@ -1123,7 +989,7 @@ class _DetailPageState extends State<DetailPage> {
                                           if (_isDropdownDoDont) {
                                             _overlayDoDont?.remove();
                                             _overlayDoDont = null;
-                                            setState(() => _isDropdownDoDont = false);
+                                            _isDropdownDoDont = false;
                                           } else {
                                             _overlaySos?.remove();
                                             _overlaySos = null;
@@ -1143,50 +1009,58 @@ class _DetailPageState extends State<DetailPage> {
                                               link: _doDontLink,
                                               keyButton: _doDontKey,
                                               onSaveOverlay: (overlay) => _overlayDoDont = overlay,
-                                              onVisibleChange: () =>
-                                                  setState(() => _isDropdownDoDont = true),
+                                              onVisibleChange: () {
+                                                _isDropdownDoDont = true;
+                                              },
                                               content: SizedBox(
                                                 width: 200,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    if (dosList.isNotEmpty) ...[
-                                                      const Padding(
-                                                        padding: EdgeInsets.only(bottom: 10),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(Icons.check_box, color: Colors.green),
-                                                            SizedBox(width: 5),
-                                                            Text("Do"),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      ...dosList.map(
-                                                        (dos) => Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10),
-                                                          child: Text(dos),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                    if (dontsList.isNotEmpty) ...[
-                                                      const Padding(
-                                                        padding: EdgeInsets.only(bottom: 10),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(Icons.close, color: Colors.red),
-                                                            SizedBox(width: 5),
-                                                            Text("Don't"),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      ...dontsList.map(
-                                                        (dont) => Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10),
-                                                          child: Text(dont),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ],
+                                                child: ConstrainedBox(
+                                                  constraints: const BoxConstraints(
+                                                    maxHeight: 300
+                                                  ),
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        if (dosList.isNotEmpty) ...[
+                                                          const Padding(
+                                                            padding: EdgeInsets.only(bottom: 10),
+                                                            child: Row(
+                                                              children: [
+                                                                Icon(Icons.check_box, color: Colors.green),
+                                                                SizedBox(width: 5),
+                                                                Text("Do"),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          ...dosList.map(
+                                                            (dos) => Padding(
+                                                              padding: const EdgeInsets.only(bottom: 10),
+                                                              child: Text(dos),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                        if (dontsList.isNotEmpty) ...[
+                                                          const Padding(
+                                                            padding: EdgeInsets.only(bottom: 10),
+                                                            child: Row(
+                                                              children: [
+                                                                Icon(Icons.close, color: Colors.red),
+                                                                SizedBox(width: 5),
+                                                                Text("Don't"),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          ...dontsList.map(
+                                                            (dont) => Padding(
+                                                              padding: const EdgeInsets.only(bottom: 10),
+                                                              child: Text(dont),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             );
@@ -1207,7 +1081,7 @@ class _DetailPageState extends State<DetailPage> {
                                           if (_isDropdownSafety) {
                                             _overlaySafety?.remove();
                                             _overlaySafety = null;
-                                            setState(() => _isDropdownSafety = false);
+                                            _isDropdownSafety = false;
                                           } else {
                                             _overlaySos?.remove();
                                             _overlaySos = null;
@@ -1224,31 +1098,40 @@ class _DetailPageState extends State<DetailPage> {
                                               link: _safetyLink,
                                               keyButton: _safetyKey,
                                               onSaveOverlay: (overlay) => _overlaySafety = overlay,
-                                              onVisibleChange: () =>setState(() => _isDropdownSafety = true),
+                                              onVisibleChange: () {
+                                                _isDropdownSafety = true;
+                                              },
                                               isSafety: true,
                                               content: SizedBox(
                                                 width: 180,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Padding(
-                                                      padding: EdgeInsets.only(bottom: 10),
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(Icons.shield_outlined,
-                                                              color: Colors.orange),
-                                                          SizedBox(width: 5),
-                                                          Text("Safety Guidelines"),
-                                                        ],
-                                                      ),
+                                                child: ConstrainedBox(
+                                                  constraints: const BoxConstraints(
+                                                    maxHeight: 300
+                                                  ),
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Padding(
+                                                          padding: EdgeInsets.only(bottom: 10),
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(Icons.shield_outlined,
+                                                                  color: Colors.orange),
+                                                              SizedBox(width: 5),
+                                                              Text("Safety Guidelines"),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        ...safetyList.map(
+                                                          (safety) => Padding(
+                                                            padding: const EdgeInsets.only(bottom: 10),
+                                                            child: Text(safety),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    ...safetyList.map(
-                                                      (safety) => Padding(
-                                                        padding: const EdgeInsets.only(bottom: 10),
-                                                        child: Text(safety),
-                                                      ),
-                                                    ),
-                                                  ],
+                                                  ),
                                                 ),
                                               ),
                                             );
@@ -1274,10 +1157,12 @@ class _DetailPageState extends State<DetailPage> {
                                     target: LatLng(
                                       isDestination
                                         ? destination.latitude
-                                        : event!.latitude,
+                                        : event?.destinationId?.latitude ??
+                                          event?.latitude ?? 0,
                                       isDestination
                                         ? destination.longitude
-                                        : event!.longitude
+                                        : event?.destinationId?.longitude ??
+                                          event?.longitude ?? 0
                                     ),
                                     zoom: 14,
                                   ),
@@ -1287,10 +1172,12 @@ class _DetailPageState extends State<DetailPage> {
                                       position: LatLng(
                                         isDestination
                                           ? destination.latitude
-                                          : event!.latitude,
+                                          : event?.destinationId?.latitude ??
+                                            event?.latitude ?? 0,
                                         isDestination
                                           ? destination.longitude
-                                          : event!.longitude
+                                          : event?.destinationId?.longitude ??
+                                            event?.longitude ?? 0
                                       ),
                                     ),
                                   },
@@ -1302,7 +1189,9 @@ class _DetailPageState extends State<DetailPage> {
                               onTap: () => _openMap(
                                 isDestination
                                   ? destination.maps
-                                  : event!.maps,
+                                  : event?.destinationId != null
+                                    ? event!.destinationId!.maps
+                                    : event!.maps
                               ),
                               child: Container(
                                 width: double.infinity,
@@ -1324,222 +1213,26 @@ class _DetailPageState extends State<DetailPage> {
 
                             SizedBox(
                               width: double.infinity,
-                              child: Container(
-                                margin: const EdgeInsets.only(top: 30, bottom: 20),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF3F9FF),
-                                  borderRadius: BorderRadius.circular(10)
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    comments.isEmpty
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(top: 20),
-                                          child: Text("Belum ada ulasan",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.w500
-                                            )
-                                          ),
-                                        )
-                                      : Column(
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 15),
-                                              child: Column(
-                                                children: [
-                                                  SizedBox(
-                                                    width: double.infinity,
-                                                    child: Stack(
-                                                      alignment: Alignment.center,
-                                                      children: [
-                                                        const Text("Reviews",
-                                                          style: TextStyle(
-                                                            fontSize: 22,
-                                                            color: Colors.black,
-                                                            fontWeight: FontWeight.w700,
-                                                          )
-                                                        ),
-                                                    
-                                                        Positioned(
-                                                          right: 20,
-                                                          child: InkWell(
-                                                            onTap: () {
-                                                              showAllReviews(context);
-                                                            },
-                                                            child: const Text(
-                                                              "See All",
-                                                              style: TextStyle(color: Color(0xFF8AC4FA), fontSize: 14),
-                                                            )
-                                                          ),
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
-
-                                                  Text(avarageRating.toStringAsFixed(1),
-                                                    style: const TextStyle(
-                                                      fontSize: 37,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w900,
-                                                    )
-                                                  ),
-
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(bottom: 7),
-                                                    child: _ratingStars(rating: avarageRating),
-                                                  ),
-
-                                                  Text(
-                                                    "Based on ${comments.length} comments",
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.black,
-                                                      fontWeight: FontWeight.w300
-                                                    )
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                            const Padding(
-                                              padding: EdgeInsets.only(top: 5, bottom: 20),
-                                              child: Divider(
-                                                thickness: 2,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            ...comments.map((rev) {
-                                              return Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 25),
-                                                child: Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Container(
-                                                      height: 40,
-                                                      width: 40,
-                                                      margin: EdgeInsets.only(right: 7),
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      child: rev.userId.image.isNotEmpty
-                                                        ?  ClipOval(
-                                                            child: Image(
-                                                              image: formatImage(rev.userId.image),
-                                                              height: 40,
-                                                              width: 40,
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                          )
-                                                        : Icon( 
-                                                            Icons.account_circle,
-                                                            size: 40,
-                                                            color: Colors.grey[400],
-                                                          ),
-                                                    ),
-
-                                                    Expanded(
-                                                      child: Column(
-                                                        children: [
-                                                          Column(
-                                                            crossAxisAlignment:
-                                                              CrossAxisAlignment.start,
-                                                            children: [
-                                                              Row(
-                                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                                children: [
-                                                                  Text(rev.userId.username,
-                                                                    style: const TextStyle(
-                                                                      fontSize: 16,
-                                                                      color: Colors.black,
-                                                                      fontWeight: FontWeight.w500
-                                                                    )
-                                                                  ),
-                                                          
-                                                                  if(rev.userId.id_user == widget.currentUser.id_user)
-                                                                    Padding(
-                                                                      padding: const EdgeInsets.symmetric(horizontal: 7),
-                                                                      child: Text(
-                                                                        "(you)",
-                                                                        style: const TextStyle(
-                                                                          fontStyle: FontStyle.italic,
-                                                                          fontSize: 16,
-                                                                          color: Colors.black,
-                                                                          fontWeight: FontWeight.w300
-                                                                        )
-                                                                      ),
-                                                                    ),
-                                                                ],
-                                                              ),
-                                                              Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                children: [
-                                                                  Row(
-                                                                    children: [
-                                                                      Padding(
-                                                                        padding: const EdgeInsets.only(right: 5),
-                                                                        child: _ratingStars(
-                                                                          rating: rev.rating,
-                                                                          position: false
-                                                                        ),
-                                                                      ),
-                                                          
-                                                                      Text(
-                                                                        rev.rating.toStringAsFixed(1),
-                                                                        style: const TextStyle(
-                                                                          fontSize: 13,
-                                                                          color: Colors.black,
-                                                                        ))
-                                                                    ],
-                                                                  ),
-                                                          
-                                                                  Text(
-                                                                    TimeOfDay.fromDateTime(rev.createdAt).format(context),
-                                                                    style: const TextStyle(
-                                                                      fontSize: 14,
-                                                                      color: Colors.grey,
-                                                                    )
-                                                                  )
-                                                                ],
-                                                              ),
-                                                              Padding(
-                                                                padding: const EdgeInsets.only(top: 5),
-                                                                child: Text(
-                                                                  rev.comment,
-                                                                  textAlign: TextAlign.justify,
-                                                                  style: const TextStyle(
-                                                                    fontSize: 13,
-                                                                    color: Colors.grey,
-                                                                  )
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }),
-                                          ],
-                                        ),
-
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
-                                      child: ButtonCostum(
-                                        text: "Write a comment", 
-                                        onPressed: () {
-                                          showcommentPopup(context);
-                                        }
-                                      ),
-                                    )
-                                  ],
-                                ),
+                              child: ReviewSection(
+                                review: comments.take(5).toList(),
+                                averageRating: avarageRating,
+                                onSeeAll: () => showAllReviews(context),
+                                onWrite: () {
+                                  showcommentPopup(
+                                    context,
+                                    destinationId: isDestination ? destination.id_destination : null,
+                                    eventId: !isDestination ? event!.id_event : null,
+                                    onSuccess: () async {
+                                      final newReviews = await getReviews();
+                                      setState(() {
+                                        reviews = newReviews;
+                                      });
+                                    },
+                                  );
+                                },
                               ),
                             ),
-                          ],
+                          ]
                           ]
                         )
                       ),
@@ -1571,7 +1264,7 @@ class _DetailPageState extends State<DetailPage> {
                               (index) {
                                 if (isDestination) {
                                   final item = destinations[index];
-                                  final ratDest = averageRatingForDestination(item.id_destination);
+                                  final ratDest = averageRatingForDestination(item.id_destination, reviews);
 
                                   return CardItems2(
                                     image: item.imageUrl[0],
@@ -1589,7 +1282,6 @@ class _DetailPageState extends State<DetailPage> {
                                         MaterialPageRoute(builder: (context) => DetailPage(
                                           destination: item, 
                                           event: null,
-                                          currentUser: widget.currentUser,
                                         )),
                                       );
                                     },
@@ -1602,14 +1294,13 @@ class _DetailPageState extends State<DetailPage> {
                                     child: CardItems1(
                                       title: item.name,
                                       subtitle: formatEventDate(item.startDate, item.endDate),
-                                      image: item.imageUrl[0],
+                                      image: item.imageUrl.first,
                                       onTap: () {
                                         Navigator.push(
                                           context,  
                                           MaterialPageRoute(builder: (context) => DetailPage(
                                             destination: null, 
                                             event: item,
-                                            currentUser: widget.currentUser,
                                           )),
                                         );
                                       },

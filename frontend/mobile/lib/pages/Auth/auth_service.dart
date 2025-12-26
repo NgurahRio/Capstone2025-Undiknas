@@ -76,7 +76,6 @@ class AuthService {
       final userJson = data['user'];
       userJson['image'] = "";
 
-      // ⬇️ SIMPAN USER
       await prefs.setString('user', jsonEncode(userJson));
 
       final user = User.fromJson(userJson);
@@ -94,34 +93,32 @@ class AuthService {
     }
   }
 
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('user');
+    await prefs.remove('user_id');
+    User.currentUser = null;
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
-    if (token == null) {
-      throw Exception('Token tidak ditemukan');
+    if (token != null) {
+      final url = Uri.parse('$baseUrl/user/logout');
+      await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
     }
 
-    final url = Uri.parse('$baseUrl/user/logout');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      await prefs.remove('token');
-      await prefs.remove('user_id');
-      User.currentUser = null;
-    } else {
-      final data = jsonDecode(response.body);
-      throw Exception(data['error'] ?? 'Logout gagal');
-    }
+    await clearSession();
   }
-
+  
   static Future<User?> loadUserFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
@@ -134,4 +131,19 @@ class AuthService {
 
     return user;
   }
+
+  static Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userString = prefs.getString('user');
+
+    if (token == null || userString == null) return false;
+
+    if (User.currentUser == null) {
+      await loadUserFromStorage();
+    }
+
+    return true;
+  }
+
 }

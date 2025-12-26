@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile/componen/formateImage.dart';
+import 'package:mobile/componen/formatImage.dart';
 
 class CardItems1 extends StatelessWidget {
   final String image;
@@ -273,12 +273,15 @@ class CardItems2 extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(Icons.location_on_outlined,  color: Color(0xff8ac4fa), size: 14),
                         
-                            Text(
-                              location!,
-                              style: const TextStyle(color: Color(0xFF868686), fontSize: 11),
+                            Expanded(
+                              child: Text(
+                                location!,
+                                style: const TextStyle(color: Color(0xFF868686), fontSize: 11),
+                              ),
                             )
                           ],
                         ),

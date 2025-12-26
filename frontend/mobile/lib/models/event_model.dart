@@ -1,8 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:mobile/api.dart';
 import 'package:mobile/models/destination_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 List<String> _parseList(dynamic value) {
   if (value == null) return [];
@@ -10,15 +10,18 @@ List<String> _parseList(dynamic value) {
   if (value is List) {
     return value.map((e) => e.toString().trim()).toList();
   }
+
   if (value is String) {
     return value
-        .split(RegExp(r'[,\n]'))
+        .split('\n')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
   }
+
   return [];
 }
+
 
 class Event {
   final int id_event;
@@ -102,20 +105,13 @@ class Event {
 }
 
 Future<List<Event>> getEvents() async {
-  final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) {
-      throw Exception('Token tidak ditemukan');
-    }
-
   final response = await http.get(
     Uri.parse('$baseUrl/events'),
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
     },
   );
+
   if (response.statusCode != 200) {
     throw Exception('Gagal mengambil event');
   }
@@ -123,6 +119,26 @@ Future<List<Event>> getEvents() async {
   final List list = decoded['data'];
   return list.map((e) => Event.fromJson(e)).toList();
 }
+
+Future<Event> getEventById(int id) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/events/$id'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  );
+
+  debugPrint(response.body);
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil detail event');
+  }
+
+  final decoded = jsonDecode(response.body);
+  final Map<String, dynamic> data = decoded['data'];
+  return Event.fromJson(data);
+}
+
 
 final List<Event> events = [
   Event(

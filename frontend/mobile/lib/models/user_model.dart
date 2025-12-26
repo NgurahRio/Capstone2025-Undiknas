@@ -33,7 +33,7 @@ class User {
       username: json['username'],
       email: json['email'],
       roleId: role,
-      image: json['image']
+      image: json['image'] ?? ''
     );
   }
 

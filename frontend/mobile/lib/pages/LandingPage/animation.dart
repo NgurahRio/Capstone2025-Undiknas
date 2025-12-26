@@ -76,9 +76,15 @@ class _AnimationFirstState extends State<AnimationFirst>
 
     Future.delayed(const Duration(milliseconds: 5700), () async {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
 
-      if (token != null) {
+      print('TOKEN: ${prefs.getString('token')}');
+      print('USER: ${prefs.getString('user')}');
+
+
+      final isLoggedIn = await AuthService.isLoggedIn();
+      final userString = prefs.getString('user');
+
+      if (isLoggedIn && userString != null) {
         await AuthService.loadUserFromStorage();
 
         if (!mounted) return;

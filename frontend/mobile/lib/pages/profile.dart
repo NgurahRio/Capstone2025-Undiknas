@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/componen/buttonCostum.dart';
-import 'package:mobile/componen/formateImage.dart';
+import 'package:mobile/componen/formatImage.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/auth_service.dart';
@@ -9,9 +9,8 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
-  final User? currentUser;
 
-  const ProfilePage({super.key, this.currentUser});
+  const ProfilePage({super.key,});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -34,7 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _profileImage = widget.currentUser?.image;
+    _profileImage = User.currentUser?.image;
   }
 
   Future<void> _pickFromGallery() async {
@@ -399,7 +398,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.currentUser;
+    final user = User.currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),

@@ -17,10 +17,10 @@ class BottonNavigation extends StatefulWidget {
 class _BottonNavigationState extends State<BottonNavigation> {
   int _selectedIndex = 0;
   List<Widget> get screens => [
-    Dashboard(currentUser: widget.currentUser),
-    EventPage(currentUser: widget.currentUser,),
-    BookmarkPage(currentUser: widget.currentUser),
-    ProfilePage(currentUser: widget.currentUser),
+    Dashboard(),
+    EventPage(),
+    BookmarkPage(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {

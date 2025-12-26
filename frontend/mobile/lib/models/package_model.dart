@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:mobile/api.dart';
 import 'package:mobile/models/subPackage.dart';
 import 'package:mobile/models/destination_model.dart';
 
@@ -43,6 +46,25 @@ class Package {
       subPackages: result,
     );
   }
+}
+
+Future<List<Package>> getPackages() async {
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/packages'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal ambil package');
+  }
+
+  final jsonData = jsonDecode(response.body);
+  final List list = jsonData['data'];
+
+  return list.map((e) => Package.fromJson(e)).toList();
 }
 
 final List<Package> packages = [

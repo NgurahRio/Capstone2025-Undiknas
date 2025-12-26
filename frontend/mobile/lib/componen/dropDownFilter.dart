@@ -25,9 +25,28 @@ class _StyleDropdownState extends State<StyleDropdown> {
   late List<dynamic> selectedCategory;
   late List<dynamic> selectedSubCategories;
 
+  List<Category> categories = [];
+  List<SubCategory> subCategories = [];
+
+  Future<void> loadData() async {
+    try {
+      final cat = await getCategories();
+      final subCat = await getSubCategories(cat);
+
+      setState(() {
+        categories = cat;
+        subCategories = subCat;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    loadData();
+    
     selectedCategory = List.from(widget.selectedCategory);
     selectedSubCategories = List.from(widget.selectedSubCategories);
   }

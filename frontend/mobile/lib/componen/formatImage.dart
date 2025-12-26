@@ -16,6 +16,5 @@ ImageProvider formatImage(String image) {
     return MemoryImage(bytes);
   }
 
-  // Asset image
   return AssetImage(image);
 }

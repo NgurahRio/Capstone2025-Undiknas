@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/componen/FormateDate.dart';
+import 'package:mobile/componen/formatDate.dart';
 import 'package:mobile/componen/calenderStyle.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/event_model.dart';
-import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class EventPage extends StatefulWidget {
-  final User? currentUser;
-
-  const EventPage({
-    super.key,
-    required this.currentUser
-  });
+  const EventPage({super.key});
 
   @override
   State<EventPage> createState() => _EventPageState();
@@ -145,16 +139,19 @@ class _EventPageState extends State<EventPage> {
                                 title: item.name,
                                 subtitle: formatEventDate(item.startDate, item.endDate),
                                 image: item.imageUrl.first,
-                                onTap: () {
+                                onTap: () async {
+                                  final fullEvent = await getEventById(item.id_event);
+
                                   Navigator.push(
-                                    context,  
-                                    MaterialPageRoute(builder: (context) => DetailPage(
-                                      destination: null, 
-                                      event: item,
-                                      currentUser: widget.currentUser!,
-                                    )),
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DetailPage(
+                                        destination: null,
+                                        event: fullEvent,
+                                      ),
+                                    ),
                                   );
-                                },
+                                }
                               );
                             },
                           ),

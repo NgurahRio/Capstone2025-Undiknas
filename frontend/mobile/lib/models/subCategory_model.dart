@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:mobile/api.dart';
 import 'package:mobile/models/category_model.dart';
+import 'package:http/http.dart' as http;
 
 class SubCategory {
   final int id_subCategory;
@@ -17,6 +21,26 @@ class SubCategory {
       name: json['namesubcategories'],
       categoryId: Category.fromJson(json['category'])
     );
+  }
+}
+
+Future<List<SubCategory>> getSubCategories(
+  List<Category> categories,
+) async {
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/subcategories'),
+  );
+
+  if (response.statusCode == 200) {
+    final json = jsonDecode(response.body);
+    final List list = json['data'];
+
+    return list
+      .map((e) => SubCategory.fromJson(e))
+      .toList();
+  } else {
+    throw Exception('Gagal mengambil subcategory');
   }
 }
 
