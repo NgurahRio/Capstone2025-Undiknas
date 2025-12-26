@@ -124,6 +124,7 @@ func GetAllPackagesUser(c *gin.Context) {
 			subResp = append(subResp, gin.H{
 				"id_subpackage": sp.ID,
 				"jenispackage":  sp.Packagetype,
+				"image":         sp.Image,
 			})
 		}
 
@@ -198,6 +199,7 @@ func GetPackageByDestinationIDUser(c *gin.Context) {
 		subResp = append(subResp, gin.H{
 			"id_subpackage": sp.ID,
 			"jenispackage":  sp.Packagetype,
+			"image":         sp.Image,
 		})
 	}
 
