@@ -22,6 +22,24 @@ class _BookmarkPageState extends State<BookmarkPage> {
   List<int> selected = [];
   bool _isSelect = false;
   String selectedType = "ALL";
+  List<Bookmark> bookmarks = [];
+
+  Future<void> fetchBookmarks() async {
+    try {
+      final data = await getBookmarks();
+      setState(() {
+        bookmarks = data;
+      });
+    } catch (e) {
+      print('Error fetching bookmarks: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBookmarks();
+  }
 
   void _deleteAllFavorites() {
     setState(() {

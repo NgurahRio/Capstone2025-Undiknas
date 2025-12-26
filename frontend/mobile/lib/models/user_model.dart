@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:mobile/api.dart';
 import 'package:mobile/models/role_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class User {
   final int id_user;
@@ -37,7 +42,64 @@ class User {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id_user': id_user,
+      'username': username,
+      'email': email,
+      'image': image,
+    };
+  }
+
   static User? currentUser;
+}
+
+Future<User> updateProfile({
+  String? username,
+  String? oldPassword,
+  String? newPassword,
+  File? imageFile,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final uri = Uri.parse("$baseUrl/user/profile");
+  final request = http.MultipartRequest("PUT", uri);
+
+  request.headers['Authorization'] = "Bearer $token";
+
+  if (username != null && username.isNotEmpty) {
+    request.fields['username'] = username;
+  }
+
+  if (newPassword != null && newPassword.isNotEmpty) {
+    request.fields['password'] = newPassword;
+    request.fields['old_password'] = oldPassword ?? '';
+  }
+
+  if (imageFile != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+      ),
+    );
+  }
+
+  final streamedResponse = await request.send();
+  final responseBody = await streamedResponse.stream.bytesToString();
+
+  final decoded = jsonDecode(responseBody);
+
+  if (streamedResponse.statusCode != 200) {
+    throw decoded['error'] ?? 'Gagal update profile';
+  }
+
+  final updatedUser = User.fromJson(decoded['user']);
+
+  User.currentUser = updatedUser;
+
+  return updatedUser;
 }
 
 final List<User> users = [

@@ -1,6 +1,10 @@
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/event_model.dart';
 import 'package:mobile/models/user_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile/api.dart';
 
 class Bookmark {
   final int id_bookmark;
@@ -28,6 +32,97 @@ class Bookmark {
     );
   }
 }
+
+Future<List<Bookmark>> getBookmarks() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) {
+    throw Exception('User belum login');
+  }
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/user/favorite'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    final decoded = jsonDecode(response.body);
+    throw Exception(decoded['error'] ?? 'Gagal mengambil bookmark');
+  } 
+
+  final decoded = jsonDecode(response.body);
+  final List list = decoded['favorites'] ?? [];
+  return list.map((e) => Bookmark.fromJson(e)).toList();
+
+}
+
+
+Future<void> createBookmark({
+  int? destinationId,
+  int? eventId,
+}) async {
+  if ((destinationId == null && eventId == null) ||
+      (destinationId != null && eventId != null)) {
+    throw Exception('Pilih salah satu destination atau event');
+  }
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  if (token == null) throw Exception('User belum login');
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/user/favorite'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      if (destinationId != null) 'destinationId': destinationId,
+      if (eventId != null) 'eventId': eventId,
+    }),
+  );
+
+  if (response.statusCode != 201) {
+    final decoded = jsonDecode(response.body);
+    throw Exception(decoded['error'] ?? 'Gagal menambah bookmark');
+  }
+}
+
+Future<void> deleteBookmark({
+  required int destinationId,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) {
+    throw Exception('User belum login');
+  }
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/user/favorite/$destinationId'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    bookmarks.removeWhere(
+      (b) =>
+          b.userId.id_user == User.currentUser!.id_user &&
+          b.destinationId?.id_destination == destinationId,
+    );
+    return;
+  }
+
+  final decoded = jsonDecode(response.body);
+  throw Exception(decoded['error'] ?? 'Gagal menghapus bookmark');
+}
+
 
 bool isBookmarked({
   required int userId,

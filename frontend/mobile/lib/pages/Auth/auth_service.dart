@@ -74,7 +74,7 @@ class AuthService {
       await prefs.setString('token', data['token']);
 
       final userJson = data['user'];
-      userJson['image'] = "";
+      userJson['image'] = userJson['image'] ?? '';
 
       await prefs.setString('user', jsonEncode(userJson));
 
