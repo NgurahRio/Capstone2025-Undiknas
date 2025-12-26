@@ -29,8 +29,8 @@ func GetUserFavorites(c *gin.Context) {
 		return
 	}
 
-	var favorites []models.Favorite
-	if err := config.DB.Where("userId = ?", userID).Find(&favorites).Error; err != nil {
+	favorites := make([]models.Favorite, 0)
+	if err := config.DB.Preload("Destination").Preload("Event").Where("userId = ?", userID).Find(&favorites).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil favorites"})
 		return
 	}
@@ -57,16 +57,16 @@ func GetUserFavorites(c *gin.Context) {
 		eventIDs = append(eventIDs, id)
 	}
 
-	var destinations []models.Destination
+	destinations := make([]models.Destination, 0)
 	if len(destIDs) > 0 {
 		if err := config.DB.Where("id_destination IN ?", destIDs).Find(&destinations).Error; err != nil {
 			fmt.Println("warning: gagal mengambil detail destinasi:", err)
 		}
 	}
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	if len(eventIDs) > 0 {
-		if err := config.DB.Where("id_event IN ?", eventIDs).Find(&events).Error; err != nil {
+		if err := config.DB.Preload("Destination").Where("id_event IN ?", eventIDs).Find(&events).Error; err != nil {
 			fmt.Println("warning: gagal mengambil detail event:", err)
 		}
 	}

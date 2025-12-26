@@ -5,6 +5,10 @@ type Favorite struct {
 	UserID        uint `gorm:"column:userId" json:"userId"`
 	DestinationID *uint `gorm:"column:destinationId" json:"destinationId"`
 	EventID       *uint `gorm:"column:eventId" json:"eventId,omitempty"`
+
+	// Relations
+	Destination *Destination `gorm:"foreignKey:DestinationID;references:ID" json:"destination,omitempty"`
+	Event       *Event       `gorm:"foreignKey:EventID;references:ID" json:"event,omitempty"`
 }
 
 func (Favorite) TableName() string {

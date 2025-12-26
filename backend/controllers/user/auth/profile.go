@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -161,4 +162,63 @@ func UpdateProfile(c *gin.Context) {
 		"message": "Profil berhasil diperbarui",
 		"user":    responseUser,
 	})
+}
+
+// DeleteProfile menghapus akun user yang sedang login
+func DeleteProfile(c *gin.Context) {
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Tidak dapat menemukan informasi pengguna"})
+		return
+	}
+
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID tidak valid"})
+		return
+	}
+
+	// Pastikan user ada terlebih dulu
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Pengguna tidak ditemukan"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data pengguna"})
+		return
+	}
+
+	// Hapus semua data terkait supaya tidak menghalangi penghapusan user (FK constraint)
+	tx := config.DB.Begin()
+
+	if err := tx.Where("userId = ?", userID).Delete(&models.Favorite{}).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("error delete favorite by user:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus bookmark pengguna"})
+		return
+	}
+
+	if err := tx.Where("userId = ?", userID).Delete(&models.Review{}).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("error delete review by user:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus ulasan pengguna"})
+		return
+	}
+
+	// Hard delete (bukan soft delete) supaya benar-benar hilang
+	if err := tx.Unscoped().Delete(&models.User{}, userID).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("error delete profile:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus profil"})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		fmt.Println("error commit delete profile:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan penghapusan profil"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profil berhasil dihapus", "user": nil})
 }

@@ -48,6 +48,7 @@ func SetupUserRoutes(r *gin.Engine) {
 
 	user.GET("/profile", auth.GetProfile)
 	user.PUT("/profile", auth.UpdateProfile)
+	user.DELETE("/profile", auth.DeleteProfile)
 
 	user.POST("/favorite", favorite.AddFavorite)
 	user.GET("/favorite", favorite.GetUserFavorites)
