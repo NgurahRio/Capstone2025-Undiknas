@@ -115,7 +115,7 @@ export default function Auth() {
             <form onSubmit={handleSubmit} className="space-y-5">
               
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Username / Email</label>
+                <label className="text-sm font-bold text-gray-700 ml-1">Username</label>
                 <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input 

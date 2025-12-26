@@ -14,9 +14,12 @@ export default function Navbar() {
   useEffect(() => {
     const checkUser = () => {
         const storedUser = localStorage.getItem('travora_user');
-        if (storedUser) {
+        const token = localStorage.getItem('travora_token');
+
+        if (storedUser && token) {
             setUser(JSON.parse(storedUser));
         } else {
+            localStorage.removeItem('travora_user');
             setUser(null);
         }
     };

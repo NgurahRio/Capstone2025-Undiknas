@@ -44,6 +44,8 @@ export default function Profile() {
   useEffect(() => {
     const token = localStorage.getItem('travora_token');
     if (!token) {
+      localStorage.removeItem('travora_user');
+      localStorage.removeItem('travora_token');
       navigate('/auth');
       return;
     }
@@ -58,6 +60,9 @@ export default function Profile() {
         localStorage.setItem('travora_user', JSON.stringify(profile));
       } catch (err) {
         console.error(err);
+        localStorage.removeItem('travora_user');
+        localStorage.removeItem('travora_token');
+        setUser(null);
         navigate('/auth');
       } finally {
         setLoading(false);

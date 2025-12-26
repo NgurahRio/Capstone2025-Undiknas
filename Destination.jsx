@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { 
-  MapPin, Bookmark, Star, Camera, Users, ShoppingBag, Utensils, 
-  CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon, Tag, Clock, ShieldAlert
+  MapPin, Bookmark, Star, Camera, Square, User, Users, ShoppingBag, Utensils, 
+  ShieldAlert, CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon, Tag, Clock, FileText
 } from 'lucide-react';
 
 export default function Destination() {
@@ -26,9 +26,6 @@ export default function Destination() {
   const [userComment, setUserComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [catLookup, setCatLookup] = useState({});
-  const [subLookup, setSubLookup] = useState({});
-  const [subDetailLookup, setSubDetailLookup] = useState({});
 
   // --- 1. HELPER IMAGE SCANNER ---
   const findAllImagesInObject = (obj) => {
@@ -60,14 +57,8 @@ export default function Destination() {
 
   const parseList = (text) => {
     if (!text) return [];
-    // If already array, normalize to strings
-    if (Array.isArray(text)) return text.map((t) => (typeof t === 'string' ? t : String(t || ''))).filter(Boolean);
-    // If object, take its values
-    if (typeof text === 'object') return Object.values(text).map((t) => (typeof t === 'string' ? t : String(t || ''))).filter(Boolean);
-    // From here treat as string
-    const str = String(text);
-    if (str.trim().startsWith('[')) { try { return JSON.parse(str); } catch(e) {} }
-    return str.split(/\r?\n|,/).map((item) => item.trim()).filter(item => item !== "");
+    if (text.trim().startsWith('[')) { try { return JSON.parse(text); } catch(e) {} }
+    return text.split(/\r?\n|,/).filter(item => item.trim() !== "");
   };
 
   // --- 2. FACILITY LOGIC (PURE DATABASE) ---
@@ -135,60 +126,8 @@ export default function Destination() {
   };
 
   const cleanText = (text) => {
-      if (text === null || text === undefined) return '';
-      if (typeof text === 'number' || typeof text === 'boolean') return String(text);
-      if (typeof text !== 'string') return '';
-      return text;
-  };
-
-  const buildLookup = (arr, idKeys = [], nameKeys = []) => {
-      const map = {};
-      arr.forEach((item) => {
-          if (!item || typeof item !== 'object') return;
-          const id = idKeys.map((k) => item[k]).find(Boolean);
-          const name = nameKeys.map((k) => item[k]).find(Boolean);
-          if (id && name) map[String(id)] = String(name);
-      });
-      return map;
-  };
-
-  const buildSubDetailLookup = (arr) => {
-      const map = {};
-      arr.forEach((item) => {
-          if (!item || typeof item !== 'object') return;
-          const id = item.id_subcategories || item.id || item.ID;
-          const name = item.namesubcategories || item.name_subcategory || item.name;
-          const catId = item.categoriesId || item.categoryId || item.id_categories || item.category?.id;
-          if (id) {
-            map[String(id)] = { name: name ? String(name) : '', categoryId: catId ? String(catId) : '' };
-          }
-      });
-      return map;
-  };
-
-  const collectIds = (source) => {
-      const ids = [];
-      const push = (val) => {
-          if (val === null || val === undefined) return;
-          const str = String(val).trim();
-          if (str) ids.push(str);
-      };
-      const walk = (val) => {
-          if (val === null || val === undefined) return;
-          if (Array.isArray(val)) { val.forEach(walk); return; }
-          if (typeof val === 'object') {
-              const maybeId = val.id || val.id_categories || val.id_category || val.id_subcategories || val.id_subcategory || val.categoryId || val.subcategoryId || val.categoriesId;
-              if (maybeId) push(maybeId);
-              return;
-          }
-          if (typeof val === 'string') {
-              parseList(val).forEach(push);
-              return;
-          }
-          push(val);
-      };
-      walk(source);
-      return [...new Set(ids)];
+      if (!text || typeof text !== 'string') return text;
+      return text.replace(/Ã¢â?¬â?¢/g, "'").replace(/Ã¢â?¬Å?/g, '"').replace(/Ã¢â?¬/g, '"');
   };
 
   // --- FETCH DATA ---
@@ -197,20 +136,9 @@ export default function Destination() {
       try {
         setLoading(true);
         
-        // 1. GET DESTINATION DETAIL + categories/subcategories lookup
-        const [resDetail, resCat, resSub] = await Promise.all([
-          api.get(`/destinations/${id}`),
-          api.get('/categories'),
-          api.get('/subcategories'),
-        ]);
-
-        const catData = Array.isArray(resCat.data) ? resCat.data : resCat.data.data || [];
-        const subData = Array.isArray(resSub.data) ? resSub.data : resSub.data.data || [];
-        setCatLookup(buildLookup(catData, ['id_categories', 'id', 'ID'], ['namecategory', 'name_category', 'name']));
-        setSubLookup(buildLookup(subData, ['id_subcategories', 'id', 'ID'], ['namesubcategories', 'name_subcategory', 'name']));
-
-                setSubDetailLookup(buildSubDetailLookup(subData));
-const destData = resDetail.data.data || resDetail.data; 
+        // 1. GET DESTINATION DETAIL
+        const resDetail = await api.get(`/destinations/${id}`);
+        const destData = resDetail.data.data || resDetail.data; 
         const finalData = Array.isArray(destData) ? destData[0] : destData;
         if (!finalData) throw new Error("Data kosong");
         setData(finalData);
@@ -220,33 +148,8 @@ const destData = resDetail.data.data || resDetail.data;
             // Endpoint yang valid di backend: /packages/:destinationId
             const resPkg = await api.get(`/packages/${id}`);
             const pkgData = resPkg.data.data || resPkg.data;
-
-            // Backend /packages/:destinationId returns a single object, normalize to array
-            const pkgList = Array.isArray(pkgData) ? pkgData : (pkgData ? [pkgData] : []);
-
-            if (pkgList.length > 0) {
-              const normalized = pkgList.flatMap((pkg) => {
-                const subData = pkg.subpackage_data || {};
-                const subList = Array.isArray(pkg.subpackages) ? pkg.subpackages : [];
-                return subList.map((sp, idx) => {
-                  const key = sp.id_subpackage || sp.id || sp.ID || idx;
-                  const detail = subData[key] || subData[String(key)] || {};
-                  const includes = Array.isArray(detail.Include)
-                    ? detail.Include
-                    : Array.isArray(detail.include)
-                      ? detail.include
-                      : [];
-                  return {
-                    id: key,
-                    name: sp.jenispackage || sp.packagetype || sp.name || sp.jenis_package || "Package",
-                    icon: sp.image || sp.icon || "",
-                    price: detail.price || detail.Price || 0,
-                    includes,
-                    rawDetail: detail,
-                  };
-                });
-              });
-              setPackages(normalized);
+            if (Array.isArray(pkgData)) {
+                setPackages(pkgData);
             }
         } catch (pkgError) {
             console.log("Package data fetch error:", pkgError);
@@ -389,70 +292,21 @@ const destData = resDetail.data.data || resDetail.data;
   const mapsLink = data.maps;
   const doList = parseList(data.do).map(cleanText);
   const dontList = parseList(data.dont).map(cleanText);
-  const destinationSubcategoryIds = (() => {
-    return collectIds([
-      data.subcategoryid, data.subcategory_id, data.subcategoryId,
-      data.subcategory?.id_subcategories || data.subcategory?.id || data.subcategory?.subcategoryId,
-      data.subcategories?.id_subcategories || data.subcategories?.id,
-      Array.isArray(data.subcategory) ? data.subcategory.map((s) => s.id_subcategories || s.id || s.subcategoryId) : null,
-      Array.isArray(data.subcategories) ? data.subcategories.map((s) => s.id_subcategories || s.id || s.subcategoryId) : null
-    ]);
-  })();
-
-  const subCategories = (() => {
-    const names = [];
-    destinationSubcategoryIds.forEach((id) => {
-      const detail = subDetailLookup[id];
-      if (detail?.name) names.push(detail.name);
-      else if (subLookup[id]) names.push(subLookup[id]);
-    });
-    return [...new Set(names.filter(Boolean))];
-  })();
-
-  const categories = (() => {
-    const catIds = collectIds([
-      data.categoryid, data.category_id, data.categoryId, data.categoriesId,
-      data.category?.id_categories || data.category?.id || data.category?.categoryId,
-      Array.isArray(data.categories) ? data.categories.map((c) => c.id_categories || c.id || c.categoryId || c.categoriesId) : null
-    ]);
-
-    // also derive from subcategory -> categoryId mapping
-    destinationSubcategoryIds.forEach((subId) => {
-      const detail = subDetailLookup[subId];
-      if (detail?.categoryId) catIds.push(detail.categoryId);
-    });
-
-    const names = [];
-    catIds.forEach((id) => {
-      const n = catLookup[String(id)];
-      if (n) names.push(n);
-    });
-
-    // fallback inline names
-    const inline = [
-      data.category?.namecategory || data.category?.name_category || data.category?.name,
-      data.Category,
-      data.category_name
-    ];
-    inline.forEach((n) => { if (cleanText(n)) names.push(cleanText(n)); });
-
-    return [...new Set(names.filter(Boolean))];
-  })();
   const safety = cleanText(data.safety);
   const facilities = getFacilities(data);
   const selectedPackage = packages[selectedPackageIndex] || packages[0];
-  const selectedPackageDetails = selectedPackage?.includes || [];
-  const sosList = (() => {
-      const sos = data?.sos;
-      if (sos) {
-        const list = [];
-        if (sos.name_sos) list.push(`Name: ${sos.name_sos}`);
-        if (sos.telepon) list.push(`Phone: ${sos.telepon}`);
-        if (sos.alamat_sos) list.push(`Address: ${sos.alamat_sos}`);
-        return list.length > 0 ? list : ['Data SOS tidak tersedia'];
-      }
-      return ['Data SOS tidak tersedia'];
-    })();
+  const selectedPackageDetails = selectedPackage ? parseList(cleanText(selectedPackage.data || "")) : [];
+  const sosList = useMemo(() => {
+    const sos = data?.sos;
+    if (sos) {
+      const list = [];
+      if (sos.name_sos) list.push(`Name: ${sos.name_sos}`);
+      if (sos.telepon) list.push(`Phone: ${sos.telepon}`);
+      if (sos.alamat_sos) list.push(`Address: ${sos.alamat_sos}`);
+      return list.length > 0 ? list : ['Data SOS tidak tersedia'];
+    }
+    return ['Data SOS tidak tersedia'];
+  }, [data]);
 
   const currentImg = displayImages[imgIndex] || placeholderImg;
   const nextImage = () => setImgIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
@@ -510,18 +364,6 @@ const destData = resDetail.data.data || resDetail.data;
                     </button>
                 </div>
                 <p className="text-gray-600 text-lg leading-relaxed text-justify whitespace-pre-line">{description || "No description available."}</p>
-                {(categories.length > 0 || subCategories.length > 0) && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {[...categories, ...subCategories].map((label, idx) => (
-                      <span
-                        key={`cat-sub-${idx}-${label}`}
-                        className="px-4 py-2 rounded-md bg-[#82B1FF] text-white text-sm font-semibold italic shadow-sm"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                )}
                 
                 {/* FACILITIES */}
                 <div>
@@ -536,78 +378,55 @@ const destData = resDetail.data.data || resDetail.data;
                     <div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-4">Available Ticket</h3>
 
-                          {packages.length > 0 ? (
+                        {packages.length > 0 ? (
                           <>
-                              <div className="flex flex-wrap gap-3 mb-4">
-                                {packages.map((pkg, idx) => {
-                                  const isActive = idx === selectedPackageIndex;
-                                  const iconSrc = pkg.icon;
-                                  const renderIcon = () => {
-                                    if (!iconSrc) return <Tag size={16} className="text-[#5E9BF5]" />;
-                                    const src = (typeof iconSrc === 'string' && (iconSrc.startsWith('http') || iconSrc.startsWith('data:')))
-                                      ? iconSrc
-                                      : `data:image/png;base64,${iconSrc}`;
-                                    return <img src={src} alt={pkg.name} className="w-5 h-5 object-contain" />;
-                                  };
+                            <div className="flex flex-wrap gap-3 mb-4">
+                              {packages.map((pkg, idx) => {
+                                const isActive = idx === selectedPackageIndex;
+                                return (
+                                  <button
+                                    key={pkg.id_package || idx}
+                                    onClick={() => setSelectedPackageIndex(idx)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border shadow-sm transition ${
+                                      isActive
+                                        ? 'bg-[#E9F4FF] border-[#5E9BF5] text-[#1F4F8C]'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-[#5E9BF5]'
+                                    }`}
+                                  >
+                                    <Tag size={16} className="text-[#5E9BF5]" />
+                                    <span className="truncate">{pkg.subpackage || pkg.sub_package || 'Package'}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
 
-                                  return (
-                                    <button
-                                      key={pkg.id || idx}
-                                      onClick={() => setSelectedPackageIndex(idx)}
-                                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border shadow-sm transition ${
-                                        isActive
-                                          ? 'bg-[#E9F4FF] border-[#5E9BF5] text-[#1F4F8C]'
-                                          : 'bg-white border-gray-200 text-gray-600 hover:border-[#5E9BF5]'
-                                      }`}
-                                    >
-                                      {renderIcon()}
-                                      <span className="truncate">{pkg.name || 'Package'}</span>
-                                    </button>
-                                  );
-                                })}
+                            <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-lg">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-xl font-bold text-gray-900">
+                                  {selectedPackage?.subpackage || selectedPackage?.sub_package || 'Ticket Package'}
+                                </h4>
+                                {selectedPackage?.price && (
+                                  <span className="text-lg font-extrabold text-[#E0A030]">
+                                    IDR {Math.round(selectedPackage.price).toLocaleString('id-ID')}
+                                  </span>
+                                )}
                               </div>
 
-                              <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-lg">
-                                <div className="mb-3">
-                                  <h4 className="text-xl font-bold text-gray-900">
-                                    {selectedPackage?.name || 'Ticket Package'}
-                                  </h4>
-                                </div>
-
-                                <div className="text-sm text-gray-700">
-                                  <h5 className="font-semibold mb-2">Includes:</h5>
-                                  {selectedPackageDetails.length > 0 ? (
-                                    <ul className="space-y-2">
-                                      {selectedPackageDetails.map((inc, i) => {
-                                        const iconSrc = inc.image || inc.Icon || "";
-                                        const renderIcon = () => {
-                                          if (!iconSrc) return <CheckCircle size={18} className="text-[#5E9BF5] mt-[2px]" />;
-                                          const src = (typeof iconSrc === 'string' && (iconSrc.startsWith('http') || iconSrc.startsWith('data:')))
-                                            ? iconSrc
-                                            : `data:image/png;base64,${iconSrc}`;
-                                          return <img src={src} alt={inc.name || 'Include'} className="w-5 h-5 object-contain mt-[2px]" />;
-                                        };
-                                        return (
-                                          <li key={i} className="flex items-start gap-2">
-                                            {renderIcon()}
-                                            <span className="leading-relaxed">{inc.name || inc.Name || 'Included item'}</span>
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                  ) : (
-                                    <p className="text-sm text-gray-500">No details available for this package.</p>
-                                  )}
-                                </div>
-
-                                <div className="mt-4 text-lg font-extrabold text-[#E0A030]">
-                                  {selectedPackage?.price
-                                    ? `IDR ${Math.round(selectedPackage.price).toLocaleString('id-ID')}`
-                                    : 'FREE ENTRY'}
-                                </div>
-                              </div>
-                            </>
-                          ) : (
+                              {selectedPackageDetails.length > 0 ? (
+                                <ul className="space-y-2 text-sm text-gray-700">
+                                  {selectedPackageDetails.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="mt-[6px] w-1.5 h-1.5 rounded-full bg-[#5E9BF5] inline-block"></span>
+                                      <span className="leading-relaxed">{item}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm text-gray-500">No details available for this package.</p>
+                              )}
+                            </div>
+                          </>
+                        ) : (
                           <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-lg">
                             <div className="flex items-center gap-3 mb-2 text-gray-900">
                                 <Clock className="text-[#5E9BF5]" size={24}/>
@@ -625,33 +444,28 @@ const destData = resDetail.data.data || resDetail.data;
 
                     <div className="space-y-4">
                         <h3 className="text-2xl font-bold text-gray-900">Guide</h3>
-                              <div className="flex flex-wrap gap-3">
-                              {[
-                                { key: 'sos', label: 'SOS', color: 'bg-[#FF7878]', off: 'bg-[#FFE4E4]' },
-                                { key: 'dodont', label: "Do & Don't", color: 'bg-[#7BC5FF]', off: 'bg-[#E8F5FF]' },
-                                { key: 'safety', label: 'Safety', color: 'bg-[#5E9BF5]', off: 'bg-[#E9F4FF]' },
-                              ].map((tab) => {
-                                const active = activeTab === tab.key;
-                                return (
-                                  <button
-                                    key={tab.key}
-                                    onClick={() => setActiveTab(tab.key)}
-                                    className={`px-5 py-2 rounded-full font-bold text-sm shadow-sm transition flex items-center gap-2 ${
-                                      active
-                                        ? `${tab.color} text-white`
-                                        : `${tab.off} text-gray-700 border border-transparent hover:border-[#5E9BF5]`
-                                    }`}
-                                  >
-                                    {tab.key === 'dodont' ? (
-                                      <CheckCircle size={16} className={active ? 'text-white' : 'text-[#5E9BF5]'} />
-                                    ) : tab.key === 'safety' ? (
-                                      <ShieldAlert size={16} className={active ? 'text-white' : 'text-[#5E9BF5]'} />
-                                    ) : null}
-                                    {tab.label}
-                                  </button>
-                                );
-                              })}
-                          </div>
+                        <div className="flex flex-wrap gap-3">
+                            {[
+                              { key: 'sos', label: 'SOS', color: 'bg-[#FF7878]', off: 'bg-[#FFE4E4]' },
+                              { key: 'dodont', label: "Do & Don't", color: 'bg-[#7BC5FF]', off: 'bg-[#E8F5FF]' },
+                              { key: 'safety', label: 'Safety Guidelines', color: 'bg-[#5E9BF5]', off: 'bg-[#E9F4FF]' },
+                            ].map((tab) => {
+                              const active = activeTab === tab.key;
+                              return (
+                                <button
+                                  key={tab.key}
+                                  onClick={() => setActiveTab(tab.key)}
+                                  className={`px-5 py-2 rounded-full font-bold text-sm shadow-sm transition ${
+                                    active
+                                      ? `${tab.color} text-white`
+                                      : `${tab.off} text-gray-700 border border-transparent hover:border-[#5E9BF5]`
+                                  }`}
+                                >
+                                  {tab.label}
+                                </button>
+                              );
+                            })}
+                        </div>
 
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-lg">
                             {activeTab === 'sos' && (
@@ -787,10 +601,6 @@ const destData = resDetail.data.data || resDetail.data;
     </div>
   );
 }
-
-
-
-
 
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
-import { MapPin, ArrowRight, Clock, RefreshCw, Star } from 'lucide-react';
+import { MapPin, RefreshCw, Star, CalendarDays, Clock3 } from 'lucide-react';
 import { api } from '../../api';
 
 import 'react-calendar/dist/Calendar.css';
@@ -39,6 +39,17 @@ const EventCardList = ({ item, onPress }) => {
     return "New";
   };
 
+  const formatDateRange = (start, end) => {
+    if (!start) return "-";
+    const format = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    return end && end !== start ? `${format(start)} - ${format(end)}` : format(start);
+  };
+
+  const formatTimeRange = (start, end) => {
+    if (!start) return "-";
+    return end ? `${start} - ${end}` : start;
+  };
+
   return (
     <div 
       onClick={onPress}
@@ -59,12 +70,25 @@ const EventCardList = ({ item, onPress }) => {
 
         {/* Konten */}
         <div className="p-4 flex flex-col gap-2 flex-1">
-            <h3 className="text-base font-bold text-gray-900 leading-tight">{item.nameevent || "Event"}</h3>
-            <div className="flex items-center gap-1.5 text-gray-500 text-[12px] font-medium">
+            <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2 min-h-[40px]">
+              {item.nameevent || "Event"}
+            </h3>
+            <div className="flex items-center gap-1.5 text-gray-500 text-[12px] font-medium min-h-[32px]">
                 <MapPin size={12} className="text-[#5E9BF5] flex-shrink-0" />
                 <span className="truncate">{item.location || "Bali"}</span>
             </div>
-            <p className="text-sm text-gray-500 leading-snug line-clamp-2">{item.description || "Exciting experience awaits you."}</p>
+            <div className="text-[12px] text-gray-700 space-y-1 leading-snug">
+              <div className="flex items-start gap-1.5">
+                <CalendarDays size={14} className="text-[#5E9BF5] mt-[1px]" />
+                <span className="truncate font-semibold text-gray-800">
+                  {formatDateRange(item.start_date, item.end_date)}
+                </span>
+              </div>
+              <div className="flex items-start gap-1.5">
+                <Clock3 size={14} className="text-[#5E9BF5] mt-[1px]" />
+                <span className="truncate">{formatTimeRange(item.start_time, item.end_time)}</span>
+              </div>
+            </div>
 
             <div className="mt-auto flex justify-end">
               <span className="text-[11px] font-bold text-white bg-[#82B1FF] px-3 py-2 rounded-md shadow-sm">
@@ -81,7 +105,12 @@ export default function EventSection() {
   const [allEvents, setAllEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('today'); // 'today' | 'month'
 
   // --- LOGIC HELPER ---
   const toDBFormat = (dateObj) => {
@@ -89,6 +118,12 @@ export default function EventSection() {
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
+  };
+
+  const endOfMonthString = (monthKey) => {
+      const [year, month] = monthKey.split('-').map(Number);
+      const endDay = new Date(year, month, 0).getDate();
+      return `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
   };
 
   const normalizeDate = (dbString) => String(dbString || "").trim().substring(0, 10);
@@ -100,6 +135,49 @@ export default function EventSection() {
       return target >= start && target <= end;
   };
 
+  const rangesOverlap = (rangeStart, rangeEnd, windowStart, windowEnd) => {
+      const start = normalizeDate(rangeStart);
+      const end = normalizeDate(rangeEnd || rangeStart);
+      return start <= windowEnd && end >= windowStart;
+  };
+
+  const formatDateLong = (dateObj) => {
+      return dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
+  const formatMonthLabel = (monthKey) => {
+      const [year, month] = monthKey.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, 1);
+      return dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  };
+
+  const formatMonthName = (monthNumber) => {
+      return new Date(2000, monthNumber - 1, 1).toLocaleDateString('id-ID', { month: 'long' });
+  };
+
+  const computeTodayEvents = (dateStr, events) => {
+      const matches = events.filter(ev => isDateInRange(dateStr, ev.start_date, ev.end_date));
+      if (matches.length > 0) return matches;
+      const upcoming = events.filter(ev => normalizeDate(ev.start_date) >= dateStr);
+      return upcoming.slice(0, 3);
+  };
+
+  const computeMonthEvents = (monthKey, events) => {
+      const start = `${monthKey}-01`;
+      const end = endOfMonthString(monthKey);
+      const matches = events.filter(ev => rangesOverlap(ev.start_date, ev.end_date, start, end));
+      if (matches.length > 0) return matches;
+      const fallback = events.filter(ev => normalizeDate(ev.start_date) >= start);
+      return fallback.slice(0, 3);
+  };
+
+  const parseMonthKey = (monthKey) => {
+      const [yearStr, monthStr] = monthKey.split('-');
+      return { year: Number(yearStr), month: Number(monthStr) };
+  };
+
+  const buildMonthKey = (year, month) => `${year}-${String(month).padStart(2, '0')}`;
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -110,14 +188,7 @@ export default function EventSection() {
         setAllEvents(sorted);
         
         const todayStr = toDBFormat(new Date());
-        const todayEvents = sorted.filter(ev => isDateInRange(todayStr, ev.start_date, ev.end_date));
-
-        if (todayEvents.length > 0) {
-            setFilteredEvents(todayEvents);
-        } else {
-            const upcoming = sorted.filter(ev => normalizeDate(ev.start_date) >= todayStr);
-            setFilteredEvents(upcoming.slice(0, 3));
-        }
+        setFilteredEvents(computeTodayEvents(todayStr, sorted));
       } catch (err) {
         console.error(err);
       } finally {
@@ -127,20 +198,47 @@ export default function EventSection() {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    if (allEvents.length === 0) return;
+    const todayStr = toDBFormat(selectedDate);
+    if (viewMode === 'today') {
+        setFilteredEvents(computeTodayEvents(todayStr, allEvents));
+    } else {
+        setFilteredEvents(computeMonthEvents(selectedMonth, allEvents));
+    }
+  }, [allEvents, selectedDate, selectedMonth, viewMode]);
+
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    const selectedStr = toDBFormat(date);
-    const matches = allEvents.filter(ev => isDateInRange(selectedStr, ev.start_date, ev.end_date));
-    setFilteredEvents(matches);
+    setViewMode('today');
   };
 
-  const handleReset = () => {
-    const today = new Date();
-    setSelectedDate(today);
-    const todayStr = toDBFormat(today);
-    let upcoming = allEvents.filter(ev => normalizeDate(ev.start_date) >= todayStr);
-    if (upcoming.length === 0) upcoming = allEvents.slice(-3).reverse();
-    setFilteredEvents(upcoming.slice(0, 3));
+  const handleToggleAll = () => {
+    if (viewMode === 'month') {
+      setViewMode('today');
+      setSelectedDate(new Date());
+      return;
+    }
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(monthKey);
+    setViewMode('month');
+  };
+
+  const handleMonthSelect = (e) => {
+    const newMonth = Number(e.target.value);
+    if (!newMonth) return;
+    const { year } = parseMonthKey(selectedMonth);
+    setSelectedMonth(buildMonthKey(year, newMonth));
+    setViewMode('month');
+  };
+
+  const handleYearSelect = (e) => {
+    const newYear = Number(e.target.value);
+    if (!newYear) return;
+    const { month } = parseMonthKey(selectedMonth);
+    setSelectedMonth(buildMonthKey(newYear, month));
+    setViewMode('month');
   };
 
   const tileContent = ({ date, view }) => {
@@ -159,7 +257,7 @@ export default function EventSection() {
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
          <div className="w-1.5 h-8 bg-[#5E9BF5] rounded-full"></div>
-         <h2 className="text-4xl font-bold text-gray-900">Event Today</h2>
+        <h2 className="text-4xl font-bold text-gray-900">{viewMode === 'month' ? 'All Upcoming Events' : 'Event Today'}</h2>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -170,36 +268,71 @@ export default function EventSection() {
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                    {[1,2,3].map(i => <div key={i} className="h-[200px] bg-gray-100 rounded-[20px] animate-pulse"></div>)}
                 </div>
-            ) : filteredEvents.length > 0 ? (
-                <>
-                    <div className="flex items-center justify-between px-1 mb-3">
-                        <p className="text-xs text-gray-500">
-                           {isDateInRange(toDBFormat(selectedDate), filteredEvents[0].start_date, filteredEvents[0].end_date)
-                            ? <span>On: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('en-GB')}</span></span>
-                             : <span>displays for: <span className="font-bold text-[#5E9BF5]">All Upcoming Events</span></span>
-                           }
-                        </p>
-                        <button onClick={handleReset} className="text-[10px] text-[#5E9BF5] font-bold flex items-center gap-1 hover:underline">
-                            <RefreshCw size={10} /> Tampilkan Semua
+            ) : (
+              <>
+                <div className="flex items-center justify-between px-1 mb-3">
+                    <p className="text-xs text-gray-500">
+                       {viewMode === 'today' ? (
+                          <span>On: <span className="font-bold text-gray-900">{formatDateLong(selectedDate)}</span></span>
+                       ) : (
+                          <span>On: <span className="font-bold text-gray-900">{formatMonthLabel(selectedMonth)}</span></span>
+                       )}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {viewMode === 'month' && (() => {
+                        const { year, month } = parseMonthKey(selectedMonth);
+                        const currentYear = new Date().getFullYear();
+                        const yearOptions = [currentYear - 1, currentYear, currentYear + 1];
+                        const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
+                        return (
+                          <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold">
+                            <span>Pilih bulan:</span>
+                            <select
+                              value={month}
+                              onChange={handleMonthSelect}
+                              className="border border-gray-200 rounded-md px-2 py-1 text-[10px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#5E9BF5]"
+                            >
+                              {monthOptions.map((m) => (
+                                <option key={m} value={m}>{formatMonthName(m)}</option>
+                              ))}
+                            </select>
+                            <select
+                              value={year}
+                              onChange={handleYearSelect}
+                              className="border border-gray-200 rounded-md px-2 py-1 text-[10px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#5E9BF5]"
+                            >
+                              {yearOptions.map((y) => (
+                                <option key={y} value={y}>{y}</option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })()}
+                      <button onClick={handleToggleAll} className="text-[10px] text-[#5E9BF5] font-bold flex items-center gap-1 hover:underline">
+                          <RefreshCw size={10} /> {viewMode === 'month' ? 'Back To Event Today' : 'All Upcoming Events'}
+                      </button>
+                    </div>
+                </div>
+
+                {filteredEvents.length > 0 ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredEvents.map((item) => (
+                          <EventCardList 
+                              key={item.id_event || item.id}
+                              item={item}
+                              onPress={() => navigate(`/events/${item.id_event || item.id}`)}
+                          />
+                      ))}
+                  </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-[32px] border border-dashed border-gray-200 py-12">
+                        <p className="text-gray-500 font-bold mb-1 text-sm">Tidak ada acara.</p>
+                        <button onClick={handleToggleAll} className="mt-2 px-4 py-1.5 bg-[#5E9BF5] text-white rounded-full font-bold text-xs">
+                          {viewMode === 'month' ? 'Kembali ke Event Today' : 'Tampilkan Semua'}
                         </button>
                     </div>
-                    
-                    {/* GRID 3 KOLOM AGAR KARTU KECIL (COMPACT) */}
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filteredEvents.map((item) => (
-                            <EventCardList 
-                                key={item.id_event || item.id}
-                                item={item}
-                                onPress={() => navigate(`/events/${item.id_event || item.id}`)}
-                            />
-                        ))}
-                    </div>
-                </>
-            ) : (
-                <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-[32px] border border-dashed border-gray-200 py-12">
-                    <p className="text-gray-500 font-bold mb-1 text-sm">Tidak ada acara.</p>
-                    <button onClick={handleReset} className="mt-2 px-4 py-1.5 bg-[#5E9BF5] text-white rounded-full font-bold text-xs">Tampilkan Semua</button>
-                </div>
+                )}
+              </>
             )}
         </div>
 

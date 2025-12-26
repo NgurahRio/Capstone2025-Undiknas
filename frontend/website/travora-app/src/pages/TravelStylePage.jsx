@@ -1,5 +1,6 @@
 import React from 'react';
-import TravelStyle from '../components/sections/TravelStyle';
+
+import TravelStyle from '../components/sections/TravelStyleSection';
 
 export default function TravelStylePage() {
   return (

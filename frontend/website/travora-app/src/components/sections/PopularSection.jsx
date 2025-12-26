@@ -100,7 +100,7 @@ export default function PopularPlaces() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-center w-full py-8">
+    <div className="flex flex-col lg:flex-row gap-6 items-center w-full py-8 bg-[#EEF3FF] rounded-[28px] px-4 lg:px-8">
       
       {/* HEADER SECTION (TEKS DI KIRI) */}
       <div className="lg:w-1/4 min-w-[260px] flex flex-col gap-4 pr-2">

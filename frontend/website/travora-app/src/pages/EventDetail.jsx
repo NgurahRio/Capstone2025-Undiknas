@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, ExternalLink, MapPin, Star, CheckCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Star, CheckCircle, ShieldAlert, Bookmark } from 'lucide-react';
 import { api } from '../api';
 
 const processImage = (img) => {
@@ -65,46 +65,34 @@ export default function EventDetail() {
   const [userComment, setUserComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [guideTab, setGuideTab] = useState('dodont');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const doList = splitList(event?.do || '');
   const dontList = splitList(event?.dont || '');
   const safetyList = splitList(event?.safety || '');
 
-  const { mapLink, mapEmbed } = useMemo(() => {
-    if (!event) return { mapLink: '', mapEmbed: '' };
-    const { latitude, longitude } = event;
-    const locationText = event.location;
+  const { mapLink, mapEmbed, isRawEmbed } = useMemo(() => {
+    if (!event) return { mapLink: '', mapEmbed: '', isRawEmbed: false };
 
-    const buildEmbed = (query) => {
-      const q = encodeURIComponent(query);
-      const base = `https://maps.google.com/maps?q=${q}`;
-      return { mapLink: base, mapEmbed: `${base}&z=15&output=embed` };
-    };
-
-    const isGoogleMapsUrl = (url) => {
-      try {
-        const u = new URL(url);
-        return u.hostname.includes('google.com');
-      } catch (e) {
-        return false;
-      }
-    };
-
-    if (event.maps && isGoogleMapsUrl(event.maps)) {
-      const embedLink = event.maps.includes('output=embed')
-        ? event.maps
-        : `${event.maps}${event.maps.includes('?') ? '&' : '?'}output=embed`;
-      return { mapLink: event.maps, mapEmbed: embedLink };
+    // Jika backend mengirim HTML iframe langsung, pakai apa adanya (disesuaikan width/height)
+    if (typeof event.maps === 'string' && event.maps.includes('<iframe')) {
+      const fixed = event.maps
+        .replace(/width="\\d+"/g, 'width="100%"')
+        .replace(/height="\\d+"/g, 'height="100%"');
+      const query = encodeURIComponent(event.location || event.nameevent || 'Bali');
+      return {
+        mapLink: `https://www.google.com/maps/search/?api=1&query=${query}`,
+        mapEmbed: fixed,
+        isRawEmbed: true,
+      };
     }
 
-    if (latitude && longitude) {
-      return buildEmbed(`${latitude},${longitude}`);
-    }
+    const query = event.location || event.nameevent || 'Bali';
+    const mapLink = event.maps && event.maps.trim()
+      ? event.maps
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    const mapEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
 
-    if (locationText) {
-      return buildEmbed(locationText);
-    }
-
-    return { mapLink: '', mapEmbed: '' };
+    return { mapLink, mapEmbed, isRawEmbed: false };
   }, [event]);
 
   useEffect(() => {
@@ -153,6 +141,22 @@ export default function EventDetail() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
+  useEffect(() => {
+    const checkBookmark = async () => {
+      const token = localStorage.getItem('travora_token');
+      if (!token) { setIsBookmarked(false); return; }
+      try {
+        const res = await api.get('/user/favorite');
+        const favs = res.data?.favorites || [];
+        const found = favs.some((f) => String(f.eventId || f.event_id) === String(id));
+        setIsBookmarked(found);
+      } catch (err) {
+        console.warn('Gagal cek bookmark event:', err);
+      }
+    };
+    checkBookmark();
+  }, [id]);
+
   const averageRating = () => {
     if (!reviews || reviews.length === 0) {
       const fallback = event?.rating || event?.calculatedRating;
@@ -190,6 +194,25 @@ export default function EventDetail() {
       alert('Gagal mengirim review.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    const token = localStorage.getItem('travora_token');
+    if (!token) {
+      return navigate('/auth');
+    }
+    try {
+      if (isBookmarked) {
+        await api.delete(`/user/favorite/${id}?type=event`);
+        setIsBookmarked(false);
+      } else {
+        await api.post('/user/favorite', { eventId: Number(id) });
+        setIsBookmarked(true);
+      }
+    } catch (err) {
+      console.error('Bookmark toggle failed:', err?.response?.data || err);
+      alert('Gagal memperbarui bookmark. Pastikan sudah login.');
     }
   };
 
@@ -254,9 +277,25 @@ export default function EventDetail() {
             <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8">
               <div className="flex-1 space-y-5">
                 <div className="space-y-2">
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                    {event.nameevent}
-                  </h1>
+                  <div className="flex items-start justify-between gap-3">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                      {event.nameevent}
+                    </h1>
+                    <button
+                      onClick={handleToggleBookmark}
+                      aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                      className="p-1"
+                    >
+                      <Bookmark
+                        size={40}
+                        className={`transition duration-300 drop-shadow-sm ${
+                          isBookmarked
+                            ? 'fill-[#5E9BF5] text-[#5E9BF5]'
+                            : 'text-gray-300 hover:text-[#5E9BF5]'
+                        }`}
+                      />
+                    </button>
+                  </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF7E6] border border-[#F5C542]/40 rounded-full text-sm font-semibold text-gray-800">
                     <Star size={14} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
                     <span>{formatRating(event.rating || event.calculatedRating)}</span>
@@ -352,13 +391,20 @@ export default function EventDetail() {
                   <div className="px-4 pb-4 pt-4">
                     <div className="rounded-[20px] overflow-hidden border border-gray-200 shadow-inner bg-white">
                       {mapEmbed ? (
-                        <iframe
-                          src={mapEmbed}
-                          title="Map"
-                          className="w-full h-64"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
+                        isRawEmbed ? (
+                          <div
+                            className="w-full h-64"
+                            dangerouslySetInnerHTML={{ __html: mapEmbed }}
+                          />
+                        ) : (
+                          <iframe
+                            src={mapEmbed}
+                            title="Map"
+                            className="w-full h-64"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        )
                       ) : (
                         <div className="h-64 flex items-center justify-center text-sm text-gray-400 bg-gray-50">
                           Peta belum tersedia

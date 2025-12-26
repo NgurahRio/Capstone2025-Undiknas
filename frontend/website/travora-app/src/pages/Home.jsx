@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import HeroSection from '../components/sections/HeroSection';
 import PlaceCard from '../components/cards/PlaceCard';
-import PopularPlaces from '../components/sections/PopularPlaces';
-import ExploreUbud from '../components/sections/ExploreUbud';
-import TravelStyle from '../components/sections/TravelStyle'; // <--- IMPORT INI
+import PopularPlaces from '../components/sections/PopularSection';
+import TravelStyle from '../components/sections/TravelStyleSection'; 
 import EventSection from '../components/sections/EventSection';
 import ChatSection from '../components/sections/ChatSection';
 
@@ -46,9 +45,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto w-full px-6 flex flex-col gap-24">
         
         {isSearching ? (
-             /* TAMPILAN SEARCH RESULTS (Tetap sama) */
               <SectionFrame className="min-h-[400px]">
-                  {/* ... Kode search result sebelumnya ... */}
                   <div className="flex items-center gap-3 mb-8">
                        <button onClick={clearSearch} className="font-bold text-gray-400">Home</button>
                        <span>/</span> <span className="text-[#5E9BF5] font-bold">Search</span>
@@ -60,26 +57,16 @@ export default function Home() {
                   </div>
               </SectionFrame>
           ) : (
-            // === TAMPILAN HOME NORMAL ===
             <>
-                {/* 1. Popular Places */}
-                <SectionFrame>
-                  <PopularPlaces />
-                </SectionFrame>
+                <PopularPlaces />
                 
-                {/* 2. Explore Ubud */}
-                <ExploreUbud />
-
-                {/* 3. Travel Style (MENU TAB DYNAMIC) */}
-                {/* GANTI STYLECARD MANUAL DENGAN COMPONENT INI */}
                 <TravelStyle onViewMore={() => navigate('/travel-style')} />
 
-                {/* 4. Events */}
+               
                 <div id="events-section">
                     <EventSection />
                 </div>
 
-                {/* 5. Chat */}
                 <ChatSection />
             </>
         )}

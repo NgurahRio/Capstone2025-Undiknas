@@ -5,6 +5,14 @@ import { Compass, Search, ArrowRight } from 'lucide-react';
 export default function HeroSection({ onSearch }) {
   const [query, setQuery] = useState("");
 
+  const greet = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Good Night";
+  })();
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearch) {
@@ -27,7 +35,7 @@ export default function HeroSection({ onSearch }) {
           </div>
           
           <h1 className="text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-6 drop-shadow-lg">
-            Evening! <br /> <span className="text-[#82B1FF]">Ready to explore?</span>
+            {greet}! <br /> <span className="text-[#82B1FF]">Ready to explore?</span>
           </h1>
           <h2 className="text-3xl lg:text-4xl font-bold text-white/90 mb-12">The Best Ubud Experience</h2>
 
