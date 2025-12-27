@@ -59,12 +59,25 @@ class Destination {
   });
 
   factory Destination.fromJson(Map<String, dynamic> json) {
+    List<String> images = [];
+    if (json['images'] is List) {
+      images = List<String>.from(json['images']);
+    } else if (json['imagedata'] != null) {
+      final raw = json['imagedata'];
+      if (raw is String && raw.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is List) images = List<String>.from(decoded);
+        } catch (_) {
+          images = raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        }
+      }
+    }
+
     return Destination(
       id_destination: json['id_destination'],
       name: json['namedestination'] ?? '',
-      imageUrl: json['images'] is List
-          ? List<String>.from(json['images'])
-          : [],
+      imageUrl: images,
       location: json['location'] ?? '',
       description: json['description'] ?? '',
       operational: json['operational'] ?? '',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/componen/Bookmark/bookmarkProvider.dart';
 import 'package:mobile/componen/Detail/FacilitySection.dart';
 import 'package:mobile/componen/Detail/ReviewSection.dart';
 import 'package:mobile/componen/formatDate.dart';
@@ -15,6 +16,7 @@ import 'package:mobile/models/package_model.dart';
 import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/subPackage.dart';
 import 'package:mobile/models/user_model.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_rating/flutter_rating.dart';
@@ -51,8 +53,8 @@ class TriangleClipper extends CustomClipper<Path> {
 }
 
 class _DetailPageState extends State<DetailPage> {
-
-  late bool _isfavorites;
+  // ignore: unused_field
+  bool _isfavorites = false;
 
   Package? selectedPackage;
   SubPackage? selectedSubPackage;
@@ -75,6 +77,23 @@ class _DetailPageState extends State<DetailPage> {
       });
     } catch (e) {
       debugPrint(e.toString());
+    }
+  }
+
+  Future<void> _loadBookmarkStatus() async {
+    if (User.currentUser == null) return;
+    try {
+      final bookmarked = await isBookmarked(
+        userId: User.currentUser!.id_user,
+        destination: widget.destination,
+        event: widget.event,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isfavorites = bookmarked;
+      });
+    } catch (e) {
+      debugPrint('Failed to check bookmark: $e');
     }
   }
 
@@ -107,12 +126,7 @@ class _DetailPageState extends State<DetailPage> {
   void initState() {
     super.initState();
     loadData();
-
-    _isfavorites = isBookmarked(
-      userId: User.currentUser!.id_user,
-      destination: widget.destination,
-      event: widget.event,
-    );
+    _loadBookmarkStatus();
   }
 
   Widget _BottonInfo({
@@ -399,34 +413,34 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  void toggleBookmark({
+  Future<void> toggleBookmark({
     required User user,
     Destination? destination,
     Event? event,
-  }) {
-    assert(
-      (destination != null && event == null) ||
-      (destination == null && event != null),
-      'Either destination or event must be provided, not both',
-    );
+  }) async {
+    final bookmarks = await getBookmarks();
+    Bookmark? existing;
+    for (final b in bookmarks) {
+      if (b.userId.id_user == user.id_user &&
+          (destination != null
+              ? b.destinationId?.id_destination == destination.id_destination
+              : b.eventId?.id_event == event!.id_event)) {
+        existing = b;
+        break;
+      }
+    }
 
-    final index = bookmarks.indexWhere((b) =>
-        b.userId.id_user == user.id_user &&
-        (destination != null
-            ? b.destinationId?.id_destination == destination.id_destination
-            : b.eventId?.id_event == event!.id_event));
-
-    if (index != -1) {
-      bookmarks.removeAt(index);
-    } else {
-      bookmarks.add(
-        Bookmark(
-          id_bookmark: DateTime.now().millisecondsSinceEpoch,
-          userId: user,
-          destinationId: destination,
-          eventId: event,
-        ),
-      );
+    try {
+      if (existing != null) {
+        await deleteBookmark(item: existing);
+      } else {
+        await createBookmark(
+          destinationId: destination?.id_destination,
+          eventId: event?.id_event,
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to toggle bookmark: $e');
     }
   }
 
@@ -514,31 +528,38 @@ class _DetailPageState extends State<DetailPage> {
                                     ),
                                   ),
                                 ),
-                                IconButton(
-                                  icon: Icon(
-                                    _isfavorites
-                                        ? Icons.bookmark
-                                        : Icons.bookmark_border,
-                                    color: const Color(0xFF8AC4FA),
-                                    size: 30,
-                                  ),
-                                  onPressed: () {
+                                Consumer<BookmarkProvider>(
+                                  builder: (context, provider, _) {
+                                    final isFav = provider.isBookmarked(
+                                      user: User.currentUser!,
+                                      destination: widget.destination,
+                                      event: widget.event,
+                                    );
 
-                                    setState(() {
-                                      toggleBookmark(
-                                        user: User.currentUser!,
-                                        destination: widget.destination,
-                                        event: widget.event,
-                                      );
+                                    return IconButton(
+                                      icon: Icon(
+                                        isFav ? Icons.bookmark : Icons.bookmark_border,
+                                        color: const Color(0xFF8AC4FA),
+                                        size: 30,
+                                      ),
+                                      onPressed: () async {
+                                        if (User.currentUser == null) return;
 
-                                      _isfavorites = isBookmarked(
-                                        userId: User.currentUser!.id_user,
-                                        destination: widget.destination,
-                                        event: widget.event,
-                                      );
-                                    });
+                                        try {
+                                          await provider.toggle(
+                                            user: User.currentUser!,
+                                            destination: widget.destination,
+                                            event: widget.event,
+                                          );
+                                        } catch (_) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Gagal update bookmark')),
+                                          );
+                                        }
+                                      },
+                                    );
                                   },
-                                ),
+                                )
                               ],
                             ),
 
@@ -558,10 +579,10 @@ class _DetailPageState extends State<DetailPage> {
                                   Expanded(
                                     child: Text(
                                       isDestination
-                                          ? destination?.location ?? '-'
-                                          : event?.destinationId?.location ??
-                                            event?.location ??
-                                            '-',
+                                        ? destination?.location ?? '-'
+                                        : event?.destinationId?.location ??
+                                          event?.location ??
+                                          '-',
                                       style: const TextStyle(
                                         fontSize: 15,
                                         color: Colors.black,
@@ -615,45 +636,45 @@ class _DetailPageState extends State<DetailPage> {
                             if(isDestination && destination.facilities != null)
                               FacilitySection(facilities: destination.facilities!),
 
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 25),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if(isDestination)
-                                      Text(
-                                        "Show Tours : ${destination.operational}", 
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                        ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 25),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if(isDestination)
+                                    Text(
+                                      "Show Tours : ${destination.operational}", 
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
                                       ),
+                                    ),
 
-                                    if (!isDestination) ...[
-                                      Padding(
-                                        padding: const EdgeInsets.only(bottom: 10),
-                                        child: Text(
-                                          "Date Event : ${formatEventDate(event!.startDate, event.endDate)}",
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        "Time Event : ${event.startTime} - ${event.endTime}",
+                                  if (!isDestination) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 10),
+                                      child: Text(
+                                        "Date Event : ${formatEventDate(event!.startDate, event.endDate)}",
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
-                                    ],
+                                    ),
+                                    Text(
+                                      "Time Event : ${event.startTime} - ${event.endTime}",
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                                   ],
-                                ),
+                                ],
                               ),
+                            ),
     
                             Padding(
                               padding: const EdgeInsets.only(bottom: 25),

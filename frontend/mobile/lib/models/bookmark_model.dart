@@ -1,10 +1,10 @@
-import 'package:mobile/models/destination_model.dart';
-import 'package:mobile/models/event_model.dart';
-import 'package:mobile/models/user_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/api.dart';
+import 'package:mobile/models/destination_model.dart';
+import 'package:mobile/models/event_model.dart';
+import 'package:mobile/models/user_model.dart';
 
 class Bookmark {
   final int id_bookmark;
@@ -22,12 +22,12 @@ class Bookmark {
   factory Bookmark.fromJson(Map<String, dynamic> json) {
     return Bookmark(
       id_bookmark: json['id_bookmark'],
-      userId: User.fromJson(json['userId']),
-      destinationId: json['destinationId'] != null
-          ? Destination.fromJson(json['destinationId'])
+      userId: User.fromJson(json['user']),
+      destinationId: json['destination'] != null
+          ? Destination.fromJson(json['destination'])
           : null,
-      eventId: json['eventId'] != null
-          ? Event.fromJson(json['eventId'])
+      eventId: json['event'] != null
+          ? Event.fromJson(json['event'])
           : null,
     );
   }
@@ -36,30 +36,25 @@ class Bookmark {
 Future<List<Bookmark>> getBookmarks() async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
-
-  if (token == null) {
-    throw Exception('User belum login');
-  }
+  if (token == null) throw Exception('User belum login');
 
   final response = await http.get(
     Uri.parse('$baseUrl/user/favorite'),
     headers: {
-      'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
     },
   );
 
   if (response.statusCode != 200) {
     final decoded = jsonDecode(response.body);
     throw Exception(decoded['error'] ?? 'Gagal mengambil bookmark');
-  } 
+  }
 
   final decoded = jsonDecode(response.body);
   final List list = decoded['favorites'] ?? [];
   return list.map((e) => Bookmark.fromJson(e)).toList();
-
 }
-
 
 Future<void> createBookmark({
   int? destinationId,
@@ -93,46 +88,44 @@ Future<void> createBookmark({
 }
 
 Future<void> deleteBookmark({
-  required int destinationId,
+  required Bookmark item,
 }) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
+  if (token == null) throw Exception('User belum login');
 
-  if (token == null) {
-    throw Exception('User belum login');
-  }
+  final isEvent = item.eventId != null;
+  final targetId = isEvent
+      ? item.eventId!.id_event
+      : item.destinationId!.id_destination;
+  final typeParam = isEvent ? 'event' : 'destination';
 
   final response = await http.delete(
-    Uri.parse('$baseUrl/user/favorite/$destinationId'),
+    Uri.parse('$baseUrl/user/favorite/$targetId?type=$typeParam'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     },
   );
 
-  if (response.statusCode == 200) {
-    bookmarks.removeWhere(
-      (b) =>
-          b.userId.id_user == User.currentUser!.id_user &&
-          b.destinationId?.id_destination == destinationId,
-    );
-    return;
+  if (response.statusCode != 200) {
+    final decoded = jsonDecode(response.body);
+    throw Exception(decoded['error'] ?? 'Gagal menghapus bookmark');
   }
-
-  final decoded = jsonDecode(response.body);
-  throw Exception(decoded['error'] ?? 'Gagal menghapus bookmark');
 }
 
-
-bool isBookmarked({
+Future<bool> isBookmarked({
   required int userId,
   Destination? destination,
   Event? event,
-}) {
+}) async {
   assert(
     (destination != null && event == null) ||
     (destination == null && event != null),
+    'Either destination or event must be provided, not both',
   );
+
+  final bookmarks = await getBookmarks();
 
   return bookmarks.any((b) =>
       b.userId.id_user == userId &&
@@ -140,27 +133,3 @@ bool isBookmarked({
           ? b.destinationId?.id_destination == destination.id_destination
           : b.eventId?.id_event == event!.id_event));
 }
-
-
-final List<Bookmark> bookmarks = [
-  Bookmark(
-    id_bookmark: 1,
-    userId: users.firstWhere((u) => u.id_user == 3),
-    destinationId: destinations.firstWhere((d) => d.id_destination == 1),
-  ),
-  Bookmark(
-    id_bookmark: 2,
-    userId: users.firstWhere((u) => u.id_user == 3),
-    eventId: events.firstWhere((e) => e.id_event == 2),
-  ),
-  Bookmark(
-    id_bookmark: 3,
-    userId: users.firstWhere((u) => u.id_user == 2),
-    destinationId: destinations.firstWhere((d) => d.id_destination == 3),
-  ),
-  Bookmark(
-    id_bookmark: 4,
-    userId: users.firstWhere((u) => u.id_user == 2),
-    eventId: events.firstWhere((e) => e.id_event == 1),
-  ),
-];

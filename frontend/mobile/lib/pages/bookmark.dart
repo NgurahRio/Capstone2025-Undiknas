@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/componen/Bookmark/bookmarkProvider.dart';
 import 'package:mobile/componen/formatDate.dart';
 import 'package:mobile/componen/buttonCostum.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/headerCustom.dart';
 import 'package:mobile/models/bookmark_model.dart';
+import 'package:mobile/models/review_model.dart';
 import 'package:mobile/models/user_model.dart';
 import 'package:mobile/pages/Auth/loginPage.dart';
 import 'package:mobile/pages/detail.dart';
+import 'package:provider/provider.dart';
 
 class BookmarkPage extends StatefulWidget {
 
@@ -22,40 +25,57 @@ class _BookmarkPageState extends State<BookmarkPage> {
   List<int> selected = [];
   bool _isSelect = false;
   String selectedType = "ALL";
-  List<Bookmark> bookmarks = [];
+  List<Review> reviews = [];
 
-  Future<void> fetchBookmarks() async {
-    try {
-      final data = await getBookmarks();
-      setState(() {
-        bookmarks = data;
-      });
-    } catch (e) {
-      print('Error fetching bookmarks: $e');
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    fetchBookmarks();
-  }
-
-  void _deleteAllFavorites() {
-    setState(() {
-      bookmarks.clear();
-      selected.clear();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = User.currentUser;
+      if (user != null) {
+        context.read<BookmarkProvider>().fetchBookmarks();
+      }
     });
   }
 
-  void _deleteSelecteds() {
+
+  Future<void> _deleteSelecteds(List<Bookmark> bookmarks) async {
+    final toDelete =
+        bookmarks.where((b) => selected.contains(b.id_bookmark)).toList();
+
+    for (final b in toDelete) {
+      await context.read<BookmarkProvider>().toggle(
+            user: User.currentUser!,
+            destination: b.destinationId,
+            event: b.eventId,
+          );
+    }
+
     setState(() {
-      bookmarks.removeWhere((item) => selected.contains(item.id_bookmark));
       selected.clear();
+      _isSelect = false;
     });
   }
 
-  void _showDialogDelete() {
+  Future<void> _deleteAllFavorites(List<Bookmark> bookmarks) async {
+    final List<Bookmark> snapshot = List.from(bookmarks);
+
+    for (final b in snapshot) {
+      await context.read<BookmarkProvider>().toggle(
+        user: User.currentUser!,
+        destination: b.destinationId,
+        event: b.eventId,
+      );
+    }
+
+    setState(() {
+      selected.clear();
+      _isSelect = false;
+    });
+  }
+
+  void _showDialogDelete(List<Bookmark> bookmarks) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -118,9 +138,9 @@ class _BookmarkPageState extends State<BookmarkPage> {
                     child: GestureDetector(
                       onTap: () {
                         if (_isSelect) {
-                          _deleteSelecteds();
+                          _deleteSelecteds(bookmarks);
                         } else {
-                          _deleteAllFavorites();
+                          _deleteAllFavorites(bookmarks);
                         }
                   
                         Navigator.pop(context);
@@ -220,14 +240,18 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Bookmark> filteredItems = bookmarks.where((item) {
-      if (item.userId.id_user != User.currentUser?.id_user) return false;
+    return Consumer<BookmarkProvider>(
+    builder: (context, provider, _) {
 
-      if (selectedType == "ALL") return true;
-      if (selectedType == "Event" && item.eventId != null) return true;
-      if (selectedType == "Destination" && item.destinationId != null) return true;
-      return false;
-    }).toList();
+      final bookmarks = provider.bookmarks;
+
+      final filteredItems = bookmarks.where((item) {
+        if (item.userId.id_user != User.currentUser?.id_user) return false;
+        if (selectedType == "ALL") return true;
+        if (selectedType == "Event" && item.eventId != null) return true;
+        if (selectedType == "Destination" && item.destinationId != null) return true;
+        return false;
+      }).toList();
     
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),
@@ -313,7 +337,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                     borderRadius: BorderRadius.circular(7),
                                   ),
                                   child: GestureDetector(
-                                    onTap: _showDialogDelete,
+                                    onTap: () => _showDialogDelete(bookmarks),
                                     child: Row(
                                       children: [
                                         Padding(
@@ -429,7 +453,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                           
                                   final title = isEvent ? bookM.eventId!.name : bookM.destinationId!.name;
                                   final subtitle = isEvent ? formatEventDate(bookM.eventId!.startDate, bookM.eventId!.endDate) : bookM.destinationId!.location;
-                                  final image = isEvent ? bookM.eventId!.imageUrl[0] : bookM.destinationId!.imageUrl[0];
+                                  final image = isEvent ? bookM.eventId?.imageUrl.first : bookM.destinationId?.imageUrl.first;
                                   final List<String>? category = isEvent ? null : bookM.destinationId!.subCategoryId.map((sub) => sub.categoryId.name).toSet().toList();
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -465,22 +489,24 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                           ),
                                         Expanded(
                                           child: CardItems1(
-                                            rating: 4.9,
+                                            rating: isEvent
+                                              ? averageRatingForEvent(bookM.eventId!.id_event, reviews)
+                                              : averageRatingForDestination(bookM.destinationId!.id_destination, reviews),
                                             title: title,
-                                            image: image,
+                                            image: image!,
                                             subtitle: subtitle,
                                             categories: isEvent ? null : category,
                                             isBookmark: true,
                                             onTap: () {
                                               Navigator.push(
-                                                context, 
-                                                MaterialPageRoute(builder: (context) => DetailPage(
-                                                  destination: isEvent ? null : bookM.destinationId, 
-                                                  event: isEvent ? bookM.eventId : null,
-                                                )),
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => DetailPage(
+                                                    destination: isEvent ? null : bookM.destinationId,
+                                                    event: isEvent ? bookM.eventId : null,
+                                                  ),
+                                                ),
                                               );
-
-                                              setState(() {});
                                             },
                                           ),
                                         ),
@@ -500,5 +526,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
         )
       ),
     );
+    }
+    );
   }
-}
+  }
