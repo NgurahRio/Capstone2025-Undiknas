@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mobile/componen/cardItems.dart';
 import 'package:mobile/componen/dropDownFilter.dart';
 import 'package:mobile/componen/headerCustom.dart';
+import 'package:mobile/models/category_model.dart';
 import 'package:mobile/models/destination_model.dart';
 import 'package:mobile/models/review_model.dart';
+import 'package:mobile/models/subCategory_model.dart';
 import 'package:mobile/pages/detail.dart';
 
 class SeeAllPage extends StatefulWidget {
@@ -31,7 +33,34 @@ class _SeeAllPageState extends State<SeeAllPage> {
   OverlayEntry? _overlayEntry;
   bool _isDropdownVisible = false;
 
+  List<Destination> destinations = [];
+  List<Category> categories = [];
+  List<SubCategory> subCategories = [];
   List<Review> reviews = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final dest = await getDestinations();
+      final cat = await getCategories();
+      final sub = await getSubCategories(cat);
+      final rev = await getReviews();
+      if (!mounted) return;
+      setState(() {
+        destinations = dest;
+        categories = cat;
+        subCategories = sub;
+        reviews = rev;
+      });
+    } catch (e) {
+      debugPrint('LOAD SEEALL ERROR: $e');
+    }
+  }
 
   void _toggleDropdown() {
     if (_isDropdownVisible) {
@@ -189,16 +218,18 @@ class _SeeAllPageState extends State<SeeAllPage> {
         
             Padding(
               padding: const EdgeInsets.only(left: 17, right: 17, bottom: 5),
-              child: FilterApply(
-                key: ValueKey(widget.appliedSubCategories.length),
-                selectedCategory: widget.selectedCategories,
-                selectedSubCategories: widget.selectedSubCategories,
-                appliedSubCategories: widget.appliedSubCategories,
-                onFilterChanged: ({
-                  required selectedCategory,
-                  required selectedSubCategories,
-                  required appliedSubCategories,
-                }) {
+          child: FilterApply(
+            key: ValueKey(widget.appliedSubCategories.length),
+            selectedCategory: widget.selectedCategories,
+            selectedSubCategories: widget.selectedSubCategories,
+            appliedSubCategories: widget.appliedSubCategories,
+            categories: categories,
+            subCategories: subCategories,
+            onFilterChanged: ({
+              required selectedCategory,
+              required selectedSubCategories,
+              required appliedSubCategories,
+            }) {
                   setState(() {
                     widget.selectedCategories
                       ..clear()

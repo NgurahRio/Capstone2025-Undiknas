@@ -55,6 +55,7 @@ class TriangleClipper extends CustomClipper<Path> {
 class _DetailPageState extends State<DetailPage> {
   // ignore: unused_field
   bool _isfavorites = false;
+  late final PageController _pageController;
 
   Package? selectedPackage;
   SubPackage? selectedSubPackage;
@@ -125,8 +126,15 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     loadData();
     _loadBookmarkStatus();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Widget _BottonInfo({
@@ -482,6 +490,10 @@ class _DetailPageState extends State<DetailPage> {
                 height: 300,
                 width: double.infinity,
                 child: PageView.builder(
+                  key: PageStorageKey(
+                    'detail_images_${isDestination ? destination!.id_destination : event!.id_event}_${isDestination ? 'dest' : 'event'}',
+                  ),
+                  controller: _pageController,
                   itemCount: images.length,
                   itemBuilder: (context, index) {
                     return Image(
@@ -528,14 +540,13 @@ class _DetailPageState extends State<DetailPage> {
                                     ),
                                   ),
                                 ),
-                                Consumer<BookmarkProvider>(
-                                  builder: (context, provider, _) {
-                                    final isFav = provider.isBookmarked(
-                                      user: User.currentUser!,
-                                      destination: widget.destination,
-                                      event: widget.event,
-                                    );
-
+                                Selector<BookmarkProvider, bool>(
+                                  selector: (context, provider) => provider.isBookmarked(
+                                    user: User.currentUser!,
+                                    destination: widget.destination,
+                                    event: widget.event,
+                                  ),
+                                  builder: (context, isFav, _) {
                                     return IconButton(
                                       icon: Icon(
                                         isFav ? Icons.bookmark : Icons.bookmark_border,
@@ -546,7 +557,7 @@ class _DetailPageState extends State<DetailPage> {
                                         if (User.currentUser == null) return;
 
                                         try {
-                                          await provider.toggle(
+                                          await context.read<BookmarkProvider>().toggle(
                                             user: User.currentUser!,
                                             destination: widget.destination,
                                             event: widget.event,

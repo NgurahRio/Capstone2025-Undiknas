@@ -114,11 +114,16 @@ class _StyleDropdownState extends State<StyleDropdown> {
                   ),
                 ),
           
-                if (selectedCategory.isNotEmpty)
+                if (selectedCategory.isNotEmpty && categories.isNotEmpty && subCategories.isNotEmpty)
                   Center(
                     child: Column(
                       children: selectedCategory.map((catId) {
-                        final cat = categories.firstWhere((c) => c.id_category == catId);
+                        Category? cat;
+                        try {
+                          cat = categories.firstWhere((c) => c.id_category == catId);
+                        } catch (_) {
+                          return const SizedBox.shrink();
+                        }
                         final subs = subCategories.where((sub) => sub.categoryId.id_category == catId).toList();
                     
                         return Padding(
@@ -181,6 +186,11 @@ class _StyleDropdownState extends State<StyleDropdown> {
                       }).toList(),
                     ),
                   ),
+                if (selectedCategory.isNotEmpty && (categories.isEmpty || subCategories.isEmpty))
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
           
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -205,6 +215,8 @@ class FilterApply extends StatefulWidget {
   final List<dynamic> selectedCategory;
   final List<dynamic> selectedSubCategories;
   final List<dynamic> appliedSubCategories;
+  final List<Category> categories;
+  final List<SubCategory> subCategories;
 
   final void Function({
     required List<dynamic> selectedCategory,
@@ -217,6 +229,8 @@ class FilterApply extends StatefulWidget {
     required this.selectedCategory,
     required this.selectedSubCategories,
     required this.appliedSubCategories,
+    required this.categories,
+    required this.subCategories,
     required this.onFilterChanged,
   });
 
@@ -285,8 +299,8 @@ class _FilterApplyState extends State<FilterApply> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        ...categories.where((cat) {
-          return subCategories.any(
+        ...widget.categories.where((cat) {
+          return widget.subCategories.any(
             (sub) =>
                 sub.categoryId.id_category == cat.id_category &&
                 appliedSubCategories.contains(sub.id_subCategory),
@@ -297,14 +311,14 @@ class _FilterApplyState extends State<FilterApply> {
             onRemove: () {
               setState(() {
                 appliedSubCategories.removeWhere((subId) {
-                  final sub = subCategories.firstWhere(
+                  final sub = widget.subCategories.firstWhere(
                     (s) => s.id_subCategory == subId,
                   );
                   return sub.categoryId.id_category == cat.id_category;
                 });
 
                 selectedSubCategories.removeWhere((subId) {
-                  final sub = subCategories.firstWhere(
+                  final sub = widget.subCategories.firstWhere(
                     (s) => s.id_subCategory == subId,
                   );
                   return sub.categoryId.id_category == cat.id_category;
@@ -319,9 +333,15 @@ class _FilterApplyState extends State<FilterApply> {
         }),
 
         ...appliedSubCategories.map((subId) {
-          final sub = subCategories.firstWhere(
-            (s) => s.id_subCategory == subId,
-          );
+          SubCategory? sub;
+          try {
+            sub = widget.subCategories.firstWhere(
+              (s) => s.id_subCategory == subId,
+            );
+          } catch (_) {
+            sub = null;
+          }
+          if (sub == null) return const SizedBox.shrink();
           return _buildChip(
             label: sub.name,
             onRemove: () {

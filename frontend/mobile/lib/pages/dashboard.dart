@@ -25,7 +25,7 @@ class _DashboardState extends State<Dashboard> {
   List<dynamic> selectedCategory = [];
   List<dynamic> selectedSubCategories = [];
   List<dynamic> appliedSubCategories = [];
-  List<dynamic> searchedDestinations = [];
+  List<Destination> searchedDestinations = [];
   List<Destination> destinations = [];
   List<Event> events = [];
   List<Category> categories = [];
@@ -40,12 +40,14 @@ class _DashboardState extends State<Dashboard> {
       final evt = await getEvents();
       final cat = await getCategories();
       final subCat = await getSubCategories(cat);
+      final rev = await getReviews();
       if (!mounted) return;
       setState(() {
         destinations = dest;
         events = evt;
         categories = cat;
         subCategories = subCat;
+        reviews = rev;
       });
     } catch (e) {
       debugPrint("LOAD ERROR: $e");
@@ -57,8 +59,9 @@ class _DashboardState extends State<Dashboard> {
       if (query.isEmpty) {
         searchedDestinations = [];
       } else {
-        searchedDestinations = destinations.where(
-          (d) => d.name.toLowerCase().contains(query.toLowerCase())).toList();
+        searchedDestinations = destinations
+            .where((d) => d.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
       }
     });
   }
@@ -482,16 +485,20 @@ class _DashboardState extends State<Dashboard> {
                                 itemBuilder: (context, index) {
                                   final item = searchedDestinations[index];
                                   final ratDest = averageRatingForDestination(item.id_destination, reviews);
+                                  final image = item.imageUrl.first;
+                                  final cats = item.subCategoryId.isNotEmpty
+                                      ? item.subCategoryId
+                                          .map((sub) => sub.categoryId.name)
+                                          .toSet()
+                                          .toList()
+                                      : <String>[];
           
                                   return CardItems2(
-                                    image: item.imageUrl.first,
+                                    image: image,
                                     title: item.name,
                                     subTitle: item.description,
                                     rating: ratDest,
-                                    categories: item.subCategoryId
-                                      .map((sub) => sub.categoryId.name)
-                                      .toSet()
-                                      .toList(),
+                                    categories: cats,
                                     isDestination: true,
                                     onTap: () => _navigateTo(
                                       DetailPage(
@@ -542,6 +549,8 @@ class _DashboardState extends State<Dashboard> {
                                 selectedCategory: selectedCategory,
                                 selectedSubCategories: selectedSubCategories,
                                 appliedSubCategories: appliedSubCategories,
+                                categories: categories,
+                                subCategories: subCategories,
                                 onFilterChanged: ({
                                   required selectedCategory,
                                   required selectedSubCategories,
@@ -585,32 +594,33 @@ class _DashboardState extends State<Dashboard> {
                         ),
               
                       
-                      _subHeader(
-                        title: "Popular Places Now",
-                      ),
-                  
-                      _bodySubHeader(
-                        itemCount: topRatedDestinations.length, 
-                        itemBuilder: (context, index) {
-                          final item = topRatedDestinations[index];
-                          final ratDest = averageRatingForDestination(item.id_destination, reviews);
-                          return CardItems1(
-                            image: item.imageUrl.first,
-                            rating: ratDest,
-                            title: item.name,
-                            subtitle: item.location,
-                            categories: item.subCategoryId
-                              .map((sub) => sub.categoryId.name)
-                              .toSet()
-                              .toList(),
-                            onTap: () => _navigateTo(
-                              DetailPage(
-                                destination: item, 
-                                event: null,
-                              )),
-                          );
-                        },
-                      ),
+                      if(topRatedDestinations.isNotEmpty) ...[
+                        _subHeader(
+                          title: "Popular Places Now",
+                        ),
+                        _bodySubHeader(
+                          itemCount: topRatedDestinations.length, 
+                          itemBuilder: (context, index) {
+                            final item = topRatedDestinations[index];
+                            final ratDest = averageRatingForDestination(item.id_destination, reviews);
+                            return CardItems1(
+                              image: item.imageUrl.first,
+                              rating: ratDest,
+                              title: item.name,
+                              subtitle: item.location,
+                              categories: item.subCategoryId
+                                .map((sub) => sub.categoryId.name)
+                                .toSet()
+                                .toList(),
+                              onTap: () => _navigateTo(
+                                DetailPage(
+                                  destination: item, 
+                                  event: null,
+                                )),
+                            );
+                          },
+                        ),
+                      ],
               
                       const Padding(
                         padding: EdgeInsets.only(left: 20, top: 15, bottom: 5),

@@ -78,23 +78,6 @@ class _LoginPageState extends State<LoginPage> {
                     isPassword: true,
                   ),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5, bottom: 10),
-                      child: InkWell(
-                        child: const Text(
-                          "Forgot Password",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w300,
-                          ),
-                        ),
-                        onTap: () {},
-                      ),
-                    ),
-                  ),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 30),
                     child: TextButton(

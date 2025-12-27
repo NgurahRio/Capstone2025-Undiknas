@@ -143,13 +143,23 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
-              setState(() {
-                _profileImage = null;
-              });
+            onPressed: () async {
+              Navigator.pop(context);
+              Navigator.pop(context);
 
-              Navigator.pop(context);
-              Navigator.pop(context);
+              try {
+                await updateProfile(removeImage: true);
+
+                if (!mounted) return;
+                setState(() {
+                  _profileImage = '';
+                });
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString())),
+                );
+              }
             },
             child: const Text('Hapus'),
           ),

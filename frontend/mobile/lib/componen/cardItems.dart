@@ -40,10 +40,10 @@ class CardItems1 extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: rating == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: rating == null || rating! <= 0 ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
             children: [
 
-              if(rating != null)
+              if (rating != null && rating! > 0)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
@@ -217,9 +217,9 @@ class CardItems2 extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5),
                       child: Row(
-                        mainAxisAlignment: rating == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: rating == null || rating! <= 0 ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
                         children: [
-                          if(rating != null)
+                          if (rating != null && rating! > 0)
                             Row(
                               children: [
                                 const Icon(Icons.star, color: Colors.yellow, size: 15),

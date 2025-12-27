@@ -59,6 +59,7 @@ Future<User> updateProfile({
   String? oldPassword,
   String? newPassword,
   File? imageFile,
+  bool removeImage = false,
 }) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
@@ -77,7 +78,9 @@ Future<User> updateProfile({
     request.fields['old_password'] = oldPassword ?? '';
   }
 
-  if (imageFile != null) {
+  if (removeImage) {
+    request.fields['remove_image'] = 'true';
+  } else if (imageFile != null) {
     request.files.add(
       await http.MultipartFile.fromPath(
         'image',
