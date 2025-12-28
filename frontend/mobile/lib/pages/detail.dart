@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile/componen/Bookmark/bookmarkProvider.dart';
 import 'package:mobile/componen/Detail/FacilitySection.dart';
 import 'package:mobile/componen/Detail/ReviewSection.dart';
@@ -454,11 +453,41 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final  isDestination = widget.destination != null;
+    final isDestination = widget.destination != null;
     final destination = widget.destination;
     final event = widget.event;
 
     final images = isDestination ? destination!.imageUrl : event!.imageUrl;
+
+    final hasDoDont = isDestination
+        ? ((destination?.dos?.isNotEmpty ?? false) ||
+            (destination?.donts?.isNotEmpty ?? false))
+        : ((event?.dos?.isNotEmpty ?? false) ||
+            (event?.donts?.isNotEmpty ?? false));
+
+    final hasSafety = isDestination
+        ? (destination?.safetyGuidelines?.isNotEmpty ?? false)
+        : (event?.safetyGuidelines?.isNotEmpty ?? false);
+
+    final dosList = isDestination
+        ? (destination?.dos ?? [])
+        : (event?.dos ?? []);
+    final dontsList = isDestination
+        ? (destination?.donts ?? [])
+        : (event?.donts ?? []);
+    final safetyList = isDestination
+        ? (destination?.safetyGuidelines ?? [])
+        : (event?.safetyGuidelines ?? []);
+
+    final double latitude = isDestination
+        ? (destination?.latitude ?? 0)
+        : (event?.destinationId?.latitude ?? event?.latitude ?? 0);
+    final double longitude = isDestination
+        ? (destination?.longitude ?? 0)
+        : (event?.destinationId?.longitude ?? event?.longitude ?? 0);
+    final String mapsLink = isDestination
+        ? (destination?.maps ?? '')
+        : (event?.destinationId?.maps ?? event?.maps ?? '');
 
     final avarageRating = isDestination
       ? averageRatingForDestination(destination!.id_destination, reviews)
@@ -616,7 +645,7 @@ class _DetailPageState extends State<DetailPage> {
                               ),
                             ),
 
-                            if (isDestination) ...[
+                            if (isDestination)
                               Wrap(
                                 spacing: 12,
                                 runSpacing: 4,
@@ -644,17 +673,17 @@ class _DetailPageState extends State<DetailPage> {
                                     .toList(),
                               ),
 
-                            if(isDestination && destination.facilities != null)
-                              FacilitySection(facilities: destination.facilities!),
+                            if (isDestination && (destination?.facilities?.isNotEmpty ?? false))
+                              FacilitySection(facilities: destination!.facilities!),
 
                             Padding(
                               padding: const EdgeInsets.only(bottom: 25),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if(isDestination)
+                                  if (isDestination)
                                     Text(
-                                      "Show Tours : ${destination.operational}", 
+                                      "Show Tours : ${destination?.operational ?? '-'}", 
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w500,
@@ -906,7 +935,7 @@ class _DetailPageState extends State<DetailPage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (isDestination && destination.sos != null)
+                                  if (isDestination && destination?.sos != null)
                                     CompositedTransformTarget(
                                       link: _sosLink,
                                       key: _sosKey,
@@ -926,7 +955,7 @@ class _DetailPageState extends State<DetailPage> {
                                             _overlaySafety = null;
                                             _isDropdownSafety = false;
 
-                                            final sos = destination.sos!;
+                                            final sos = destination!.sos!;
 
                                             _showDropdown(
                                               link: _sosLink,
@@ -1006,12 +1035,7 @@ class _DetailPageState extends State<DetailPage> {
                                       ),
                                     ),
 
-                                  if ((isDestination
-                                          ? destination.dos?.isNotEmpty ?? false
-                                          : event?.dos?.isNotEmpty ?? false) ||
-                                      (isDestination
-                                          ? destination.donts?.isNotEmpty ?? false
-                                          : event?.donts?.isNotEmpty ?? false))
+                                  if (hasDoDont)
                                     CompositedTransformTarget(
                                       link: _doDontLink,
                                       key: _doDontKey,
@@ -1029,13 +1053,6 @@ class _DetailPageState extends State<DetailPage> {
                                             _overlaySafety?.remove();
                                             _overlaySafety = null;
                                             _isDropdownSafety = false;
-
-                                            final dosList = isDestination
-                                                ? destination.dos ?? []
-                                                : event!.dos ?? [];
-                                            final dontsList = isDestination
-                                                ? destination.donts ?? []
-                                                : event!.donts ?? [];
 
                                             _showDropdown(
                                               link: _doDontLink,
@@ -1101,9 +1118,7 @@ class _DetailPageState extends State<DetailPage> {
                                       ),
                                     ),
 
-                                  if ((isDestination
-                                          ? destination.safetyGuidelines?.isNotEmpty ?? false
-                                          : event?.safetyGuidelines?.isNotEmpty ?? false))
+                                  if (hasSafety)
                                     CompositedTransformTarget(
                                       link: _safetyLink,
                                       key: _safetyKey,
@@ -1121,10 +1136,6 @@ class _DetailPageState extends State<DetailPage> {
                                             _overlayDoDont?.remove();
                                             _overlayDoDont = null;
                                             _isDropdownDoDont = false;
-
-                                            final safetyList = isDestination
-                                                ? destination.safetyGuidelines ?? []
-                                                : event!.safetyGuidelines ?? [];
 
                                             _showDropdown(
                                               link: _safetyLink,
@@ -1184,33 +1195,15 @@ class _DetailPageState extends State<DetailPage> {
                                   border: Border.all(color: const Color(0xFFD9D8D8)),
                                   borderRadius: BorderRadius.circular(8)
                                 ),
-                                child: GoogleMap(
+                                  child: GoogleMap(
                                   initialCameraPosition: CameraPosition(
-                                    target: LatLng(
-                                      isDestination
-                                        ? destination.latitude
-                                        : event?.destinationId?.latitude ??
-                                          event?.latitude ?? 0,
-                                      isDestination
-                                        ? destination.longitude
-                                        : event?.destinationId?.longitude ??
-                                          event?.longitude ?? 0
-                                    ),
+                                    target: LatLng(latitude, longitude),
                                     zoom: 14,
                                   ),
                                   markers: {
                                     Marker(
                                       markerId: const MarkerId('destination'),
-                                      position: LatLng(
-                                        isDestination
-                                          ? destination.latitude
-                                          : event?.destinationId?.latitude ??
-                                            event?.latitude ?? 0,
-                                        isDestination
-                                          ? destination.longitude
-                                          : event?.destinationId?.longitude ??
-                                            event?.longitude ?? 0
-                                      ),
+                                      position: LatLng(latitude, longitude),
                                     ),
                                   },
                                 ),
@@ -1219,11 +1212,7 @@ class _DetailPageState extends State<DetailPage> {
 
                             GestureDetector(
                               onTap: () => _openMap(
-                                isDestination
-                                  ? destination.maps
-                                  : event?.destinationId != null
-                                    ? event!.destinationId!.maps
-                                    : event!.maps
+                                mapsLink
                               ),
                               child: Container(
                                 width: double.infinity,
@@ -1252,8 +1241,8 @@ class _DetailPageState extends State<DetailPage> {
                                 onWrite: () {
                                   showcommentPopup(
                                     context,
-                                    destinationId: isDestination ? destination.id_destination : null,
-                                    eventId: !isDestination ? event!.id_event : null,
+                                    destinationId: isDestination ? destination?.id_destination : null,
+                                    eventId: !isDestination ? event?.id_event : null,
                                     onSuccess: () async {
                                       final newReviews = await getReviews();
                                       setState(() {
@@ -1264,9 +1253,8 @@ class _DetailPageState extends State<DetailPage> {
                                 },
                               ),
                             ),
-                          ]
-                          ]
-                        )
+                          ],
+                        ),
                       ),
 
                       Padding(

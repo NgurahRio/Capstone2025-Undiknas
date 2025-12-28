@@ -25,13 +25,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   File? _selectedImage;
 
-  String? _profileImage;
+  String _profileImage = '';
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _profileImage = User.currentUser?.image;
+    _profileImage = User.currentUser?.image ?? '';
   }
 
   Future<void> _uploadProfileImage() async {
@@ -90,6 +90,24 @@ class _ProfilePageState extends State<ProfilePage> {
     await _uploadProfileImage();
   }
 
+  Future<void> _deleteProfileImage() async {
+    try {
+      await deleteProfileImage();
+
+      if (!mounted) return;
+      setState(() {
+        _profileImage = '';
+      });
+
+      _showSuccesfulChange();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   Widget _imagePickerItem({
     required IconData icon,
     required String text,
@@ -146,20 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () async {
               Navigator.pop(context);
               Navigator.pop(context);
-
-              try {
-                await updateProfile(removeImage: true);
-
-                if (!mounted) return;
-                setState(() {
-                  _profileImage = '';
-                });
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(e.toString())),
-                );
-              }
+              await _deleteProfileImage();
             },
             child: const Text('Hapus'),
           ),
@@ -176,8 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final hasImage =
-            _profileImage != null && _profileImage!.isNotEmpty;
+        final hasImage = _profileImage.isNotEmpty;
 
         return FractionallySizedBox(
           widthFactor: 1.0,
@@ -338,6 +342,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = User.currentUser;
+    final displayedImage = _profileImage.isNotEmpty
+        ? _profileImage
+        : (user?.image ?? '');
 
     return Scaffold(
       backgroundColor: const Color(0xfff3f9ff),
@@ -422,10 +429,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
-                                      child: user.image.isNotEmpty
+                                      child: displayedImage.isNotEmpty
                                         ?  ClipOval(
                                             child: Image(
-                                              image: formatImage(user.image),
+                                              image: formatImage(displayedImage),
                                               height: 175,
                                               width: 175,
                                               fit: BoxFit.cover,

@@ -59,7 +59,6 @@ Future<User> updateProfile({
   String? oldPassword,
   String? newPassword,
   File? imageFile,
-  bool removeImage = false,
 }) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
@@ -78,9 +77,7 @@ Future<User> updateProfile({
     request.fields['old_password'] = oldPassword ?? '';
   }
 
-  if (removeImage) {
-    request.fields['remove_image'] = 'true';
-  } else if (imageFile != null) {
+  if (imageFile != null) {
     request.files.add(
       await http.MultipartFile.fromPath(
         'image',
@@ -103,6 +100,54 @@ Future<User> updateProfile({
   User.currentUser = updatedUser;
 
   return updatedUser;
+}
+
+Future<void> deleteProfileImage() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  if (token == null) throw 'Token tidak ditemukan';
+
+  final uri = Uri.parse('$baseUrl/user/profile');
+  final response = await http.delete(
+    uri,
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  final decoded = jsonDecode(response.body);
+  if (response.statusCode != 200) {
+    throw decoded['error'] ?? 'Gagal menghapus foto profil';
+  }
+
+  // Ambil profil terbaru supaya data lain tetap utuh.
+  final getProfile = await http.get(
+    uri,
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  if (getProfile.statusCode == 200) {
+    final profileDecoded = jsonDecode(getProfile.body);
+    final refreshedUser = User.fromJson(profileDecoded['user']);
+    User.currentUser = User(
+      id_user: refreshedUser.id_user,
+      roleId: refreshedUser.roleId,
+      username: refreshedUser.username,
+      email: refreshedUser.email,
+      password: refreshedUser.password,
+      image: '',
+    );
+  } else {
+    final current = User.currentUser;
+    if (current != null) {
+      User.currentUser = User(
+        id_user: current.id_user,
+        roleId: current.roleId,
+        username: current.username,
+        email: current.email,
+        password: current.password,
+        image: '',
+      );
+    }
+  }
 }
 
 final List<User> users = [
