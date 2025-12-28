@@ -45,6 +45,20 @@ const formatRating = (val) => {
   return 'New';
 };
 
+const extractBackendRating = (item) => {
+  const candidates = [
+    item?.calculatedRating,
+    item?.calculated_rating,
+    item?.avg_rating,
+    item?.rating,
+  ];
+  for (const val of candidates) {
+    const num = parseFloat(val);
+    if (Number.isFinite(num)) return num;
+  }
+  return null;
+};
+
 const splitList = (text) => {
   if (!text) return [];
   return text
@@ -69,6 +83,21 @@ export default function EventDetail() {
   const doList = splitList(event?.do || '');
   const dontList = splitList(event?.dont || '');
   const safetyList = splitList(event?.safety || '');
+
+  const currentEventReviews = useMemo(
+    () => reviews.filter((r) => String(r.eventId || r.event_id) === String(id)),
+    [reviews, id],
+  );
+
+  const eventRatingValue = useMemo(() => {
+    if (currentEventReviews && currentEventReviews.length > 0) {
+      const total = currentEventReviews.reduce((acc, curr) => acc + parseFloat(curr.rating || 0), 0);
+      const avg = total / currentEventReviews.length;
+      if (Number.isFinite(avg) && avg > 0) return avg;
+    }
+    const raw = extractBackendRating(event);
+    return Number.isFinite(raw) ? raw : null;
+  }, [event, currentEventReviews]);
 
   const { mapLink, mapEmbed, isRawEmbed } = useMemo(() => {
     if (!event) return { mapLink: '', mapEmbed: '', isRawEmbed: false };
@@ -113,12 +142,9 @@ export default function EventDetail() {
 
     const fetchReviews = async () => {
       try {
-        const res = await api.get('/review', { params: { eventId: id } });
+        const res = await api.get('/review');
         const list = res.data?.data || res.data || [];
-        const filtered = Array.isArray(list)
-          ? list.filter((r) => String(r.eventId || r.event_id) === String(id))
-          : [];
-        setReviews(filtered);
+        setReviews(Array.isArray(list) ? list : []);
       } catch (err) {
         console.warn('Gagal ambil review event:', err);
       }
@@ -158,14 +184,24 @@ export default function EventDetail() {
   }, [id]);
 
   const averageRating = () => {
-    if (!reviews || reviews.length === 0) {
-      const fallback = event?.rating || event?.calculatedRating;
-      const num = parseFloat(fallback);
-      return Number.isFinite(num) && num > 0 ? num.toFixed(1) : 'New';
+    if (!currentEventReviews || currentEventReviews.length === 0) {
+      if (eventRatingValue && eventRatingValue > 0) return eventRatingValue.toFixed(1);
+      return 'New';
     }
-    const total = reviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0, 10), 0);
-    const avg = total / reviews.length;
+    const total = currentEventReviews.reduce((acc, curr) => acc + parseInt(curr.rating || 0, 10), 0);
+    const avg = total / currentEventReviews.length;
     return avg.toFixed(1);
+  };
+
+  const getRatingForEvent = (eventId) => {
+    if (!eventId) return null;
+    const filtered = reviews.filter((r) => String(r.eventId || r.event_id) === String(eventId));
+    if (filtered.length > 0) {
+      const total = filtered.reduce((acc, curr) => acc + parseFloat(curr.rating || 0), 0);
+      const avg = total / filtered.length;
+      if (Number.isFinite(avg) && avg > 0) return avg;
+    }
+    return null;
   };
 
   const handleSubmitReview = async () => {
@@ -182,13 +218,10 @@ export default function EventDetail() {
       });
       setUserRating(0);
       setUserComment('');
-      // refresh
-      const res = await api.get('/review', { params: { eventId: id } });
+      // refresh seluruh review untuk kebutuhan rating per event
+      const res = await api.get('/review');
       const list = res.data?.data || res.data || [];
-      const filtered = Array.isArray(list)
-        ? list.filter((r) => String(r.eventId || r.event_id) === String(id))
-        : [];
-      setReviews(filtered);
+      setReviews(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error(err);
       alert('Gagal mengirim review.');
@@ -298,7 +331,7 @@ export default function EventDetail() {
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF7E6] border border-[#F5C542]/40 rounded-full text-sm font-semibold text-gray-800">
                     <Star size={14} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
-                    <span>{formatRating(event.rating || event.calculatedRating)}</span>
+                    <span>{eventRatingValue && eventRatingValue > 0 ? eventRatingValue.toFixed(1) : 'New'}</span>
                   </div>
                   <div className="flex flex-col gap-2 text-base text-gray-900">
                     <div className="flex items-start gap-2">
@@ -437,7 +470,7 @@ export default function EventDetail() {
                         />
                       ))}
                     </div>
-                    <p className="text-[11px] text-gray-500">Berdasarkan {reviews.length || '0'} review</p>
+                    <p className="text-[11px] text-gray-500">Based on {currentEventReviews.length || '0'} review</p>
                   </div>
 
                   <div className="space-y-2 border-t border-gray-100 pt-3">
@@ -475,10 +508,10 @@ export default function EventDetail() {
                   </div>
 
                   <div className="pt-2 space-y-3 border-t border-gray-100 max-h-[240px] overflow-y-auto pr-1">
-                    {reviews.length === 0 ? (
+                    {currentEventReviews.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center">Belum ada review.</p>
                     ) : (
-                      reviews.map((rev, idx) => (
+                      currentEventReviews.map((rev, idx) => (
                         <div key={`${rev.id || idx}`} className="flex gap-3 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
                           <img
                             src={getReviewerAvatar(rev)}
@@ -522,41 +555,61 @@ export default function EventDetail() {
                 Lihat semua <ArrowLeft size={14} className="rotate-180" />
               </button>
             </div>
-            {recommendations.length === 0 ? (
+             {recommendations.length === 0 ? (
               <div className="text-sm text-gray-500">Belum ada event lainnya.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recommendations.map((item) => (
-              <div
-                key={item.id_event || item.id}
-                onClick={() => navigate(`/events/${item.id_event}`)}
-                className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="relative h-36 w-full overflow-hidden">
-                  <img
-                    src={processImage(item.image_event)}
-                    alt={item.nameevent}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1">
-                    <Star size={12} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
-                    <span>{formatRating(item.rating || item.calculatedRating)}</span>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <h4 className="font-semibold text-gray-900 text-sm line-clamp-2">
-                    {item.nameevent || 'Event'}
-                  </h4>
-                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <MapPin size={12} className="text-[#5E9BF5]" />
-                        <span className="truncate">{item.location || 'Lokasi belum tersedia'}</span>
+                {recommendations.map((item) => {
+                  const backendRating = extractBackendRating(item);
+                  const recRating = getRatingForEvent(item.id_event || item.id) ?? backendRating;
+                  const badgeLabel = formatRating(recRating);
+                  return (
+                    <div
+                      key={item.id_event || item.id}
+                      onClick={() => navigate(`/events/${item.id_event}`)}
+                      className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
+                    >
+                      <div className="relative aspect-[16/10] w-full overflow-hidden">
+                        <img
+                          src={processImage(item.image_event)}
+                          alt={item.nameevent}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                        />
+                        <div className="absolute top-3 right-3 bg-white/95 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1.5">
+                          <Star size={12} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
+                          <span>{badgeLabel}</span>
+                        </div>
                       </div>
-                      <div className="text-[11px] font-bold text-[#1F5FBF] bg-[#E8F1FF] inline-flex px-2 py-1 rounded-lg">
-                        {priceLabel(item.price)}
+                      <div className="p-4 flex flex-col gap-3 flex-1">
+                        <div className="space-y-2 flex-1">
+                          <h4 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 break-words min-h-[44px]">
+                            {item.nameevent || 'Event'}
+                          </h4>
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5 line-clamp-1">
+                            <MapPin size={14} className="text-[#5E9BF5]" />
+                            <span className="truncate">{item.location || 'Lokasi belum tersedia'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-800">
+                            <Calendar size={14} className="text-[#1F5FBF]" />
+                            <span>
+                              {toDateString(item.start_date)}
+                              {item.end_date ? ` - ${toDateString(item.end_date)}` : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                            <Clock size={14} className="text-[#1F5FBF]" />
+                            <span>{timeRange(item.start_time, item.end_time)}</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <span className="px-3 py-1 rounded-lg bg-[#5E9BF5] text-white text-xs font-extrabold shadow-sm self-end">
+                            {priceLabel(item.price)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
