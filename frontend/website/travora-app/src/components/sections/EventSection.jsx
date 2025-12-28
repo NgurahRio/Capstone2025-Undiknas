@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import { MapPin, RefreshCw, Star, CalendarDays, Clock3 } from 'lucide-react';
@@ -16,8 +16,22 @@ const calendarStyles = `
   .event-dot { height: 4px; width: 4px; background-color: #5E9BF5; border-radius: 50%; margin: 2px auto 0; }
 `;
 
+const extractBackendRating = (item) => {
+  const candidates = [
+    item?.calculatedRating,
+    item?.calculated_rating,
+    item?.avg_rating,
+    item?.rating,
+  ];
+  for (const val of candidates) {
+    const num = parseFloat(val);
+    if (Number.isFinite(num) && num > 0) return num;
+  }
+  return null;
+};
+
 // --- COMPONENT CARD EVENT COMPACT (VERSI KECIL) ---
-const EventCardList = ({ item, onPress }) => {
+const EventCardList = ({ item, onPress, ratingValue }) => {
   const processImage = (img) => {
     const fallback = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30";
     if (!img) return fallback;
@@ -27,15 +41,16 @@ const EventCardList = ({ item, onPress }) => {
   };
 
   const priceLabel = () => {
-    if (!item.price || parseFloat(item.price) <= 0) return "FREE ACCESS";
+    if (!item.price || parseFloat(item.price) <= 0) return "FREE ENTRY";
     const val = parseFloat(item.price);
     return `IDR ${Math.round(val).toLocaleString('id-ID')}`;
   };
 
   const ratingLabel = () => {
-    const val = parseFloat(item?.rating);
+    const val = parseFloat(ratingValue);
     if (Number.isFinite(val) && val > 0) return val.toFixed(1);
-    if (Number.isFinite(item?.calculatedRating) && item.calculatedRating > 0) return item.calculatedRating.toFixed(1);
+    const backendVal = extractBackendRating(item);
+    if (Number.isFinite(backendVal) && backendVal > 0) return backendVal.toFixed(1);
     return "New";
   };
 
@@ -104,6 +119,7 @@ export default function EventSection() {
   const navigate = useNavigate();
   const [allEvents, setAllEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -199,6 +215,19 @@ export default function EventSection() {
   }, []);
 
   useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await api.get('/review');
+        const list = res.data?.data || res.data || [];
+        setReviews(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error('Gagal ambil review event:', err);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  useEffect(() => {
     if (allEvents.length === 0) return;
     const todayStr = toDBFormat(selectedDate);
     if (viewMode === 'today') {
@@ -207,6 +236,24 @@ export default function EventSection() {
         setFilteredEvents(computeMonthEvents(selectedMonth, allEvents));
     }
   }, [allEvents, selectedDate, selectedMonth, viewMode]);
+
+  const ratingMap = useMemo(() => {
+    if (!reviews.length) return {};
+    const totals = {};
+    const counts = {};
+    reviews.forEach((r) => {
+      const evId = String(r.eventId || r.event_id || '');
+      const val = parseFloat(r.rating || 0);
+      if (!evId || !Number.isFinite(val)) return;
+      totals[evId] = (totals[evId] || 0) + val;
+      counts[evId] = (counts[evId] || 0) + 1;
+    });
+    const result = {};
+    Object.keys(totals).forEach((key) => {
+      if (counts[key] > 0) result[key] = totals[key] / counts[key];
+    });
+    return result;
+  }, [reviews]);
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
@@ -320,6 +367,7 @@ export default function EventSection() {
                           <EventCardList 
                               key={item.id_event || item.id}
                               item={item}
+                              ratingValue={ratingMap[String(item.id_event || item.id)]}
                               onPress={() => navigate(`/events/${item.id_event || item.id}`)}
                           />
                       ))}
