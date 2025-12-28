@@ -8,6 +8,7 @@ import 'package:admin_website/pages/content/overview.dart';
 import 'package:admin_website/pages/content/package.dart';
 import 'package:admin_website/pages/content/review.dart';
 import 'package:admin_website/pages/content/sos.dart';
+import 'package:admin_website/pages/content/subPackage.dart';
 import 'package:admin_website/pages/content/user.dart';
 import 'package:admin_website/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +40,7 @@ GoRouter createRouter(AuthService authService) {
           GoRoute(path: '/user', builder: (context, state) => const UserPage()),
           GoRoute(path: '/sos', builder: (context, state) => const SosPage()),
           GoRoute(path: '/facility', builder: (context, state) => const FacilityPage()),
+          GoRoute(path: '/subpackage', builder: (context, state) => const SubPackagePage()),
         ],
       ),
     ],
