@@ -62,7 +62,7 @@ class _AnimationFirstState extends State<AnimationFirst>
     // Logo geser ke kiri
     Future.delayed(const Duration(milliseconds: 3200), () {
       setState(() {
-        logoOffset = const Offset(-1.5, 0);
+        logoOffset = const Offset(-1.55, 0);
       });
     });
 
@@ -178,7 +178,7 @@ class _AnimationFirstState extends State<AnimationFirst>
                 builder: (context, child) {
                   final screen = MediaQuery.of(context).size;
                   return Padding(
-                    padding: EdgeInsets.only(left: screen.width * 0.215, bottom: 10),
+                    padding: EdgeInsets.only(left: screen.width * 0.210, bottom: 10),
                     child: ShaderMask(
                       shaderCallback: (Rect bounds) {
                         return LinearGradient(
