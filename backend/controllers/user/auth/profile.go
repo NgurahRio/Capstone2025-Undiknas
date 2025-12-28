@@ -164,7 +164,6 @@ func UpdateProfile(c *gin.Context) {
 	})
 }
 
-// DeleteProfile menghapus akun user yang sedang login
 func DeleteProfile(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
@@ -178,7 +177,6 @@ func DeleteProfile(c *gin.Context) {
 		return
 	}
 
-	// Pastikan user ada terlebih dulu
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -189,36 +187,15 @@ func DeleteProfile(c *gin.Context) {
 		return
 	}
 
-	// Hapus semua data terkait supaya tidak menghalangi penghapusan user (FK constraint)
-	tx := config.DB.Begin()
-
-	if err := tx.Where("userId = ?", userID).Delete(&models.Favorite{}).Error; err != nil {
-		tx.Rollback()
-		fmt.Println("error delete favorite by user:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus bookmark pengguna"})
+	if err := config.DB.Model(&user).Update("image", nil).Error; err != nil {
+		fmt.Println("error delete profile image:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus foto profil"})
 		return
 	}
 
-	if err := tx.Where("userId = ?", userID).Delete(&models.Review{}).Error; err != nil {
-		tx.Rollback()
-		fmt.Println("error delete review by user:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus ulasan pengguna"})
-		return
-	}
+	user.Image = nil
 
-	// Hard delete (bukan soft delete) supaya benar-benar hilang
-	if err := tx.Unscoped().Delete(&models.User{}, userID).Error; err != nil {
-		tx.Rollback()
-		fmt.Println("error delete profile:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus profil"})
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		fmt.Println("error commit delete profile:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan penghapusan profil"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Profil berhasil dihapus", "user": nil})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Foto profil berhasil dihapus",
+	})
 }
