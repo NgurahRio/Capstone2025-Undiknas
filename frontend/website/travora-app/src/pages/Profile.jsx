@@ -10,6 +10,7 @@ import {
   X,
   Edit,
   Lock,
+  Trash2,
 } from 'lucide-react';
 import api from '../api';
 
@@ -161,6 +162,28 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteProfileImage = async () => {
+    setError('');
+    setSuccess('');
+    const agree = window.confirm('Hapus foto profil? Akun tetap ada, hanya fotonya yang dihapus.');
+    if (!agree) return;
+    try {
+      setSavingProfile(true);
+      await api.delete('/user/profile');
+      const updatedUser = { ...user, image: null };
+      setUser(updatedUser);
+      setImageFile(null);
+      localStorage.setItem('travora_user', JSON.stringify(updatedUser));
+      setSuccess('Foto profil berhasil dihapus.');
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.error || 'Gagal menghapus foto profil.';
+      setError(msg);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center text-gray-400">
@@ -277,6 +300,13 @@ export default function Profile() {
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                 </label>
                 {imageFile && <span className="text-xs text-gray-500">{imageFile.name}</span>}
+                <button
+                  type="button"
+                  onClick={handleDeleteProfileImage}
+                  className="text-xs font-semibold text-red-500 hover:text-red-600"
+                >
+                  Hapus foto
+                </button>
               </div>
             </div>
 
