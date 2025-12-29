@@ -316,7 +316,7 @@ class _DetailPageState extends State<DetailPage> {
                                               )
                                             ),
                                     
-                                            if(rev.userId.id_user == User.currentUser!.id_user)
+                                            if (User.currentUser != null && rev.userId.id_user == User.currentUser!.id_user)
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 7),
                                                 child: Text(
@@ -456,6 +456,7 @@ class _DetailPageState extends State<DetailPage> {
     final isDestination = widget.destination != null;
     final destination = widget.destination;
     final event = widget.event;
+    final bool isLoggedIn = User.currentUser != null;
 
     final images = isDestination ? destination!.imageUrl : event!.imageUrl;
 
@@ -569,37 +570,51 @@ class _DetailPageState extends State<DetailPage> {
                                     ),
                                   ),
                                 ),
-                                Selector<BookmarkProvider, bool>(
-                                  selector: (context, provider) => provider.isBookmarked(
-                                    user: User.currentUser!,
-                                    destination: widget.destination,
-                                    event: widget.event,
-                                  ),
-                                  builder: (context, isFav, _) {
-                                    return IconButton(
-                                      icon: Icon(
-                                        isFav ? Icons.bookmark : Icons.bookmark_border,
-                                        color: const Color(0xFF8AC4FA),
-                                        size: 30,
-                                      ),
-                                      onPressed: () async {
-                                        if (User.currentUser == null) return;
+                                if (!isLoggedIn)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.bookmark_border,
+                                      color: Color(0xFF8AC4FA),
+                                      size: 30,
+                                    ),
+                                    onPressed: () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Silakan login untuk menambahkan bookmark')),
+                                      );
+                                    },
+                                  )
+                                else
+                                  Selector<BookmarkProvider, bool>(
+                                    selector: (context, provider) => provider.isBookmarked(
+                                      user: User.currentUser!,
+                                      destination: widget.destination,
+                                      event: widget.event,
+                                    ),
+                                    builder: (context, isFav, _) {
+                                      return IconButton(
+                                        icon: Icon(
+                                          isFav ? Icons.bookmark : Icons.bookmark_border,
+                                          color: const Color(0xFF8AC4FA),
+                                          size: 30,
+                                        ),
+                                        onPressed: () async {
+                                          if (User.currentUser == null) return;
 
-                                        try {
-                                          await context.read<BookmarkProvider>().toggle(
-                                            user: User.currentUser!,
-                                            destination: widget.destination,
-                                            event: widget.event,
-                                          );
-                                        } catch (_) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Gagal update bookmark')),
-                                          );
-                                        }
-                                      },
-                                    );
-                                  },
-                                )
+                                          try {
+                                            await context.read<BookmarkProvider>().toggle(
+                                              user: User.currentUser!,
+                                              destination: widget.destination,
+                                              event: widget.event,
+                                            );
+                                          } catch (_) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Gagal update bookmark')),
+                                            );
+                                          }
+                                        },
+                                      );
+                                    },
+                                  )
                               ],
                             ),
 
@@ -1239,6 +1254,13 @@ class _DetailPageState extends State<DetailPage> {
                                 averageRating: avarageRating,
                                 onSeeAll: () => showAllReviews(context),
                                 onWrite: () {
+                                  if (!isLoggedIn) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Silakan login untuk menulis review')),
+                                    );
+                                    return;
+                                  }
+
                                   showcommentPopup(
                                     context,
                                     destinationId: isDestination ? destination?.id_destination : null,
