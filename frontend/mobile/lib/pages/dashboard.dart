@@ -660,7 +660,9 @@ class _DashboardState extends State<Dashboard> {
                               itemCount: todayEvents.length, 
                               itemBuilder: (context, index) {
                                 final item = todayEvents[index];
+                                final ratEvent = averageRatingForEvent(item.id_event, reviews);
                                 return CardItems2(
+                                  rating: ratEvent,
                                   image: item.imageUrl.first, 
                                   title: item.name,
                                   location: item.location, 

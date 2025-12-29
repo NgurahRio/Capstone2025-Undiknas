@@ -1226,9 +1226,7 @@ class _DetailPageState extends State<DetailPage> {
                             ),
 
                             GestureDetector(
-                              onTap: () => _openMap(
-                                mapsLink
-                              ),
+                              onTap: () => _openMap(mapsLink),
                               child: Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1309,7 +1307,7 @@ class _DetailPageState extends State<DetailPage> {
                                   final ratDest = averageRatingForDestination(item.id_destination, reviews);
 
                                   return CardItems2(
-                                    image: item.imageUrl[0],
+                                    image: item.imageUrl.first,
                                     title: item.name,
                                     subTitle: item.description,
                                     rating: ratDest,
