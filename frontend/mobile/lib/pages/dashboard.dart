@@ -662,8 +662,9 @@ class _DashboardState extends State<Dashboard> {
                                 final item = todayEvents[index];
                                 return CardItems2(
                                   image: item.imageUrl.first, 
-                                  title: item.name, 
+                                  title: item.name,
                                   location: item.location, 
+                                  clock: "${item.startTime} - ${item.endTime}",
                                   subTitle: formatEventDate(item.startDate, item.endDate),
                                   price: item.price,
                                   onTap: () => _navigateTo(

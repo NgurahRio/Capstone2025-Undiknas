@@ -159,6 +159,7 @@ class CardItems2 extends StatelessWidget {
   final String title;
   final String? location;
   final String subTitle;
+  final String? clock;
   final int? price;
   final bool? isDestination;
   final VoidCallback onTap;
@@ -170,10 +171,11 @@ class CardItems2 extends StatelessWidget {
     this.categories,
     required this.title,
     this.location,
+    this.clock,
     required this.subTitle,
     this.price,
     this.isDestination = false,
-    required this.onTap
+    required this.onTap,
   });
 
   final currencyFormatter = NumberFormat.currency(
@@ -264,14 +266,14 @@ class CardItems2 extends StatelessWidget {
           
                     Text(
                       title,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
       
                     if(location != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -280,19 +282,55 @@ class CardItems2 extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 location!,
-                                style: const TextStyle(color: Color(0xFF868686), fontSize: 11),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF868686), 
+                                  fontSize: 11,
+                                ),
                               ),
                             )
                           ],
                         ),
                       ),
       
-                    Text(
-                      subTitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Color(0xFF6F6F6F), fontSize: 11, fontStyle: FontStyle.italic),
-                    )
+                    Wrap(
+                      spacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if(isDestination != true)
+                          Icon(Icons.calendar_month, color: Color(0xff8ac4fa), size: 14),
+
+                        Text(
+                          subTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDestination == true ? Color(0xFF868686) : Colors.black,
+                            fontSize: 11,
+                            fontStyle: isDestination == true ? FontStyle.italic : FontStyle.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (isDestination != true && clock != null && clock!.isNotEmpty)
+                      Wrap(
+                        spacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          const Icon(Icons.access_time, color: Color(0xff8ac4fa), size: 14),
+                          Text(
+                            clock!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF868686),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
