@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/componen/WhatsApp.dart';
 
 class Header extends StatelessWidget {
   final VoidCallback? onTapBack;
@@ -52,7 +53,9 @@ class Header extends StatelessWidget {
                   Positioned(
                     right: 0,
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        openWhatsApp('6285166189866');
+                      },
                       child: Row(
                         children: [
                           Container(

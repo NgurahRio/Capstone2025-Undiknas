@@ -42,7 +42,7 @@ class AuthService {
     } 
     else if (response.statusCode == 409) {
       throw Exception(data['error']);
-    } 
+    }
     else {
       throw Exception(data['error'] ?? 'Registrasi gagal');
     }
@@ -69,18 +69,21 @@ class AuthService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.setString('token', data['token']);
-
       final userJson = data['user'];
-      userJson['image'] = userJson['image'] ?? '';
+      final roleIdFromApi = userJson['roleId'] ?? 0;
+      
+      if (roleIdFromApi != 1) {
+        throw Exception('Akses ditolak: hanya roleId 1 yang dapat login');
+      }
 
-      await prefs.setString('user', jsonEncode(userJson));
+      userJson['image'] = userJson['image'] ?? '';
 
       final user = User.fromJson(userJson);
       User.currentUser = user;
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+      await prefs.setString('user', jsonEncode(userJson));
       await prefs.setInt('user_id', user.id_user);
 
       return user;
