@@ -799,7 +799,10 @@ class _DetailPageState extends State<DetailPage> {
                                                                 crossAxisAlignment: WrapCrossAlignment.center,
                                                                 children: [
                                                                   Image(
-                                                                    image: formatImage(subPkg.icon)
+                                                                    image: formatImage(subPkg.icon),
+                                                                    width: 30,
+                                                                    height: 30,
+                                                                    fit: BoxFit.contain,
                                                                   ),
                                                                   Text(
                                                                     subPkg.name.replaceAll(' ', '\n'),

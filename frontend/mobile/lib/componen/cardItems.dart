@@ -69,6 +69,8 @@ class CardItems1 extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: isBookmark == true ? 20 : 15, 
                         fontWeight: FontWeight.w500, 
@@ -84,9 +86,11 @@ class CardItems1 extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    padding: const EdgeInsets.only(left: 8, bottom: 4, right: 8),
                     child: Text(
                       subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: isBookmark == true ? 14 : 12,
                         fontStyle: FontStyle.italic,

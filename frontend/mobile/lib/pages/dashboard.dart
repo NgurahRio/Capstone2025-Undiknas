@@ -225,11 +225,13 @@ class _DashboardState extends State<Dashboard> {
     FocusScope.of(context).unfocus();
     if (_isDropdownVisible) _removeDropdown();
 
-
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => page),
     );
+
+    if (!mounted) return;
+    await loadData();
 
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
