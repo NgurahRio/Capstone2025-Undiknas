@@ -68,14 +68,14 @@ const EventCardList = ({ item, onPress, ratingValue }) => {
   return (
     <div 
       onClick={onPress}
-      className="group cursor-pointer bg-white rounded-[18px] border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
+      className="group cursor-pointer bg-white rounded-[10px] border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
     >
         {/* Gambar */}
-        <div className="relative h-[150px] w-full overflow-hidden">
+        <div className="relative h-[150px] w-full overflow-hidden p-1">
             <img 
                 src={processImage(item.image_event)} 
                 alt={item.nameevent} 
-                className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                className="w-full h-full object-cover group-hover:scale-110 transition duration-700 rounded-[10px]"
             />
             <div className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1">
               <Star size={12} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
@@ -84,7 +84,8 @@ const EventCardList = ({ item, onPress, ratingValue }) => {
         </div>
 
         {/* Konten */}
-        <div className="p-4 flex flex-col gap-2 flex-1">
+        <div className=" flex flex-col">
+          <div className="p-4 flex flex-col gap-2">
             <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2 min-h-[40px]">
               {item.nameevent || "Event"}
             </h3>
@@ -104,12 +105,13 @@ const EventCardList = ({ item, onPress, ratingValue }) => {
                 <span className="truncate">{formatTimeRange(item.start_time, item.end_time)}</span>
               </div>
             </div>
+          </div>
 
-            <div className="mt-auto flex justify-end">
-              <span className="text-[11px] font-bold text-white bg-[#82B1FF] px-3 py-2 rounded-md shadow-sm">
-                {priceLabel()}
-              </span>
-            </div>
+          <div className="mt-auto flex justify-end">
+            <span className="text-[11px] font-bold text-white bg-[#82B1FF] px-4 py-3 rounded-tl-[10px] shadow-sm">
+              {priceLabel()}
+            </span>
+          </div>
         </div>
     </div>
   );
