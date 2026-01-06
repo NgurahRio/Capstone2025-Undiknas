@@ -14,19 +14,19 @@ Future<void> openWhatsApp(String phoneNumber) async {
     cleaned = cleaned.substring(1);
   }
 
-  final Uri waUri = Uri.parse('https://wa.me/$cleaned');
+  final Uri waUri =
+      Uri.parse('https://api.whatsapp.com/send?phone=$cleaned');
   final Uri telUri = Uri(scheme: 'tel', path: '+$cleaned');
 
   try {
-    bool canLaunchWA = await canLaunchUrl(waUri);
-    if (canLaunchWA) {
-      await launchUrl(waUri, mode: LaunchMode.externalApplication);
-      debugPrint("✅ Membuka WhatsApp: $cleaned");
-    } else {
-      await launchUrl(telUri, mode: LaunchMode.externalApplication);
-      debugPrint("☎️ Membuka panggilan ke: +$cleaned");
-    }
+    await launchUrl(
+      waUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    debugPrint("🌐 Dibuka lewat browser → WhatsApp");
   } catch (e) {
-    debugPrint('❌ Gagal membuka WhatsApp/telepon: $e');
+    debugPrint('❌ Gagal buka WA, fallback ke telepon: $e');
+    await launchUrl(telUri);
   }
 }

@@ -112,6 +112,8 @@ Future<List<Event>> getEvents() async {
     },
   );
 
+  print(response.body);
+
   if (response.statusCode != 200) {
     throw Exception('Gagal mengambil event');
   }

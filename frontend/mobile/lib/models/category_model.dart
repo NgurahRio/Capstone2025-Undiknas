@@ -26,6 +26,9 @@ Future<List<Category>> getCategories() async {
       'Content-Type': 'application/json',
     },
   );
+
+  print(response.body);
+  
   if (response.statusCode != 200) {
     throw Exception('Gagal mengambil category');
   }

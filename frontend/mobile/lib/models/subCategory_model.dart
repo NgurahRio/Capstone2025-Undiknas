@@ -32,6 +32,8 @@ Future<List<SubCategory>> getSubCategories(
     Uri.parse('$baseUrl/subcategories'),
   );
 
+  print(response.body);
+
   if (response.statusCode == 200) {
     final json = jsonDecode(response.body);
     final List list = json['data'];

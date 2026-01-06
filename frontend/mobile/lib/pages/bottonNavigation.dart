@@ -35,7 +35,9 @@ class _BottonNavigationState extends State<BottonNavigation> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: _selectedIndex == selectedIndex ? [const Color(0xff8AC4FA), const Color(0xFF6189af)] : [const Color.fromARGB(255, 232, 231, 231), const Color.fromARGB(255, 232, 231, 231)],
+          colors: _selectedIndex == selectedIndex 
+            ? [const Color(0xff8AC4FA), const Color(0xFF6189af)] 
+            : [const Color.fromARGB(255, 232, 231, 231), const Color.fromARGB(255, 232, 231, 231)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -43,7 +45,9 @@ class _BottonNavigationState extends State<BottonNavigation> {
       child: IconButton(
         icon: Icon(
           icon, 
-          color: _selectedIndex == selectedIndex ? Colors.white : const Color.fromARGB(255, 146, 146, 146),
+          color: _selectedIndex == selectedIndex 
+            ? Colors.white 
+            : const Color.fromARGB(255, 146, 146, 146),
           size: 35,
         ),
         onPressed: () => _onItemTapped(selectedIndex),
