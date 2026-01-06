@@ -308,13 +308,17 @@ class _DashboardState extends State<Dashboard> {
 
       body: SafeArea(
         child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
+          behavior: HitTestBehavior.deferToChild,
           onTap: () {
+            final shouldCloseDropdown = _isDropdownVisible;
+            final shouldDeactivateSearch = _isSearchActive;
+            if (!shouldCloseDropdown && !shouldDeactivateSearch) return;
+
             FocusScope.of(context).unfocus();
-            setState(() {
-              _isSearchActive = false;
-            });
-            _removeDropdown();
+            if (shouldCloseDropdown) _removeDropdown();
+            if (shouldDeactivateSearch) {
+              setState(() => _isSearchActive = false);
+            }
           },
           child: SingleChildScrollView(
             child: Padding(

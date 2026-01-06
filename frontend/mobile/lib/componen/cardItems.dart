@@ -270,7 +270,7 @@ class CardItems2 extends StatelessWidget {
           
                     Text(
                       title,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
