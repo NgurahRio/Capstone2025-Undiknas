@@ -20,6 +20,19 @@ const processImage = (img) => {
   return img || fallback;
 };
 
+const extractImages = (imgField) => {
+  const fallback = ['https://images.unsplash.com/photo-1492684223066-81342ee5ff30'];
+  if (!imgField) return fallback;
+  if (Array.isArray(imgField)) return imgField.length ? imgField : fallback;
+  if (typeof imgField === 'string') {
+    try {
+      const parsed = JSON.parse(imgField);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (_) {}
+  }
+  return [imgField];
+};
+
 const priceLabel = (price) => {
   if (price === undefined || price === null || parseFloat(price) <= 0) return 'FREE ENTRY';
   const val = parseFloat(price);
@@ -37,6 +50,12 @@ const timeRange = (start, end) => {
   if (!start && !end) return '-';
   if (start && end) return `${start} - ${end}`;
   return start || end;
+};
+
+const formatDateRange = (start, end) => {
+  if (!start) return '-';
+  const format = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  return end && end !== start ? `${format(start)} - ${format(end)}` : format(start);
 };
 
 const formatRating = (val) => {
@@ -80,6 +99,7 @@ export default function EventDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [guideTab, setGuideTab] = useState('dodont');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [imgIndex, setImgIndex] = useState(0);
   const doList = splitList(event?.do || '');
   const dontList = splitList(event?.dont || '');
   const safetyList = splitList(event?.safety || '');
@@ -123,6 +143,15 @@ export default function EventDetail() {
 
     return { mapLink, mapEmbed, isRawEmbed: false };
   }, [event]);
+
+  const imageList = useMemo(
+    () => extractImages(event?.image_event).map(processImage),
+    [event?.image_event],
+  );
+
+  useEffect(() => {
+    setImgIndex(0);
+  }, [event?.image_event]);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -296,15 +325,31 @@ export default function EventDetail() {
         <div className="bg-red-50 text-red-700 font-semibold px-4 py-3 rounded-xl border border-red-100">
           {error}
         </div>
-      ) : event ? (
+          ) : event ? (
         <>
           <div className="bg-white border border-gray-100 rounded-[28px] shadow-lg overflow-hidden">
-            <div className="h-[320px] w-full overflow-hidden">
+            <div className="relative h-[320px] w-full overflow-hidden">
               <img
-                src={processImage(event.image_event)}
+                src={imageList[imgIndex] || imageList[0]}
                 alt={event.nameevent}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition duration-500"
               />
+              {imageList.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setImgIndex((prev) => (prev === 0 ? imageList.length - 1 : prev - 1))}
+                    className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/85 hover:bg-white text-gray-700 rounded-full w-9 h-9 flex items-center justify-center shadow border"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={() => setImgIndex((prev) => (prev === imageList.length - 1 ? 0 : prev + 1))}
+                    className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/85 hover:bg-white text-gray-700 rounded-full w-9 h-9 flex items-center justify-center shadow border"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8">
@@ -566,43 +611,46 @@ export default function EventDetail() {
                   return (
                     <div
                       key={item.id_event || item.id}
-                      onClick={() => navigate(`/events/${item.id_event}`)}
-                      className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
+                      onClick={() => navigate(`/events/${item.id_event || item.id}`)}
+                      className="group cursor-pointer bg-white rounded-[10px] border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1 h-full"
                     >
-                      <div className="relative aspect-[16/10] w-full overflow-hidden">
+                      <div className="relative h-[150px] w-full overflow-hidden p-1">
                         <img
                           src={processImage(item.image_event)}
                           alt={item.nameevent}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                          className="w-full h-full object-cover group-hover:scale-110 transition duration-700 rounded-[10px]"
                         />
-                        <div className="absolute top-3 right-3 bg-white/95 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1.5">
+                        <div className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-[11px] font-bold text-gray-800 shadow-sm flex items-center gap-1.5">
                           <Star size={12} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
                           <span>{badgeLabel}</span>
                         </div>
                       </div>
-                      <div className="p-4 flex flex-col gap-3 flex-1">
-                        <div className="space-y-2 flex-1">
-                          <h4 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 break-words min-h-[44px]">
+
+                      <div className="flex flex-col flex-1">
+                        <div className="p-4 flex flex-col gap-2 flex-1">
+                          <h4 className="text-base font-bold text-gray-900 leading-tight line-clamp-2 min-h-[40px]">
                             {item.nameevent || 'Event'}
                           </h4>
-                          <div className="text-xs text-gray-500 flex items-center gap-1.5 line-clamp-1">
-                            <MapPin size={14} className="text-[#5E9BF5]" />
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[12px] font-medium min-h-[32px]">
+                            <MapPin size={12} className="text-[#5E9BF5] flex-shrink-0" />
                             <span className="truncate">{item.location || 'Lokasi belum tersedia'}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-800">
-                            <Calendar size={14} className="text-[#1F5FBF]" />
-                            <span>
-                              {toDateString(item.start_date)}
-                              {item.end_date ? ` - ${toDateString(item.end_date)}` : ''}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                            <Clock size={14} className="text-[#1F5FBF]" />
-                            <span>{timeRange(item.start_time, item.end_time)}</span>
+                          <div className="text-[12px] text-gray-700 space-y-1 leading-snug">
+                            <div className="flex items-start gap-1.5">
+                              <Calendar size={14} className="text-[#5E9BF5] mt-[1px]" />
+                              <span className="truncate font-semibold text-gray-800">
+                                {formatDateRange(item.start_date, item.end_date)}
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-1.5">
+                              <Clock size={14} className="text-[#5E9BF5] mt-[1px]" />
+                              <span className="truncate">{timeRange(item.start_time, item.end_time)}</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex justify-end">
-                          <span className="px-3 py-1 rounded-lg bg-[#5E9BF5] text-white text-xs font-extrabold shadow-sm self-end">
+
+                        <div className="mt-auto flex justify-end">
+                          <span className="text-[11px] font-bold text-white bg-[#82B1FF] px-4 py-3 rounded-tl-[10px] shadow-sm">
                             {priceLabel(item.price)}
                           </span>
                         </div>

@@ -28,7 +28,13 @@ export default function Navbar() {
     
     // Listener tambahan jika localStorage berubah (opsional, untuk safety)
     window.addEventListener('storage', checkUser);
-    return () => window.removeEventListener('storage', checkUser);
+    window.addEventListener('focus', checkUser);
+    document.addEventListener('visibilitychange', checkUser);
+    return () => {
+      window.removeEventListener('storage', checkUser);
+      window.removeEventListener('focus', checkUser);
+      document.removeEventListener('visibilitychange', checkUser);
+    };
   }, [location]); // Re-run saat pindah halaman
 
   const handleNav = (menu) => {

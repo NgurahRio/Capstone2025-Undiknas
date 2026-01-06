@@ -127,6 +127,7 @@ export default function EventSection() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [availableMonths, setAvailableMonths] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('today'); // 'today' | 'month'
 
@@ -181,20 +182,53 @@ export default function EventSection() {
   };
 
   const computeMonthEvents = (monthKey, events) => {
+      if (!monthKey) return [];
       const start = `${monthKey}-01`;
       const end = endOfMonthString(monthKey);
-      const matches = events.filter(ev => rangesOverlap(ev.start_date, ev.end_date, start, end));
-      if (matches.length > 0) return matches;
-      const fallback = events.filter(ev => normalizeDate(ev.start_date) >= start);
-      return fallback.slice(0, 3);
+      return events.filter(ev => rangesOverlap(ev.start_date, ev.end_date, start, end));
   };
 
   const parseMonthKey = (monthKey) => {
+      if (!monthKey || typeof monthKey !== 'string' || !monthKey.includes('-')) {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() + 1 };
+      }
       const [yearStr, monthStr] = monthKey.split('-');
-      return { year: Number(yearStr), month: Number(monthStr) };
+      const yearNum = Number(yearStr);
+      const monthNum = Number(monthStr);
+      const now = new Date();
+      return {
+        year: Number.isFinite(yearNum) ? yearNum : now.getFullYear(),
+        month: Number.isFinite(monthNum) ? monthNum : (now.getMonth() + 1),
+      };
   };
 
   const buildMonthKey = (year, month) => `${year}-${String(month).padStart(2, '0')}`;
+
+  const getMonthKeyFromDate = (dateStr) => {
+      if (!dateStr) return null;
+      const normalized = normalizeDate(dateStr);
+      if (!normalized || normalized.length < 7) return null;
+      const [y, m] = normalized.split('-');
+      return `${y}-${m}`;
+  };
+
+  const monthsBetween = (startStr, endStr) => {
+      const start = normalizeDate(startStr);
+      const end = normalizeDate(endStr || startStr);
+      if (!start || !end) return [];
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      if (Number.isNaN(startDate) || Number.isNaN(endDate)) return [];
+      const months = [];
+      const cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+      const last = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+      while (cur <= last) {
+        months.push(buildMonthKey(cur.getFullYear(), cur.getMonth() + 1));
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      return months;
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -204,8 +238,23 @@ export default function EventSection() {
         
         const sorted = data.sort((a,b) => (a.start_date || "").localeCompare(b.start_date || ""));
         setAllEvents(sorted);
-        
+
+        // Build available month list based on event ranges (start -> end)
+        const monthSet = new Set();
+        sorted.forEach((ev) => {
+          monthsBetween(ev.start_date, ev.end_date).forEach((mk) => monthSet.add(mk));
+          // fallback if no end
+          const mkStart = getMonthKeyFromDate(ev.start_date);
+          if (mkStart) monthSet.add(mkStart);
+        });
+        const monthList = Array.from(monthSet).sort();
+        setAvailableMonths(monthList);
+
+        // Initialize default month selection to current if available else first available
         const todayStr = toDBFormat(new Date());
+        const todayMonthKey = getMonthKeyFromDate(todayStr);
+        const initialMonth = (todayMonthKey && monthSet.has(todayMonthKey)) ? todayMonthKey : monthList[0] || selectedMonth;
+        setSelectedMonth(initialMonth);
         setFilteredEvents(computeTodayEvents(todayStr, sorted));
       } catch (err) {
         console.error(err);
@@ -268,8 +317,10 @@ export default function EventSection() {
       setSelectedDate(new Date());
       return;
     }
+    // Switch to month view using current month if available, otherwise first available from backend
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthKey = availableMonths.includes(currentMonthKey) ? currentMonthKey : (availableMonths[0] || currentMonthKey);
     setSelectedMonth(monthKey);
     setViewMode('month');
   };
@@ -306,7 +357,7 @@ export default function EventSection() {
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
          <div className="w-1.5 h-8 bg-[#5E9BF5] rounded-full"></div>
-        <h2 className="text-4xl font-bold text-gray-900">{viewMode === 'month' ? 'All Upcoming Events' : 'Event Today'}</h2>
+        <h2 className="text-4xl font-bold text-gray-900">{viewMode === 'month' ? 'All Events' : 'Event Today'}</h2>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -330,8 +381,12 @@ export default function EventSection() {
                     <div className="flex items-center gap-2">
                       {viewMode === 'month' && (() => {
                         const { year, month } = parseMonthKey(selectedMonth);
-                        const currentYear = new Date().getFullYear();
-                        const yearOptions = [currentYear - 1, currentYear, currentYear + 1];
+                        const monthKeys = availableMonths.length > 0 ? availableMonths : [selectedMonth];
+                        const yearOptions = (() => {
+                          const years = Array.from(new Set(monthKeys.map((mk) => Number(mk.split('-')[0])))).sort((a,b) => a - b);
+                          if (years.length === 0) return [new Date().getFullYear()];
+                          return years;
+                        })();
                         const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
                         return (
                           <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold">
@@ -376,9 +431,11 @@ export default function EventSection() {
                   </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-[32px] border border-dashed border-gray-200 py-12">
-                        <p className="text-gray-500 font-bold mb-1 text-sm">Tidak ada acara.</p>
+                        <p className="text-gray-500 font-bold mb-1 text-sm">
+                          {viewMode === 'month' ? 'No have events in this month.' : 'no events in this month.'}
+                        </p>
                         <button onClick={handleToggleAll} className="mt-2 px-4 py-1.5 bg-[#5E9BF5] text-white rounded-full font-bold text-xs">
-                          {viewMode === 'month' ? 'Kembali ke Event Today' : 'Tampilkan Semua'}
+                          {viewMode === 'month' ? 'Go back to today event' : 'Tampilkan Semua'}
                         </button>
                     </div>
                 )}

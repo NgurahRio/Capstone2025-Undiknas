@@ -160,6 +160,9 @@ export default function TravelStyle({ initialShowAll = false, hideViewMore = fal
   const activeSubName = subByCategory.find(
     (s) => String(getSubcategoryId(s)) === String(activeSubcategory)
   )?.namesubcategories;
+  const activeCategoryName = categories.find(
+    (cat) => String(cat.id_categories || cat.id) === String(activeCategory)
+  )?.name;
 
   return (
     <div className="flex flex-col gap-8 w-full bg-[#EEF3FF] rounded-[28px] px-4 py-8 lg:px-8">
@@ -247,7 +250,7 @@ export default function TravelStyle({ initialShowAll = false, hideViewMore = fal
                   title={item.NameDestination || item.namedestination || item.title}
                   subtitle={item.Location || item.location}
                   description={item.description}
-                  tag={activeSubName}
+                  tag={activeCategoryName || activeSubName}
                   img={img}
                   rating={formatRating(item)}
                   onPress={() => navigate(`/destination/${item.ID || item.id_destination}`)}
