@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import PlaceCard from '../components/cards/PlaceCard';
 import { 
   MapPin, Bookmark, Star, Camera, Users, ShoppingBag, Utensils, 
   CheckCircle, Info, Ticket, ChevronLeft, ChevronRight, Wifi, Car, Moon, Tag, Clock, ShieldAlert
@@ -754,31 +755,67 @@ const destData = resDetail.data.data || resDetail.data;
               const imgs = findAllImagesInObject(item);
               const img = imgs[0] || placeholderImg;
               const rating = formatRating(item.rating || item.calculatedRating);
-              const tag = (item.subcategory && item.subcategory[0]?.namesubcategories) || item.category || 'Recommended';
+              const tag = (() => {
+                // Prioritize mapped category names from lookup based on available category ids
+                const catIds = collectIds([
+                  item.categoryid,
+                  item.category_id,
+                  item.categoryId,
+                  item.categoriesId,
+                  item.category?.id_categories || item.category?.id || item.category?.categoryId || item.category?.categoriesId,
+                  Array.isArray(item.categories)
+                    ? item.categories.map((c) => c.id_categories || c.id || c.categoryId || c.categoriesId)
+                    : null,
+                ]);
+                const fromLookup = catIds.map((id) => catLookup[String(id)]).find(Boolean);
+                if (fromLookup) return fromLookup;
+
+                // Derive category from subcategory -> category mapping, still returning category name
+                const subIds = collectIds([
+                  item.subcategoryid,
+                  item.subcategory_id,
+                  item.subcategoryId,
+                  item.subcategory?.id_subcategories || item.subcategory?.id || item.subcategory?.subcategoryId,
+                  Array.isArray(item.subcategory)
+                    ? item.subcategory.map((s) => s.id_subcategories || s.id || s.subcategoryId)
+                    : null,
+                  Array.isArray(item.subcategories)
+                    ? item.subcategories.map((s) => s.id_subcategories || s.id || s.subcategoryId)
+                    : null,
+                ]);
+                const catFromSub = subIds
+                  .map((sid) => subDetailLookup[String(sid)]?.categoryId)
+                  .map((cid) => catLookup[String(cid)])
+                  .find(Boolean);
+                if (catFromSub) return catFromSub;
+
+                // Fallback to inline category names only (no subcategory)
+                const inline = [
+                  item?.category?.namecategory,
+                  item?.category?.name_category,
+                  item?.category?.name,
+                  item?.categories?.[0]?.namecategory,
+                  item?.categories?.[0]?.name_category,
+                  item?.categories?.[0]?.name,
+                  item?.category_name,
+                  item?.category,
+                ];
+                const inlineName = inline.map(cleanText).find((n) => n);
+                return inlineName || 'Recommended';
+              })();
               const desc = item.description || 'Discover this amazing destination.';
               return (
-                <div
+                <PlaceCard
                   key={item.id_destination || item.id || item.ID}
-                  onClick={() => navigate(`/destination/${item.id_destination || item.id || item.ID}`)}
-                  className="rounded-[18px] overflow-hidden shadow-md border border-gray-100 bg-white hover:-translate-y-1 transition cursor-pointer flex flex-col"
-                >
-                  <div className="h-36 w-full overflow-hidden">
-                    <img src={img} alt={item.namedestination} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-4 flex flex-col gap-2 flex-1">
-                    <div className="flex items-center justify-between text-sm font-semibold text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <Star size={16} className="text-[#F5C542]" fill="#F5C542" stroke="none" />
-                        <span>{rating}</span>
-                      </div>
-                      <span className="text-[11px] font-semibold text-[#2f5aa5] bg-[#E9F2FF] px-3 py-1 rounded-full">
-                        {tag}
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-base leading-tight line-clamp-2">{item.namedestination || item.NameDestination}</h4>
-                    <p className="text-sm text-gray-500 leading-snug line-clamp-2">{desc}</p>
-                  </div>
-                </div>
+                  title={item.namedestination || item.NameDestination}
+                  subtitle={item.location}
+                  description={desc}
+                  img={img}
+                  rating={rating}
+                  tag={tag}
+                  onPress={() => navigate(`/destination/${item.id_destination || item.id || item.ID}`)}
+                  className="h-full"
+                />
               );
             })}
           </div>

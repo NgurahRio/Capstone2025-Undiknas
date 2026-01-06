@@ -5,6 +5,8 @@ export const api = axios.create({
   baseURL: 'http://localhost:8080', 
 });
 
+let hasHandledAuthError = false;
+
 // INTERCEPTOR: Setiap kali kirim request, tempelkan Token dari LocalStorage
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('travora_token');
@@ -26,8 +28,9 @@ api.interceptors.response.use(
     if (hadAuthHeader && (status === 401 || status === 403)) {
       localStorage.removeItem('travora_token');
       localStorage.removeItem('travora_user');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
-        window.location.href = '/auth';
+      if (!hasHandledAuthError && typeof window !== 'undefined') {
+        hasHandledAuthError = true;
+        window.location.reload();
       }
     }
     return Promise.reject(error);
