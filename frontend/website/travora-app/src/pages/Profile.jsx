@@ -199,7 +199,7 @@ export default function Profile() {
       {/* Hero Header */}
       <div className="h-[350px] relative w-full">
         <img
-          src="https://images.unsplash.com/photo-1577717903315-1691ae25ab3f"
+          src="/src/assets/gambar1.png"
           className="w-full h-full object-cover brightness-50"
           alt="Profile Hero"
         />

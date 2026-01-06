@@ -345,7 +345,7 @@ export default function Bookmark() {
   return (
     <div className="w-full animate-fade-in pb-20">
       <div className="h-[350px] relative w-full">
-        <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=1200" className="w-full h-full object-cover brightness-50" alt="Book Hero" />
+        <img src="/src/assets/gambar1.png" className="w-full h-full object-cover brightness-50" alt="Book Hero" />
         <div className="absolute inset-0 flex items-center justify-center">
              <h1 className="text-5xl md:text-6xl font-bold text-white">My Bookmarks</h1>
         </div>

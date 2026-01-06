@@ -16,14 +16,14 @@ export default function HeroSection({ onSearch }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearch) {
-        onSearch(query); // Kirim text ke Home.jsx
+        onSearch(query);
     }
   };
 
   return (
     <div className="relative h-[650px] w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-black">
-        <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80" className="w-full h-full object-cover opacity-80" alt="Hero" />
+        <img src="/src/assets/gambar1.png" className="w-full h-full object-cover opacity-80" alt="Hero" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
       </div>
       
