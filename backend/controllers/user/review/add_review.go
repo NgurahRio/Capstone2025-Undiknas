@@ -3,11 +3,13 @@ package review
 import (
 	"backend/config"
 	"backend/models"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // getUserID extracts user_id from context and normalizes to uint.
@@ -65,6 +67,29 @@ func AddReview(c *gin.Context) {
 	userID, ok := getUserID(c)
 	if !ok {
 		return
+	}
+
+	// Pastikan target review ada agar tidak melanggar foreign key.
+	if input.DestinationID != nil {
+		var dest models.Destination
+		if err := config.DB.First(&dest, "id_destination = ?", *input.DestinationID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Destinasi tidak ditemukan"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memeriksa destinasi"})
+			return
+		}
+	} else if input.EventID != nil {
+		var event models.Event
+		if err := config.DB.First(&event, "id_event = ?", *input.EventID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Event tidak ditemukan"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memeriksa event"})
+			return
+		}
 	}
 
 	// Cegah duplikat review oleh user pada target yang sama.
